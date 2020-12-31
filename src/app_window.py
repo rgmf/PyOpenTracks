@@ -17,14 +17,18 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
 class PyopentracksWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "PyopentracksWindow"
 
-    label = Gtk.Template.Child()
+    label: Gtk.Label = Gtk.Template.Child()
+    primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def set_menu(self, menu: Gio.Menu):
+        self.primary_menu_btn.set_menu_model(menu)

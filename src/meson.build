@@ -23,6 +23,7 @@ pyopentracks_sources = [
   'main.py',
   'app.py',
   'app_window.py',
+  'file_chooser.py',
 ]
 
 install_data(pyopentracks_sources, install_dir: moduledir)
