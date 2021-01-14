@@ -31,7 +31,10 @@
                     "type" : "git",
                     "url" : "file:///home/roman/workspace/PyOpenTracks"
                 }
-            ]
+            ],
+            "build-commands": [
+		"pip3 install --prefix=/app --no-cache-dir folium"
+	    ]
         }
     ]
 }
