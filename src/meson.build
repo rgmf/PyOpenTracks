@@ -24,6 +24,11 @@ pyopentracks_sources = [
   'app.py',
   'app_window.py',
   'file_chooser.py',
+  'gpx_parser.py',
+  'track_stats.py',
+  'layout.py',
+  'utils.py',
+  'maps.py',
 ]
 
 install_data(pyopentracks_sources, install_dir: moduledir)

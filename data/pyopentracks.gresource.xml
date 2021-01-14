@@ -2,5 +2,15 @@
 <gresources>
   <gresource prefix="/es/rgmf/pyopentracks">
     <file>ui/window.ui</file>
+    <file>ui/track_stats_layout.ui</file>
+    <file>ui/greeter_layout.ui</file>
+
+    <file>ui/gtk_style.css</file>
+
+    <file>icons/bike_black_48dp.svg</file>
+    <file>icons/drive_car_black_48dp.svg</file>
+    <file>icons/run_black_48dp.svg</file>
+    <file>icons/unknown_black_48dp.svg</file>
+    <file>icons/walk_black_48dp.svg</file>
   </gresource>
 </gresources>

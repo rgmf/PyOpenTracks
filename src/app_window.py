@@ -19,16 +19,74 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Gio
 
+from .layout import TrackStatsLayout, GreeterLayout
+
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
 class PyopentracksWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "PyopentracksWindow"
 
-    label: Gtk.Label = Gtk.Template.Child()
-    primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
+    _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.set_title("PyOpenTracks")
+        self._app = kwargs["application"]
+        self._layout = None
+        self.show_layout(GreeterLayout())
+
+    def show_layout(self, layout):
+        if layout is self._layout:
+            return
+
+        if self._layout:
+            self.remove(self._layout)
+
+        self._layout = layout
+        self.add(self._layout)
+        self.show_all()
 
     def set_menu(self, menu: Gio.Menu):
-        self.primary_menu_btn.set_menu_model(menu)
+        self._primary_menu_btn.set_menu_model(menu)
+
+    def load_track_stats(self, track):
+        """Load track stats layout with new track.
+
+        Arguments:
+        track -- Track object with all stats and information.
+        """
+        layout = TrackStatsLayout(self._app)
+        layout.load_data(track)
+        self.show_layout(layout)
+
+    def loading(self, total):
+        """Handle a progress bar on the top of the loaded Layout.
+
+        Show a progress bar or upload an existing one on top of the
+        loaded Layout.
+
+        total -- a float number between 0.0 and 1.0 indicating the
+                 progress of the loading process.
+        """
+        top_widget = self._layout.get_top_widget()
+        if not top_widget:
+            return
+
+        if total == 1.0:
+            top_widget.foreach(
+                lambda child: (
+                    top_widget.remove(child)
+                    if isinstance(child, Gtk.ProgressBar) else None
+                )
+            )
+            return
+
+        if (len(top_widget.get_children()) == 0 or not
+                isinstance(top_widget.get_children()[0], Gtk.ProgressBar)):
+            progress = Gtk.ProgressBar()
+            top_widget.pack_start(progress, True, False, 0)
+            progress.set_fraction(total)
+            self.show_all()
+        else:
+            progress = top_widget.get_children()[0]
+            progress.set_fraction(total)

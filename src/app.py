@@ -17,7 +17,9 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk, Gio
+from .gpx_parser import GpxParserHandle
+
+from gi.repository import Gtk, Gio, Gdk
 
 from .app_window import PyopentracksWindow
 from .file_chooser import FileChooserWindow
@@ -53,6 +55,16 @@ class Application(Gtk.Application):
         self._window: PyopentracksWindow = None
 
     def do_activate(self):
+        stylecontext = Gtk.StyleContext()
+        provider = Gtk.CssProvider()
+        provider.load_from_resource(
+            "/es/rgmf/pyopentracks/ui/gtk_style.css"
+        )
+        stylecontext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
         win = self.props.active_window
         if not win:
             win = PyopentracksWindow(application=self)
@@ -78,11 +90,17 @@ class Application(Gtk.Application):
         dialog = FileChooserWindow(parent=self._window)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            print("Open clicked!")
-            print("File Selected:", dialog.get_filename())
-        elif response == Gtk.ResponseType.CANCEL:
-            print("Open canceled!")
+            self._load_file(dialog.get_filename())
         dialog.destroy()
 
     def on_quit(self, action, param):
         self.quit()
+
+    def _load_file(self, filename: str):
+        self._window.loading(0.5)
+        gpxParserHandle = GpxParserHandle()
+        gpxParserHandle.connect("end-parse", self._end_parse_cb)
+        gpxParserHandle.parse(filename, self._window.load_track_stats)
+
+    def _end_parse_cb(self, gpxParserHandle):
+        self._window.loading(1.0)

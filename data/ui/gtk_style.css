@@ -1,0 +1,18 @@
+.pyot-h1 {
+    font-size: 3em;
+    font-weight: bolder;
+}
+
+.pyot-stats-bg-color {
+    background-color: #fefefe;
+    padding: 20px;
+}
+
+.pyot-stats-header {
+    font-size: 1.5em;
+    font-weight: bolder;
+}
+
+.pyot-stats-value {
+    font-size: 1.5em;
+}
