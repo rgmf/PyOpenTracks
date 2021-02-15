@@ -91,30 +91,35 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._add_item("Inicio", track_stats.start_time, 0, 2, 1, 1)
         # End datetime
         self._add_item("Fin", track_stats.end_time, 1, 2, 1, 1)
-        # Total time
-        self._add_item("Tiempo total", track_stats.total_time, 0, 3, 1, 1)
-        # Total moving time
-        self._add_item(
-            "Tiempo total en movimiento", track_stats.moving_time, 1, 3, 1, 1
-        )
         # Total distance
         self._add_item(
-            "Distancia total", track_stats.total_distance, 0, 4, 1, 1
+            "Distancia", track_stats.total_distance, 0, 3, 1, 1
+        )
+        # Total moving time
+        self._add_item(
+            "Tiempo en movimiento", track_stats.moving_time, 1, 3, 1, 1
+        )
+        # Total time
+        self._add_item("Tiempo total", track_stats.total_time, 0, 4, 1, 1)
+        # Avg. moving speed
+        self._add_item(
+            "Velocidad media en movimiento",
+            track_stats.avg_moving_speed, 0, 5, 1, 1
         )
         # Avg. speed
-        self._add_item("Velocidad media", track_stats.avg_speed, 1, 4, 1, 1)
+        self._add_item("Velocidad media", track_stats.avg_speed, 1, 5, 1, 1)
         # Max. speed
-        self._add_item("Velocidad máxima", track_stats.max_speed, 0, 5, 1, 1)
+        self._add_item("Velocidad máxima", track_stats.max_speed, 0, 6, 1, 1)
         # Max. elevation
-        self._add_item("Altitud máxima", track_stats.max_elevation, 1, 5, 1, 1)
+        self._add_item("Altitud máxima", track_stats.max_elevation, 0, 7, 1, 1)
         # Min. elevation
-        self._add_item("Altitud mínima", track_stats.min_elevation, 0, 6, 1, 1)
+        self._add_item("Altitud mínima", track_stats.min_elevation, 1, 7, 1, 1)
         # Gain elevation
-        self._add_item("Ganancia de altitud", track_stats.gain_elevation, 1, 6, 1, 1)
+        self._add_item("Ganancia de altitud", track_stats.gain_elevation, 0, 8, 1, 1)
         # Loss elevation
-        self._add_item("Pérdida de altitud", track_stats.loss_elevation, 0, 7, 1, 1)
+        self._add_item("Pérdida de altitud", track_stats.loss_elevation, 1, 8, 1, 1)
         # Map
-        self._add_map(track_stats, 2, 1, 2, 7)
+        self._add_map(track_stats, 2, 1, 2, 8)
 
     def _add_info_track(self, track, left, top, width, height):
         """Adds track information to main widget.
