@@ -53,6 +53,10 @@ class Track:
 
 
 class TrackStats:
+    # Speed threshold for considering that there is not movement (in mps).
+    # TODO This should be a setting's option ¿?
+    AUTO_PAUSE_SPEED_THRESHOLD = 0.1
+
     def __init__(self):
         self._segment = None
 
@@ -68,6 +72,7 @@ class TrackStats:
 
         self._avg_speed_mps = None
         self._max_speed_mps = None
+        self._avg_moving_speed_mps = None
 
         self._max_elevation_m = None
         self._min_elevation_m = None
@@ -103,6 +108,10 @@ class TrackStats:
     @property
     def max_speed(self):
         return su.mps_to_kph(self._max_speed_mps)
+
+    @property
+    def avg_moving_speed(self):
+        return su.mps_to_kph(self._avg_moving_speed_mps)
 
     @property
     def max_elevation(self):
@@ -143,7 +152,6 @@ class TrackStats:
         self._segment = num_segment
 
         self._add_location(track_point["location"])
-        self._add_time(track_point["time"])
         self._add_distance(track_point["location"])
         self._add_speed(self._get_float_or_none("speed", track_point))
         self._add_elevation(
@@ -151,6 +159,10 @@ class TrackStats:
             self._get_float_or_none("elevation_gain", track_point),
             self._get_float_or_none("elevation_loss", track_point)
         )
+        if float(track_point["speed"]) < TrackStats.AUTO_PAUSE_SPEED_THRESHOLD:
+            self._end_segment_time_ms = None
+        else:
+            self._add_time(track_point["time"])
 
     def _get_float_or_none(self, idx, dictionary):
         if idx in dictionary and dictionary[idx] is not None:
@@ -201,15 +213,13 @@ class TrackStats:
         if self._total_distance_m is None:
             self._total_distance_m = 0
         else:
-            self._total_distance_m = (
-                self._total_distance_m
-                + self._distance_to(
-                    float(self._last_latitude),
-                    float(self._last_longitude),
-                    float(location["latitude"]),
-                    float(location["longitude"])
-                )
+            to_accum = self._distance_to(
+                float(self._last_latitude),
+                float(self._last_longitude),
+                float(location["latitude"]),
+                float(location["longitude"])
             )
+            self._total_distance_m = (self._total_distance_m + to_accum)
         self._last_latitude = location["latitude"]
         self._last_longitude = location["longitude"]
 
@@ -221,8 +231,13 @@ class TrackStats:
                 else self._max_speed_mps
             )
         if self._total_distance_m and self._total_time_ms:
-            self._avg_speed_mps = (self._total_distance_m
-                                   / (self._total_time_ms / 1000))
+            self._avg_speed_mps = (
+                self._total_distance_m / (self._total_time_ms / 1000)
+            )
+        if self._total_distance_m and self._moving_time_ms:
+            self._avg_moving_speed_mps = (
+                self._total_distance_m / (self._moving_time_ms / 1000)
+            )
 
     def _add_elevation(self, ele, gain, loss):
         if ele is not None:

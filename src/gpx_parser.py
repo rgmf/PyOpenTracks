@@ -63,6 +63,8 @@ class GpxParser:
             self._tag = tag
         elif tag == GpxParser.TAG_TRK:
             self._tag = tag
+        elif tag == GpxParser.TAG_TRKSEG:
+            self._segment = self._segment + 1
         elif tag == GpxParser.TAG_TRKPT:
             self._tag = tag
             self._new_trk_point = {
@@ -85,8 +87,6 @@ class GpxParser:
 
         if self._tag in (GpxParser.TAG_METADATA, GpxParser.TAG_TRK):
             self._end_tag_inside_metadata_trk(tag)
-        elif self._tag == GpxParser.TAG_TRKSEG:
-            self._segment = self._segment + 1
         elif self._tag == GpxParser.TAG_TRKPT:
             self._end_tag_inside_trkpt(tag)
 

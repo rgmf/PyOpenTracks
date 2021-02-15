@@ -114,6 +114,7 @@ class TypeActivityUtils:
         "mountain biking": "icons/bike_black_48dp.svg",
 
         "walking": "icons/walk_black_48dp.svg",
+        "trail walking": "icons/walk_black_48dp.svg",
         "hiking": "icons/walk_black_48dp.svg",
         "trail hiking": "icons/walk_black_48dp.svg",
 
