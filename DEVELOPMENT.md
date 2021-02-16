@@ -9,4 +9,10 @@ pipenv shell
 pipenv install
 
 # Build
-meson --internal regenerate buildir --backend ninja
+sh build.sh
+
+# Execute
+After building enter to buildir/buildir/testdir/bin and execute ./pyopentracks
+
+# Internacionalization (i10n)
+Enter to po/ directory and execute update_potfiles.sh to create a new language PO file or update the string to a language. Then edit the PO file and execute compile_potfiles.sh to generate mo file.

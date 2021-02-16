@@ -31,7 +31,13 @@ localedir = "@localedir@"
 
 sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-gettext.install("pyopentracks", localedir)
+
+gettext.install(APP_ID, localedir)
+gettext.bindtextdomain(APP_ID, localedir)
+gettext.textdomain(APP_ID)
+# set current language to test a language
+lang_translations = gettext.translation(APP_ID, localedir=localedir, languages=["es"])
+lang_translations.install()
 
 if __name__ == "__main__":
     import gi
