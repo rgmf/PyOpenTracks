@@ -5,6 +5,8 @@
     <file>ui/track_stats_layout.ui</file>
     <file>ui/greeter_layout.ui</file>
 
+    <file>ui/menu.ui</file>
+
     <file>ui/gtk_style.css</file>
 
     <file>icons/bike_black_48dp.svg</file>

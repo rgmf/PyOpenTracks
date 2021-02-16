@@ -34,21 +34,21 @@ class FileChooserWindow(Gtk.FileChooserDialog):
 
     def _add_filters(self):
         filter_text = Gtk.FileFilter()
-        filter_text.set_name("GPX files")
+        filter_text.set_name(_("GPX files"))
         filter_text.add_mime_type("application/gpx+xml")
         self.add_filter(filter_text)
 
         filter_py = Gtk.FileFilter()
-        filter_py.set_name("KML files")
+        filter_py.set_name(_("KML files"))
         filter_py.add_mime_type("application/vnd.google-earth.kml+xml")
         self.add_filter(filter_py)
 
         filter_py = Gtk.FileFilter()
-        filter_py.set_name("KMZ files")
+        filter_py.set_name(_("KMZ files"))
         filter_py.add_mime_type("application/vnd.google-earth.kmz")
         self.add_filter(filter_py)
 
         filter_any = Gtk.FileFilter()
-        filter_any.set_name("Any files")
+        filter_any.set_name(_("Any files"))
         filter_any.add_pattern("*")
         self.add_filter(filter_any)

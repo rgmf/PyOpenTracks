@@ -1,0 +1,98 @@
+# Spanish translations for es.rgmf.pyopentracks package.
+# Copyright (C) 2021 THE es.rgmf.pyopentracks'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the es.rgmf.pyopentracks package.
+# Román Martínez <rgmf@riseup.net>, 2021.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: es.rgmf.pyopentracks 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-02-17 14:03+0100\n"
+"PO-Revision-Date: 2021-02-17 13:40+0100\n"
+"Last-Translator: roman <rgmf@riseup.net>\n"
+"Language-Team: Spanish <es@tp.org.es>\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../src/layout.py:49
+msgid "Select a track"
+msgstr "Selecciona un track"
+
+#: ../src/layout.py:84
+msgid "Track Stats"
+msgstr "Estadísticas de la actividad"
+
+#: ../src/layout.py:91
+msgid "Start"
+msgstr "Comienzo"
+
+#: ../src/layout.py:93
+msgid "End"
+msgstr "Final"
+
+#: ../src/layout.py:96
+msgid "Distance"
+msgstr "Distancia"
+
+#: ../src/layout.py:100
+msgid "Moving Time"
+msgstr "Tiempo en movimiento"
+
+#: ../src/layout.py:103
+msgid "Total Time"
+msgstr "Tiempo total"
+
+#: ../src/layout.py:106
+msgid "Avg. Moving Speed"
+msgstr "Velocidad media en movimiento"
+
+#: ../src/layout.py:110
+msgid "Avg. Speed"
+msgstr "Velocidad media"
+
+#: ../src/layout.py:112
+msgid "Max. Speed"
+msgstr "Velocidad máxima"
+
+#: ../src/layout.py:114
+msgid "Max. Altitude"
+msgstr "Altitud máxima"
+
+#: ../src/layout.py:116
+msgid "Min. Altitude"
+msgstr "Altitud mínima"
+
+#: ../src/layout.py:118
+msgid "Elevation Gain"
+msgstr "Ganancia de altitud"
+
+#: ../src/layout.py:120
+msgid "Elevation Loss"
+msgstr "Pérdida de altitud"
+
+#: ../src/file_chooser.py:37
+msgid "GPX files"
+msgstr "Ficheros GPX"
+
+#: ../src/file_chooser.py:42
+msgid "KML files"
+msgstr "Ficheros KML"
+
+#: ../src/file_chooser.py:47
+msgid "KMZ files"
+msgstr "Ficheros KMZ"
+
+#: ../src/file_chooser.py:52
+msgid "Any files"
+msgstr "Cualquier fichero"
+
+#: ../data/ui/menu.ui:8
+msgid "_Open file..."
+msgstr "_Abrir fichero..."
+
+#: ../data/ui/menu.ui:12
+msgid "_Quit"
+msgstr "_Salir"

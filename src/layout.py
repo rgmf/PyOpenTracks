@@ -46,7 +46,7 @@ class GreeterLayout(Gtk.Box, Layout):
         self._setup_ui()
 
     def _setup_ui(self):
-        label = Gtk.Label(label="Select a track")
+        label = Gtk.Label(label=_("Select a track"))
         label.get_style_context().add_class("pyot-h1")
         self._main_widget.pack_start(label, True, True, 0)
 
@@ -81,43 +81,43 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
             lambda child: self._main_widget.remove(child)
         )
 
-        label = Gtk.Label(label="Track Stats")
+        label = Gtk.Label(label=_("Track Stats"))
         label.get_style_context().add_class("pyot-h1")
         self._main_widget.attach(label, 0, 0, 4, 1)
 
         # Track's name, description and type
         self._add_info_track(track, 0, 1, 2, 1)
         # Start datetime
-        self._add_item("Inicio", track_stats.start_time, 0, 2, 1, 1)
+        self._add_item(_("Start"), track_stats.start_time, 0, 2, 1, 1)
         # End datetime
-        self._add_item("Fin", track_stats.end_time, 1, 2, 1, 1)
+        self._add_item(_("End"), track_stats.end_time, 1, 2, 1, 1)
         # Total distance
         self._add_item(
-            "Distancia", track_stats.total_distance, 0, 3, 1, 1
+            _("Distance"), track_stats.total_distance, 0, 3, 1, 1
         )
         # Total moving time
         self._add_item(
-            "Tiempo en movimiento", track_stats.moving_time, 1, 3, 1, 1
+            _("Moving Time"), track_stats.moving_time, 1, 3, 1, 1
         )
         # Total time
-        self._add_item("Tiempo total", track_stats.total_time, 0, 4, 1, 1)
+        self._add_item(_("Total Time"), track_stats.total_time, 0, 4, 1, 1)
         # Avg. moving speed
         self._add_item(
-            "Velocidad media en movimiento",
+            _("Avg. Moving Speed"),
             track_stats.avg_moving_speed, 0, 5, 1, 1
         )
         # Avg. speed
-        self._add_item("Velocidad media", track_stats.avg_speed, 1, 5, 1, 1)
+        self._add_item(_("Avg. Speed"), track_stats.avg_speed, 1, 5, 1, 1)
         # Max. speed
-        self._add_item("Velocidad máxima", track_stats.max_speed, 0, 6, 1, 1)
+        self._add_item(_("Max. Speed"), track_stats.max_speed, 0, 6, 1, 1)
         # Max. elevation
-        self._add_item("Altitud máxima", track_stats.max_elevation, 0, 7, 1, 1)
+        self._add_item(_("Max. Altitude"), track_stats.max_elevation, 0, 7, 1, 1)
         # Min. elevation
-        self._add_item("Altitud mínima", track_stats.min_elevation, 1, 7, 1, 1)
+        self._add_item(_("Min. Altitude"), track_stats.min_elevation, 1, 7, 1, 1)
         # Gain elevation
-        self._add_item("Ganancia de altitud", track_stats.gain_elevation, 0, 8, 1, 1)
+        self._add_item(_("Elevation Gain"), track_stats.gain_elevation, 0, 8, 1, 1)
         # Loss elevation
-        self._add_item("Pérdida de altitud", track_stats.loss_elevation, 1, 8, 1, 1)
+        self._add_item(_("Elevation Loss"), track_stats.loss_elevation, 1, 8, 1, 1)
         # Map
         self._add_map(track_stats, 2, 1, 2, 8)
 

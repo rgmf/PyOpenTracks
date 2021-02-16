@@ -25,26 +25,6 @@ from .app_window import PyopentracksWindow
 from .file_chooser import FileChooserWindow
 
 
-MENU_XML = """
-<?xml version="1.0" encoding="UTF-8"?>
-<interface>
-  <menu id="app-menu">
-    <section>
-      <item>
-        <attribute name="action">app.open_file</attribute>
-        <attribute name="label" translatable="yes">_Open file...</attribute>
-      </item>
-      <item>
-        <attribute name="action">app.quit</attribute>
-        <attribute name="label" translatable="yes">_Quit</attribute>
-        <attribute name="accel">&lt;Primary&gt;q</attribute>
-    </item>
-    </section>
-  </menu>
-</interface>
-"""
-
-
 class Application(Gtk.Application):
     def __init__(self, app_id):
         super().__init__(
@@ -83,7 +63,7 @@ class Application(Gtk.Application):
         action.connect("activate", self.on_quit)
         self.add_action(action)
 
-        builder = Gtk.Builder.new_from_string(MENU_XML, -1)
+        builder = Gtk.Builder.new_from_resource("/es/rgmf/pyopentracks/ui/menu.ui")
         self._menu = builder.get_object("app-menu")
 
     def on_open_file(self, action, param):
