@@ -4,9 +4,21 @@
   <menu id="app-menu">
     <section>
       <item>
+        <attribute name="action">app.import_folder</attribute>
+        <attribute name="label" translatable="yes">Import _folder...</attribute>
+      </item>
+      <item>
+        <attribute name="action">app.import_file</attribute>
+        <attribute name="label" translatable="yes">_Import file...</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
         <attribute name="action">app.open_file</attribute>
         <attribute name="label" translatable="yes">_Open file...</attribute>
       </item>
+    </section>
+    <section>
       <item>
         <attribute name="action">app.quit</attribute>
         <attribute name="label" translatable="yes">_Quit</attribute>

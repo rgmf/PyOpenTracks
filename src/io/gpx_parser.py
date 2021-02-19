@@ -22,7 +22,7 @@ import threading
 from xml.etree.ElementTree import XMLParser
 from gi.repository import GLib, GObject
 
-from .track_stats import TrackStats, Track
+from pyopentracks.models.track_stats import TrackStats, Track
 
 
 class GpxParser:

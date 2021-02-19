@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: es.rgmf.pyopentracks 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-17 14:03+0100\n"
+"POT-Creation-Date: 2021-02-24 19:21+0100\n"
 "PO-Revision-Date: 2021-02-17 13:40+0100\n"
 "Last-Translator: roman <rgmf@riseup.net>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
@@ -17,61 +17,81 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../src/layout.py:49
-msgid "Select a track"
-msgstr "Selecciona un track"
+#: ../src/layout.py:51
+msgid ""
+"You can:\n"
+"1.- Import a folder with tracks.\n"
+"2.- Import a track's file.\n"
+"3.- Select a folder to synchronize the tracks files inside it."
+msgstr ""
+"Para empezar, puedes realizar una de las siguientes acciones:\n"
+"1.- Importar una carpeta con ficheros de actividad.\n"
+"2.- Importar un fichero de actividad.\n"
+"3.- Configurar una carpeta para sincronizar todos sus ficheros de actividad."
 
-#: ../src/layout.py:84
+#: ../src/layout.py:54
+msgid "Welcome to PyOpenTracks"
+msgstr "Bienvenid@ a PyOpenTracks"
+
+#: ../src/layout.py:92
 msgid "Track Stats"
 msgstr "Estadísticas de la actividad"
 
-#: ../src/layout.py:91
+#: ../src/layout.py:99
 msgid "Start"
 msgstr "Comienzo"
 
-#: ../src/layout.py:93
+#: ../src/layout.py:101
 msgid "End"
 msgstr "Final"
 
-#: ../src/layout.py:96
+#: ../src/layout.py:104
 msgid "Distance"
 msgstr "Distancia"
 
-#: ../src/layout.py:100
+#: ../src/layout.py:108
 msgid "Moving Time"
 msgstr "Tiempo en movimiento"
 
-#: ../src/layout.py:103
+#: ../src/layout.py:111
 msgid "Total Time"
 msgstr "Tiempo total"
 
-#: ../src/layout.py:106
+#: ../src/layout.py:114
 msgid "Avg. Moving Speed"
 msgstr "Velocidad media en movimiento"
 
-#: ../src/layout.py:110
+#: ../src/layout.py:118
 msgid "Avg. Speed"
 msgstr "Velocidad media"
 
-#: ../src/layout.py:112
+#: ../src/layout.py:120
 msgid "Max. Speed"
 msgstr "Velocidad máxima"
 
-#: ../src/layout.py:114
+#: ../src/layout.py:122
 msgid "Max. Altitude"
 msgstr "Altitud máxima"
 
-#: ../src/layout.py:116
+#: ../src/layout.py:124
 msgid "Min. Altitude"
 msgstr "Altitud mínima"
 
-#: ../src/layout.py:118
+#: ../src/layout.py:126
 msgid "Elevation Gain"
 msgstr "Ganancia de altitud"
 
-#: ../src/layout.py:120
+#: ../src/layout.py:128
 msgid "Elevation Loss"
 msgstr "Pérdida de altitud"
+
+#: ../src/layout.py:252
+msgid "Select a track to view its stats..."
+msgstr "Selecciona una actividad para ver sus estadísticas..."
+
+#: ../src/file_chooser.py:26
+msgid "Select a track file"
+msgstr "Selecciona un fichero"
 
 #: ../src/file_chooser.py:37
 msgid "GPX files"
@@ -89,10 +109,25 @@ msgstr "Ficheros KMZ"
 msgid "Any files"
 msgstr "Cualquier fichero"
 
+#: ../src/file_chooser.py:60
+msgid "Select a folder"
+msgstr "Selecciona una carpeta"
+
 #: ../data/ui/menu.ui:8
+msgid "Import _folder..."
+msgstr "Importar una _carpeta"
+
+#: ../data/ui/menu.ui:12
+msgid "_Import file..."
+msgstr "_Importar un fichero..."
+
+#: ../data/ui/menu.ui:18
 msgid "_Open file..."
 msgstr "_Abrir fichero..."
 
-#: ../data/ui/menu.ui:12
+#: ../data/ui/menu.ui:24
 msgid "_Quit"
 msgstr "_Salir"
+
+#~ msgid "Select a track"
+#~ msgstr "Selecciona un track"

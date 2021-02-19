@@ -17,12 +17,14 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .gpx_parser import GpxParserHandle
+from pyopentracks.io.gpx_parser import GpxParserHandle
 
 from gi.repository import Gtk, Gio, Gdk
 
-from .app_window import PyopentracksWindow
-from .file_chooser import FileChooserWindow
+from pyopentracks.app_window import PyopentracksWindow
+from pyopentracks.views.file_chooser import FileChooserWindow, FolderChooserWindow
+from pyopentracks.models.migrations import Migration
+from pyopentracks.models.database import Database
 
 
 class Application(Gtk.Application):
@@ -33,6 +35,7 @@ class Application(Gtk.Application):
         )
         self._menu: Gio.Menu = Gio.Menu()
         self._window: PyopentracksWindow = None
+        self._settings: Gtk.Settings = None
 
     def do_activate(self):
         stylecontext = Gtk.StyleContext()
@@ -50,10 +53,58 @@ class Application(Gtk.Application):
             win = PyopentracksWindow(application=self)
             self._window = win
             win.set_menu(self._menu)
+            self._load_folder()
         win.present()
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
+        self._setup_menu()
+        self._setup_settings()
+        self._setup_database()
+
+    def on_import_folder(self, action, param):
+        dialog = FolderChooserWindow(parent=self._window)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            self._settings.set_string("trackspath", dialog.get_filename())
+        dialog.destroy()
+
+    def on_import_file(self, action, param):
+        pass
+
+    def on_open_file(self, action, param):
+        dialog = FileChooserWindow(parent=self._window)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            self.load_file(dialog.get_filename(), self._window.load_track_stats)
+        dialog.destroy()
+
+    def on_quit(self, action, param):
+        self.quit()
+
+    def load_file(self, filename: str, cb):
+        """Load the GPX filename and call cb.
+
+        It loads track from GPX filename and call to the cb callback
+        passing it th track object.
+
+        Arguments:
+        filename -- absolute path to a GPX file.
+        cb -- the callback to call after loading.
+        """
+        self._window.loading(0.5)
+        gpxParserHandle = GpxParserHandle()
+        gpxParserHandle.connect("end-parse", self._end_parse_cb)
+        gpxParserHandle.parse(filename, cb)
+
+    def _setup_menu(self):
+        action = Gio.SimpleAction.new("import_folder", None)
+        action.connect("activate", self.on_import_folder)
+        self.add_action(action)
+
+        action = Gio.SimpleAction.new("import_file", None)
+        action.connect("activate", self.on_import_file)
+        self.add_action(action)
 
         action = Gio.SimpleAction.new("open_file", None)
         action.connect("activate", self.on_open_file)
@@ -63,24 +114,33 @@ class Application(Gtk.Application):
         action.connect("activate", self.on_quit)
         self.add_action(action)
 
-        builder = Gtk.Builder.new_from_resource("/es/rgmf/pyopentracks/ui/menu.ui")
+        builder = Gtk.Builder.new_from_resource(
+            "/es/rgmf/pyopentracks/ui/menu.ui"
+        )
         self._menu = builder.get_object("app-menu")
 
-    def on_open_file(self, action, param):
-        dialog = FileChooserWindow(parent=self._window)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            self._load_file(dialog.get_filename())
-        dialog.destroy()
+    def _setup_settings(self):
+        self._settings = Gio.Settings.new("es.rgmf.pyopentracks")
+        self._settings.connect(
+            "changed::trackspath", self._on_settings_folder_changed
+        )
 
-    def on_quit(self, action, param):
-        self.quit()
+    def _setup_database(self):
+        db = Database()
+        if "dbversion" in self._settings.keys():
+            migration = Migration(db, self._settings.get_int("dbversion"))
+        else:
+            migration = Migration(db, None)
+        db_version = migration.migrate()
+        self._settings.set_int("dbversion", db_version)
 
-    def _load_file(self, filename: str):
-        self._window.loading(0.5)
-        gpxParserHandle = GpxParserHandle()
-        gpxParserHandle.connect("end-parse", self._end_parse_cb)
-        gpxParserHandle.parse(filename, self._window.load_track_stats)
+    def _on_settings_folder_changed(self, settings, key):
+        self._load_folder()
+
+    def _load_folder(self):
+        self._window.load_tracks_folder(
+            self._settings.get_value("trackspath").get_string()
+        )
 
     def _end_parse_cb(self, gpxParserHandle):
         self._window.loading(1.0)
