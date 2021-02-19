@@ -1,0 +1,72 @@
+# Data source
+PyOpenTracks offers three possibilities of adding tracks:
+- By importing a file.
+- By importing a folder (it imports all supported track files).
+- By sync a folder (it imports every supported track file in there and it'll maintain sync this folder so every new supported track file will be imported).
+
+Also, PyOpenTracks offer the possiblity of open a track file so the user can see it withouth importing anything.
+
+# Internal data
+All imported files by whatever method will be moved to the internal storage.
+
+Also, PyOpenTracks uses a sqlite database.
+
+# Binary files
+PyOpenTracks save all the data from track files into binary files with this fields (in this order):
+
+## Track ID (32 bytes - 32 characters - "=32s"
+
+128 bits UUID that OpenTracks use to identify all tracks.
+
+The code used to write the UUID to a binary file and recover it again from a binary file is showed here:
+
+```python
+from uuid import UUID
+from struct import pack, unpack
+
+# Creates a UUID object from the UUID read from track file.
+my_uuid = UUID("618af835-1b8f-4417-a446-0ebf62bfe1b8")
+
+# Pack the uuid to save it to a binary file.
+packed_uuid = pack("=32s", my_uuid.hex.encode())
+
+# Recover UUID from binary file: unpack and recreate UUID.
+uuid_frombin = unpack("=32s", packed_uuid)
+my_uuid_recovered = uuid_frombin[0].decode("utf-8")
+```
+
+## Start timestamp in milliseconds (4 bytes - 1 long - "l")
+Then binary file contains the start time in a timestamp unix format. Here it shows the python code that pack and unpack the a timestamp:
+
+```python
+from struct import pack, unpack
+import time
+
+# Pack now time.
+now = int(time.time() * 1000)
+packed_timestamp = pack("l", now)
+
+# Unpack the time.
+unpacked_timestamp = unpack("l", packed_timestamp)[0]
+
+```
+
+## End timestamp in milliseconds (4 bytes - 1 long - "l")
+Then the end timestamp is saved into binary file (the last timestamp in the track file).
+
+## Activity type (2 bytes - 1 short - "h")
+The activity type is a short number representing the activity type. So it's needed to link every number to a string like: road biking, mtb biking, road biking, running, trail running...
+
+This is the code in python to pack and unpack a short number:
+
+```python
+from struct import pack, unpack
+
+# Pack activity type.
+activity_type = 1
+packed = pack("h", activity_type)
+
+# Unpack activity type.
+unpacked = unpack("h", packed)[0]
+```
+

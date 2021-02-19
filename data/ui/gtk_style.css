@@ -4,6 +4,10 @@
     padding: 20px;
 }
 
+.pyot-p-large {
+    font-size: 2em;
+}
+
 .pyot-stats-bg-color {
     background-color: #fefefe;
     padding: 20px;
@@ -16,4 +20,10 @@
 
 .pyot-stats-value {
     font-size: 1.5em;
+}
+
+.pyot-list-tracks-label {
+    font-size: 1.1em;
+    padding: 10px 0px 10px 0px;
+    margin-left: 10px;
 }

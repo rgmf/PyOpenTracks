@@ -23,7 +23,7 @@ from gi.repository import Gtk
 class FileChooserWindow(Gtk.FileChooserDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.set_title("Select a track file")
+        self.set_title(_("Select a track file"))
         self.add_buttons(
             Gtk.STOCK_CANCEL,
             Gtk.ResponseType.CANCEL,
@@ -52,3 +52,16 @@ class FileChooserWindow(Gtk.FileChooserDialog):
         filter_any.set_name(_("Any files"))
         filter_any.add_pattern("*")
         self.add_filter(filter_any)
+
+
+class FolderChooserWindow(Gtk.FileChooserDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.set_title(_("Select a folder"))
+        self.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
+        self.add_buttons(
+            Gtk.STOCK_CANCEL,
+            Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OPEN,
+            Gtk.ResponseType.OK,
+        )

@@ -17,10 +17,12 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from pathlib import Path
+
 from gi.repository import Gtk, GdkPixbuf, WebKit2
 
-from .maps import TrackMap
-from .utils import TypeActivityUtils
+from pyopentracks.views.maps import TrackMap
+from pyopentracks.utils.utils import TypeActivityUtils
 
 
 class Layout():
@@ -46,9 +48,16 @@ class GreeterLayout(Gtk.Box, Layout):
         self._setup_ui()
 
     def _setup_ui(self):
-        label = Gtk.Label(label=_("Select a track"))
-        label.get_style_context().add_class("pyot-h1")
-        self._main_widget.pack_start(label, True, True, 0)
+        helptext = _("You can:\n1.- Import a folder with tracks.\n2.- Import a track's file.\n3.- Select a folder to synchronize the tracks files inside it.")
+        vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
+        vbox.set_homogeneous(False)
+        labelh1 = Gtk.Label(label=_("Welcome to PyOpenTracks"))
+        labelh1.get_style_context().add_class("pyot-h1")
+        labelp = Gtk.Label(label=helptext)
+        labelp.get_style_context().add_class("pyot-p-large")
+        vbox.pack_start(labelh1, False, False, 0)
+        vbox.pack_start(labelp, False, False, 0)
+        self._main_widget.pack_start(vbox, True, True, 0)
 
     def get_top_widget(self):
         return self._top_widget
@@ -62,9 +71,8 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
     _main_widget: Gtk.Grid = Gtk.Template.Child()
     _bottom_widget: Gtk.Box = Gtk.Template.Child()
 
-    def __init__(self, app):
+    def __init__(self):
         super().__init__()
-        self._app = app
 
     def get_top_widget(self):
         return self._top_widget
@@ -211,3 +219,71 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         scrolled_window.add(webview)
 
         self._main_widget.attach(scrolled_window, left, top, width, height)
+
+
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_folder_layout.ui")
+class TracksFolderLayout(Gtk.Box, Layout):
+    __gtype_name__ = "TracksFolderLayout"
+
+    _top_widget: Gtk.Box = Gtk.Template.Child()
+    _main_widget: Gtk.Paned = Gtk.Template.Child()
+    _bottom_widget: Gtk.Box = Gtk.Template.Child()
+
+    _list_widget: Gtk.ListBox = Gtk.Template.Child()
+    _track_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
+
+    class TrackRow(Gtk.ListBoxRow):
+        def __init__(self, path: Path):
+            super().__init__()
+            self._path = path
+
+        @property
+        def path(self):
+            return self._path
+
+    def __init__(self, app, trackspath: Path):
+        super().__init__()
+
+        self._app = app
+
+        self._list_widget.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self._list_widget.connect('row-activated', self._on_row_activated)
+
+        label = Gtk.Label(label=_("Select a track to view its stats..."))
+        label.get_style_context().add_class("pyot-h1")
+        self._add_widget(label)
+
+        self._trackspath = trackspath
+        self._load_data()
+
+    def get_top_widget(self):
+        return self._top_widget
+
+    def _load_data(self):
+        for path in self._trackspath.glob("*.gpx"):
+            row = TracksFolderLayout.TrackRow(path)
+            label = Gtk.Label(label=path.name, xalign=0.0)
+            label.get_style_context().add_class("pyot-list-tracks-label")
+            row.add(label)
+            self._list_widget.add(row)
+
+    def _on_row_activated(self, listbox, row):
+        self._app.load_file(row.path.absolute(), self._load_track_stats)
+
+    def _load_track_stats(self, track):
+        layout = TrackStatsLayout()
+        layout.load_data(track)
+        self._add_widget(layout)
+
+    def _add_widget(self, widget):
+        """Add the widget to _track_stats_widget.
+
+        Arguments:
+        widget -- the widget to add to ScrolledWindow _track_stats_widget.
+        """
+        if self._track_stats_widget and self._track_stats_widget.get_child():
+            self._track_stats_widget.remove(
+                self._track_stats_widget.get_child()
+            )
+        self._track_stats_widget.add(widget)
+        self.show_all()

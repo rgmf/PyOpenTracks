@@ -17,9 +17,12 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
+from pathlib import Path
+
 from gi.repository import Gtk, Gio
 
-from .layout import TrackStatsLayout, GreeterLayout
+from pyopentracks.views.layout import TrackStatsLayout, GreeterLayout, TracksFolderLayout
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
@@ -55,9 +58,22 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         Arguments:
         track -- Track object with all stats and information.
         """
-        layout = TrackStatsLayout(self._app)
+        layout = TrackStatsLayout()
         layout.load_data(track)
         self.show_layout(layout)
+
+    def load_tracks_folder(self, trackspath: str):
+        """Load tracks folder layout.
+
+        Arguments:
+        trackspath -- path where tracks are.
+        """
+        if not trackspath or not os.path.isdir(trackspath):
+            # TODO this message should be printed to LOG system when added.
+            print(f"Error: path '{trackspath}' is not a valid one.")
+            self.show_layout(GreeterLayout())
+        else:
+            self.show_layout(TracksFolderLayout(self._app, Path(trackspath)))
 
     def loading(self, total):
         """Handle a progress bar on the top of the loaded Layout.

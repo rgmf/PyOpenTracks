@@ -4,6 +4,7 @@
     <file>ui/window.ui</file>
     <file>ui/track_stats_layout.ui</file>
     <file>ui/greeter_layout.ui</file>
+    <file>ui/tracks_folder_layout.ui</file>
 
     <file>ui/menu.ui</file>
 

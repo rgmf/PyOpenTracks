@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="pyopentracks">
-	<schema id="es.rgmf.pyopentracks" path="/es/rgmf/pyopentracks/">
-	</schema>
+  <schema id="es.rgmf.pyopentracks" path="/es/rgmf/pyopentracks/" gettext-domain="es.rgmf.pyopentracks">
+    <key name="dbversion" type="i">
+      <default>1</default>
+      <summary>Database version</summary>
+      <description>Database version actually used.</description>
+    </key>
+    <key name="trackspath" type="s">
+      <default>''</default>
+      <summary>Track's Path</summary>
+      <description>Select a directory where PyOpenTracks will load all tracks from.</description>
+    </key>
+  </schema>
 </schemalist>

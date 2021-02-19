@@ -21,11 +21,11 @@ from datetime import datetime
 from parser import ParserError
 from math import radians, sin, cos, asin, sqrt
 
-from .utils import DateTimeUtils as dtu
-from .utils import TimeUtils as tu
-from .utils import DistanceUtils as du
-from .utils import SpeedUtils as su
-from .utils import ElevationUtils as eu
+from pyopentracks.utils.utils import DateTimeUtils as dtu
+from pyopentracks.utils.utils import TimeUtils as tu
+from pyopentracks.utils.utils import DistanceUtils as du
+from pyopentracks.utils.utils import SpeedUtils as su
+from pyopentracks.utils.utils import ElevationUtils as eu
 
 
 class Track:
