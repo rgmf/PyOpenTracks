@@ -12,6 +12,24 @@
         <property name="can_focus">False</property>
         <property name="title">Hello, World!</property>
         <property name="show_close_button">True</property>
+	<child>
+	  <object class="GtkButton" id="_back_btn">
+            <property name="visible">False</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <child>
+              <object class="GtkImage" id="_back_menu_image">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">go-previous</property>
+                <property name="icon_size">1</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack_type">start</property>
+          </packing>
+	</child>
         <child>
           <object class="GtkMenuButton" id="_primary_menu_btn">
             <property name="visible">True</property>

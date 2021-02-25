@@ -1,0 +1,113 @@
+"""
+Copyright (C) 2020 Román Ginés Martínez Ferrández <rgmf@riseup.net>
+
+This file is part of PyOpenTracks.
+
+PyOpenTracks is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+PyOpenTracks is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
+"""
+
+from gi.repository import Gtk
+
+from pyopentracks.io.import_handler import ImportFolderHandler
+
+
+class MessageDialogError(Gtk.MessageDialog):
+
+    def __init__(self, **kwargs):
+        super().__init__(
+            **kwargs,
+            flags=0,
+            message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.OK
+        )
+        image = Gtk.Image()
+        image.set_from_icon_name("dialog-error", Gtk.IconSize.DIALOG)
+        image.show()
+        self.set_image(image)
+
+    def show(self):
+        self.run()
+        self.destroy()
+
+
+class ImportResultDialog(Gtk.Dialog):
+
+    def __init__(self, parent, folder):
+        Gtk.Dialog.__init__(
+            self,
+            title=_("Importing..."),
+            transient_for=parent,
+            flags=0
+        )
+        self._total = 0
+        self._folder = folder
+        self._box = self.get_content_area()
+        self._progress = Gtk.ProgressBar()
+        self._label = None
+        self._list_box = None
+        self._setup_ui()
+        self._start_importing()
+
+    def _setup_ui(self):
+        self._label = Gtk.Label(
+            label=_(f"Importing files from folder:\n{self._folder}")
+        )
+        self._label.get_style_context().add_class("pyot-p-medium")
+
+        scrolled_window = Gtk.ScrolledWindow()
+        viewport = Gtk.Viewport()
+        self._list_box = Gtk.ListBox()
+
+        viewport.add(self._list_box)
+        scrolled_window.add(viewport)
+
+        self._box.pack_start(self._progress, False, False, 0)
+        self._box.pack_start(self._label, True, True, 0)
+        self._box.pack_start(scrolled_window, True, True, 0)
+
+        self.set_default_size(400, 300)
+
+        self.show_all()
+        self._list_box.hide()
+
+    def _start_importing(self):
+        self._progress.set_fraction(0)
+        handler = ImportFolderHandler()
+        handler.connect("total-files-to-import", self._total_files_cb)
+        handler.connect("end-import-file", self._end_import_file_cb)
+        handler.import_folder(self._folder, self._import_ended_cb)
+
+    def _total_files_cb(self, handler: ImportFolderHandler, total_files):
+        self._total = total_files
+        self._label.set_text(f"0 / {self._total}")
+
+    def _end_import_file_cb(self, handler: ImportFolderHandler, num):
+        self._progress.set_fraction(num / self._total)
+        self._label.set_text(f"{num} / {self._total}")
+
+    def _import_ended_cb(self, result: dict):
+        self._label.set_text(_(f"Total imported: {result['imported']}"))
+        if len(result["errors"]) > 0:
+            self._label.set_text(
+                self._label.get_text() + ".\n" +
+                _("Finished with errors") + ":"
+            )
+            for e in result["errors"]:
+                row = Gtk.ListBoxRow()
+                label = Gtk.Label(label=e, xalign=0.0)
+                row.add(label)
+                self._list_box.add(row)
+            self._list_box.show_all()
+
+        self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)

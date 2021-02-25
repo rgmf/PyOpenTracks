@@ -6,12 +6,32 @@ PyOpenTracks offers three possibilities of adding tracks:
 
 Also, PyOpenTracks offer the possiblity of open a track file so the user can see it withouth importing anything.
 
+## Open a track
+User can open a supported track file and see all its stats.
+
+When a file is opened then a parser is executed and `TrackStats` is used to compute stats.
+
+At the end of the parser process a `Track` object is built from `TrackStats` (including the list of `TrackPoint`.
+
+Database and internal storage isn't touch. So it's an option that user can use only for see stats from a supported track file.
+
+## Importing a file
+User can import a supported track file.
+
+In this case a parser is executed and it uses `TrackStats` to compute the stats and creates a `Track` object.
+
+Now, PyOpenTracks looks for a `Track` like this in the database. If `Track` is a new one then PyOpenTracks will save it into the database and it will move the track file to internal storage.
+
+PyOpenTracks check for a duplication `Track` in this way:
+- Checks that there is not a track with the same UUID (if any).
+- Checks that there is not a track between starttime and endtime. 
+
 # Internal data
 All imported files by whatever method will be moved to the internal storage.
 
-Also, PyOpenTracks uses a sqlite database.
+Also, PyOpenTracks uses a sqlite database where all tracks are saved with its stats.
 
-# Binary files
+# Binary files (deprecated)
 PyOpenTracks save all the data from track files into binary files with this fields (in this order):
 
 ## Track ID (32 bytes - 32 characters - "=32s"

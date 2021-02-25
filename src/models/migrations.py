@@ -44,6 +44,7 @@ class Migration:
         query = """
         CREATE TABLE tracks (
         _id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trackfile TEXT,
         uuid BLOB,
         name TEXT,
         description TEXT,
@@ -54,6 +55,7 @@ class Migration:
         totaltime INTEGER,
         movingtime INTEGER,
         avgspeed FLOAT,
+        avgmovingspeed FLOAT,
         maxspeed FLOAT,
         minelevation FLOAT,
         maxelevation FLOAT,
