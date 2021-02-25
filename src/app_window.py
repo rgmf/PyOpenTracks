@@ -17,12 +17,13 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import os
-from pathlib import Path
-
 from gi.repository import Gtk, Gio
 
-from pyopentracks.views.layout import TrackStatsLayout, GreeterLayout, TracksFolderLayout
+from pyopentracks.views.layout import (
+    TrackStatsLayout, GreeterLayout, TracksLayout
+)
+from pyopentracks.utils.utils import TrackPointUtils
+from pyopentracks.views.dialogs import MessageDialogError
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
@@ -30,6 +31,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "PyopentracksWindow"
 
     _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
+    _back_btn: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -47,33 +49,48 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
         self._layout = layout
         self.add(self._layout)
-        self.show_all()
 
     def set_menu(self, menu: Gio.Menu):
+        self._back_btn.connect(
+            "clicked",
+            lambda button: self._app.back_button_clicked(button)
+        )
         self._primary_menu_btn.set_menu_model(menu)
 
-    def load_track_stats(self, track):
+    def load_track_stats(self, result: dict):
         """Load track stats layout with new track.
 
         Arguments:
-        track -- Track object with all stats and information.
+        result -- dictionary with the following keys:
+                  - file: path's file.
+                  - track: Track object or None if any error.
+                  - error: message's error or None.
         """
-        layout = TrackStatsLayout()
-        layout.load_data(track)
-        self.show_layout(layout)
+        track = result["track"]
+        if not track:
+            MessageDialogError(
+                transient_for=self,
+                text=(
+                    _(f"Error opening the file {result['file']}") +
+                    ": \n" + result["message"]
+                ),
+                title=_("Error opening track file")
+            ).show()
+        else:
+            layout = TrackStatsLayout()
+            layout.load_data(track)
+            layout.load_map(TrackPointUtils.to_locations(track.track_points))
+            self.show_layout(layout)
+            self._back_btn.show()
 
-    def load_tracks_folder(self, trackspath: str):
-        """Load tracks folder layout.
+    def load_tracks(self, tracks):
+        """Load all tracks in the correspondig layout.
 
         Arguments:
-        trackspath -- path where tracks are.
+        tracks -- a list of Track objects.
         """
-        if not trackspath or not os.path.isdir(trackspath):
-            # TODO this message should be printed to LOG system when added.
-            print(f"Error: path '{trackspath}' is not a valid one.")
-            self.show_layout(GreeterLayout())
-        else:
-            self.show_layout(TracksFolderLayout(self._app, Path(trackspath)))
+        if tracks and len(tracks) > 0:
+            self.show_layout(TracksLayout(self._app, tracks))
 
     def loading(self, total):
         """Handle a progress bar on the top of the loaded Layout.
@@ -102,7 +119,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             progress = Gtk.ProgressBar()
             top_widget.pack_start(progress, True, False, 0)
             progress.set_fraction(total)
-            self.show_all()
+            top_widget.show_all()
         else:
             progress = top_widget.get_children()[0]
             progress.set_fraction(total)

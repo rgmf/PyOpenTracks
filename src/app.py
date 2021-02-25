@@ -17,14 +17,22 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pyopentracks.io.gpx_parser import GpxParserHandle
-
 from gi.repository import Gtk, Gio, Gdk
 
+from pyopentracks.io.gpx_parser import GpxParserHandle
 from pyopentracks.app_window import PyopentracksWindow
-from pyopentracks.views.file_chooser import FileChooserWindow, FolderChooserWindow
+from pyopentracks.views.file_chooser import (
+    FileChooserWindow, FolderChooserWindow
+)
 from pyopentracks.models.migrations import Migration
 from pyopentracks.models.database import Database
+from pyopentracks.io.import_handler import (
+    ImportHandler, ImportFileHandler
+)
+from pyopentracks.views.dialogs import (
+    MessageDialogError,
+    ImportResultDialog
+)
 
 
 class Application(Gtk.Application):
@@ -36,6 +44,7 @@ class Application(Gtk.Application):
         self._menu: Gio.Menu = Gio.Menu()
         self._window: PyopentracksWindow = None
         self._settings: Gtk.Settings = None
+        self._db: Database = Database()
 
     def do_activate(self):
         stylecontext = Gtk.StyleContext()
@@ -53,7 +62,7 @@ class Application(Gtk.Application):
             win = PyopentracksWindow(application=self)
             self._window = win
             win.set_menu(self._menu)
-            self._load_folder()
+            self._load_tracks()
         win.present()
 
     def do_startup(self):
@@ -62,21 +71,13 @@ class Application(Gtk.Application):
         self._setup_settings()
         self._setup_database()
 
-    def on_import_folder(self, action, param):
-        dialog = FolderChooserWindow(parent=self._window)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            self._settings.set_string("trackspath", dialog.get_filename())
-        dialog.destroy()
-
-    def on_import_file(self, action, param):
-        pass
-
     def on_open_file(self, action, param):
         dialog = FileChooserWindow(parent=self._window)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            self.load_file(dialog.get_filename(), self._window.load_track_stats)
+            self.load_file(
+                dialog.get_filename(), self._window.load_track_stats
+            )
         dialog.destroy()
 
     def on_quit(self, action, param):
@@ -94,16 +95,20 @@ class Application(Gtk.Application):
         """
         self._window.loading(0.5)
         gpxParserHandle = GpxParserHandle()
-        gpxParserHandle.connect("end-parse", self._end_parse_cb)
+        gpxParserHandle.connect("end-parse", self._end_load_file_cb)
         gpxParserHandle.parse(filename, cb)
+
+    def back_button_clicked(self, back_btn):
+        back_btn.hide()
+        self._load_tracks()
 
     def _setup_menu(self):
         action = Gio.SimpleAction.new("import_folder", None)
-        action.connect("activate", self.on_import_folder)
+        action.connect("activate", self._on_import_folder)
         self.add_action(action)
 
         action = Gio.SimpleAction.new("import_file", None)
-        action.connect("activate", self.on_import_file)
+        action.connect("activate", self._on_import_file)
         self.add_action(action)
 
         action = Gio.SimpleAction.new("open_file", None)
@@ -126,21 +131,68 @@ class Application(Gtk.Application):
         )
 
     def _setup_database(self):
-        db = Database()
-        if "dbversion" in self._settings.keys():
-            migration = Migration(db, self._settings.get_int("dbversion"))
-        else:
-            migration = Migration(db, None)
+        migration = Migration(self._db, self._settings.get_int("dbversion"))
         db_version = migration.migrate()
         self._settings.set_int("dbversion", db_version)
 
     def _on_settings_folder_changed(self, settings, key):
-        self._load_folder()
+        #self._load_folder()
+        # dialog = FolderChooserWindow(parent=self._window)
+        # response = dialog.run()
+        # if response == Gtk.ResponseType.OK:
+        #     self._settings.set_string("trackspath", dialog.get_filename())
+        # dialog.destroy()
+        pass
 
-    def _load_folder(self):
-        self._window.load_tracks_folder(
-            self._settings.get_value("trackspath").get_string()
-        )
+    def _load_tracks(self):
+        self._window.load_tracks(self._db.get_tracks())
 
-    def _end_parse_cb(self, gpxParserHandle):
+    def _end_load_file_cb(self, gpxParserHandle):
         self._window.loading(1.0)
+
+    def _on_import_folder(self, action, param):
+        dialog = FolderChooserWindow(parent=self._window)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            folder = dialog.get_filename()
+            dialog.destroy()
+            import_dialog = ImportResultDialog(
+                parent=self._window,
+                folder=folder
+            )
+            response = import_dialog.run()
+            self._load_tracks()
+            import_dialog.destroy()
+        else:
+            dialog.destroy()
+
+    def _on_import_file(self, action, param):
+        dialog = FileChooserWindow(parent=self._window)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            self._window.loading(0.5)
+            handler = ImportFileHandler()
+            handler.import_file(dialog.get_filename(), self._import_ended)
+        dialog.destroy()
+
+    def _import_ended(self, result: dict):
+        """Called when file importing is finished.
+
+        Arguments:
+        result -- a dict with the following keys:
+                  - file: file's path.
+                  - import: the result.
+                  - message: the message.
+        """
+        self._window.loading(1.0)
+        if result["import"] == ImportHandler.OK:
+            self._load_tracks()
+        else:
+            MessageDialogError(
+                transient_for=self._window,
+                text=(
+                    _(f"Error importing the file {result['file']}") +
+                    ": \n" + result["message"]
+                ),
+                title=_("Error importing track file")
+            ).show()

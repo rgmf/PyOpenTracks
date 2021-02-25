@@ -22,14 +22,17 @@ import folium
 
 
 class TrackMap(folium.Map):
-    def __init__(self, track_stats):
-        super().__init__(location=track_stats._locations[0], zoom_start=13)
-        folium.PolyLine(
-            locations=track_stats._locations,
-            popup="Path",
-            tooltip="Path",
-            color="green"
-        ).add_to(self)
+    def __init__(self, locations):
+        if locations:
+            super().__init__(location=locations[0], zoom_start=13)
+            folium.PolyLine(
+                locations=locations,
+                popup="Path",
+                tooltip="Path",
+                color="green"
+            ).add_to(self)
+        else:
+            super().__init__()
 
         self._data = io.BytesIO()
         self.save(self._data, close_file=False)

@@ -20,14 +20,15 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 import sqlite3
 from os import path, makedirs
 
-from ..settings import xdg_data_home
+from pyopentracks.settings import xdg_data_home
+from pyopentracks.models.track import Track
 
 
 class Database:
     """SQLite database handler."""
 
     def __init__(self):
-        makedirs(path.dirname(self._db_file), exist_ok=True)
+        #makedirs(path.dirname(self._db_file), exist_ok=True)
         self._conn = sqlite3.connect(self._db_file)
 
     @property
@@ -50,3 +51,90 @@ class Database:
         except Exception as error:
             # TODO add this error message to a logger system
             print(f"Error: [SQL] Couldn't execute the query: {error}: {query}")
+
+    def get_track_by_id(self, _id):
+        """Return Track object from _id.
+
+        Arguments:
+        _id -- id of the track to look up in the database.
+
+        Return:
+        Track object or None if there is any Track identified by _id.
+        """
+        try:
+            query = "SELECT * FROM tracks WHERE _id=?"
+            tuple_result = self._conn.execute(query, (_id,)).fetchone()
+            if tuple_result:
+                return Track(*tuple_result)
+        except Exception as error:
+            # TODO add this error message to a logger system
+            print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return None
+
+    def get_tracks(self):
+        """Get all tracks from database.
+
+        Return:
+        list of Track object sorted by start time.
+        """
+        try:
+            query = "SELECT * FROM tracks ORDER BY starttime DESC"
+            return [
+                Track(*track) for track in self._conn.execute(query).fetchall()
+            ]
+        except Exception as error:
+            # TODO add this error message to a logger system
+            print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
+    def get_existed_tracks(self, uuid, start, end):
+        """"Look for a Track from arguments.
+
+        Look for a track that has the same uuid or has the same start and
+        end time.
+
+        Arguments:
+        uuid -- UUID that could be None.
+        start -- start time in milliseconds.
+        end -- end time in milliseconds.
+
+        Return:
+        list of tracks or None.
+
+        Raise:
+        raise the exception could be triggered.
+        """
+        try:
+            query = """
+            SELECT * FROM tracks
+            WHERE uuid=? OR (starttime=? and stoptime=?)
+            """
+            tracks = self._conn.execute(query, (uuid, start, end)).fetchall()
+            if tracks:
+                return [Track(*track) for track in tracks]
+            return None
+        except Exception as error:
+            # TODO add this error message to a logger system
+            error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+            print(error_msg)
+            raise
+
+    def insert(self, model):
+        """Insert the model in the database.
+
+        Arguments:
+        model -- Model object to be inserted.
+
+        Return:
+        last row id or None if any model was inserted.
+        """
+        try:
+            cursor = self._conn.cursor()
+            cursor.execute(model.insert_query, model.fields)
+            self._conn.commit()
+            return cursor.lastrowid
+        except Exception as error:
+            # TODO add this error message to a logger system
+            error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+            print(error_msg)
+        return None

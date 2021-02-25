@@ -17,21 +17,21 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from os import path, makedirs
-from pathlib import Path
 
-from gi.repository import GLib
+class TrackPoint:
 
+    def __init__(self):
+        self.location = {"longitude": None, "latitude": None}
+        self.time = None
+        self.speed = None
+        self.elevation = None
+        self.elevation_gain = None
+        self.elevation_loss = None
+        self.heart_rate = None
+        self.cadence = None
+        self.power = None
 
-def xdg_data_home() -> str:
-    p = Path(path.join(GLib.get_user_data_dir(), "PyOpenTracks"))
-    if not p.exists():
-        makedirs(p.absolute())
-    return path.join(GLib.get_user_data_dir(), "PyOpenTracks")
-
-
-def imported_tracks_folder() -> str:
-    p = Path(path.join(xdg_data_home(), "trackfiles"))
-    if not p.exists():
-        makedirs(p.absolute())
-    return path.join(xdg_data_home(), "trackfiles")
+    @property
+    def location_tuple(self):
+        """Build and return a tuple object representing location."""
+        return (float(self.location["latitude"]), float(self.location["longitude"]))

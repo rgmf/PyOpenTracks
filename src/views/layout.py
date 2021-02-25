@@ -17,12 +17,12 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pathlib import Path
-
 from gi.repository import Gtk, GdkPixbuf, WebKit2
 
 from pyopentracks.views.maps import TrackMap
-from pyopentracks.utils.utils import TypeActivityUtils
+from pyopentracks.utils.utils import TypeActivityUtils as TAU
+from pyopentracks.models.database import Database
+from pyopentracks.io.gpx_parser import GpxLocationsHandle
 
 
 class Layout():
@@ -32,7 +32,7 @@ class Layout():
         self._bottom_widget = None
 
     def get_top_widget(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/greeter_layout.ui")
@@ -46,6 +46,7 @@ class GreeterLayout(Gtk.Box, Layout):
     def __init__(self):
         super().__init__()
         self._setup_ui()
+        self.show_all()
 
     def _setup_ui(self):
         helptext = _("You can:\n1.- Import a folder with tracks.\n2.- Import a track's file.\n3.- Select a folder to synchronize the tracks files inside it.")
@@ -83,8 +84,6 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         Arguments:
         track -- Track object with stats and all information.
         """
-        track_stats = track.track_stats
-
         self._main_widget.foreach(
             lambda child: self._main_widget.remove(child)
         )
@@ -96,38 +95,44 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         # Track's name, description and type
         self._add_info_track(track, 0, 1, 2, 1)
         # Start datetime
-        self._add_item(_("Start"), track_stats.start_time, 0, 2, 1, 1)
+        self._add_item(_("Start"), track.start_time, 0, 2, 1, 1)
         # End datetime
-        self._add_item(_("End"), track_stats.end_time, 1, 2, 1, 1)
+        self._add_item(_("End"), track.end_time, 1, 2, 1, 1)
         # Total distance
-        self._add_item(
-            _("Distance"), track_stats.total_distance, 0, 3, 1, 1
-        )
+        self._add_item(_("Distance"), track.total_distance, 0, 3, 1, 1)
         # Total moving time
-        self._add_item(
-            _("Moving Time"), track_stats.moving_time, 1, 3, 1, 1
-        )
+        self._add_item(_("Moving Time"), track.moving_time, 1, 3, 1, 1)
         # Total time
-        self._add_item(_("Total Time"), track_stats.total_time, 0, 4, 1, 1)
+        self._add_item(_("Total Time"), track.total_time, 0, 4, 1, 1)
         # Avg. moving speed
         self._add_item(
             _("Avg. Moving Speed"),
-            track_stats.avg_moving_speed, 0, 5, 1, 1
-        )
+            track.avg_moving_speed, 0, 5, 1, 1)
         # Avg. speed
-        self._add_item(_("Avg. Speed"), track_stats.avg_speed, 1, 5, 1, 1)
+        self._add_item(_("Avg. Speed"), track.avg_speed, 1, 5, 1, 1)
         # Max. speed
-        self._add_item(_("Max. Speed"), track_stats.max_speed, 0, 6, 1, 1)
+        self._add_item(_("Max. Speed"), track.max_speed, 0, 6, 1, 1)
         # Max. elevation
-        self._add_item(_("Max. Altitude"), track_stats.max_elevation, 0, 7, 1, 1)
+        self._add_item(_("Max. Altitude"), track.max_elevation, 0, 7, 1, 1)
         # Min. elevation
-        self._add_item(_("Min. Altitude"), track_stats.min_elevation, 1, 7, 1, 1)
+        self._add_item(_("Min. Altitude"), track.min_elevation, 1, 7, 1, 1)
         # Gain elevation
-        self._add_item(_("Elevation Gain"), track_stats.gain_elevation, 0, 8, 1, 1)
+        self._add_item(_("Elevation Gain"), track.gain_elevation, 0, 8, 1, 1)
         # Loss elevation
-        self._add_item(_("Elevation Loss"), track_stats.loss_elevation, 1, 8, 1, 1)
+        self._add_item(_("Elevation Loss"), track.loss_elevation, 1, 8, 1, 1)
+
+        self.show_all()
+
+    def load_map(self, locations):
+        """Load the map with the locations.
+        
+        Arguments:
+        locations -- list of tuple with two items (float):
+                     latitude and longitude.
+        """
         # Map
-        self._add_map(track_stats, 2, 1, 2, 8)
+        self._add_map(locations, 2, 1, 2, 8)
+        self.show_all()
 
     def _add_info_track(self, track, left, top, width, height):
         """Adds track information to main widget.
@@ -146,7 +151,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         hbox.set_homogeneous(False)
 
         pixbuf = GdkPixbuf.Pixbuf.new_from_resource_at_scale(
-            resource_path=TypeActivityUtils.get_icon_resource(track.activity_type),
+            resource_path=TAU.get_icon_resource(track.activity_type),
             width=48,
             height=48,
             preserve_aspect_ratio=True
@@ -202,17 +207,17 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
         self._main_widget.attach(vbox, left, top, width, height)
 
-    def _add_map(self, track_stats, left, top, width, height):
-        """Adds a map with track_stats values into the _main_widget.
+    def _add_map(self, locations, left, top, width, height):
+        """Adds a map with track_points values into the _main_widget.
 
         Arguments:
-        track_stats -- TrackStats's object.
+        locations -- a list of locations.
         left -- the column number to attach the left side of map to.
         top -- the row number to attach the top side of map to.
         width --  the number of columns that map will span.
         height -- the number of rows that map will span.
         """
-        m = TrackMap(track_stats)
+        m = TrackMap(locations)
         scrolled_window = Gtk.ScrolledWindow()
         webview = WebKit2.WebView()
         webview.load_html(m.get_data().getvalue().decode())
@@ -221,9 +226,9 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._main_widget.attach(scrolled_window, left, top, width, height)
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_folder_layout.ui")
-class TracksFolderLayout(Gtk.Box, Layout):
-    __gtype_name__ = "TracksFolderLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
+class TracksLayout(Gtk.Box, Layout):
+    __gtype_name__ = "TracksLayout"
 
     _top_widget: Gtk.Box = Gtk.Template.Child()
     _main_widget: Gtk.Paned = Gtk.Template.Child()
@@ -233,47 +238,82 @@ class TracksFolderLayout(Gtk.Box, Layout):
     _track_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
 
     class TrackRow(Gtk.ListBoxRow):
-        def __init__(self, path: Path):
+        def __init__(self, _id, path):
             super().__init__()
+            self._id = _id
             self._path = path
+
+        @property
+        def id(self):
+            return self._id
 
         @property
         def path(self):
             return self._path
 
-    def __init__(self, app, trackspath: Path):
+    def __init__(self, app, tracks):
         super().__init__()
 
         self._app = app
+        self._db = Database()
 
         self._list_widget.set_selection_mode(Gtk.SelectionMode.SINGLE)
         self._list_widget.connect('row-activated', self._on_row_activated)
 
-        label = Gtk.Label(label=_("Select a track to view its stats..."))
-        label.get_style_context().add_class("pyot-h1")
-        self._add_widget(label)
+        self._show_message(_("Select a track to view its stats..."))
 
-        self._trackspath = trackspath
+        self._tracks = tracks
         self._load_data()
+
+        self.show_all()
 
     def get_top_widget(self):
         return self._top_widget
 
     def _load_data(self):
-        for path in self._trackspath.glob("*.gpx"):
-            row = TracksFolderLayout.TrackRow(path)
-            label = Gtk.Label(label=path.name, xalign=0.0)
+        for track in self._tracks:
+            row = TracksLayout.TrackRow(track._id, track.trackfile_path)
+            label = Gtk.Label(label=track.name, xalign=0.0)
             label.get_style_context().add_class("pyot-list-tracks-label")
             row.add(label)
             self._list_widget.add(row)
 
     def _on_row_activated(self, listbox, row):
-        self._app.load_file(row.path.absolute(), self._load_track_stats)
+        track = self._db.get_track_by_id(row.id)
+        if not track:
+            self._show_message(_("There was an error and the track cannot be showed"))
+            return
+        self._load_track_stats(track)
+        loc_handle = GpxLocationsHandle()
+        loc_handle.get_locations(track.trackfile_path, self._on_locations_end)
+
+    def _on_locations_end(self, locations):
+        """Load a map with locations.
+
+        Check if there is a TrackStatsLayout widget inside the Viewport
+        of the ScrolledWindow _track_stats_widget.
+
+        If all is ready then load map with locations.
+        """
+        if (
+            not self._track_stats_widget or
+            not self._track_stats_widget.get_child()
+        ):
+            return
+
+        child = self._track_stats_widget.get_child().get_child()
+        if child and isinstance(child, TrackStatsLayout):
+            child.load_map(locations)
 
     def _load_track_stats(self, track):
         layout = TrackStatsLayout()
         layout.load_data(track)
         self._add_widget(layout)
+
+    def _show_message(self, msg):
+        label = Gtk.Label(label=_("Select a track to view its stats..."))
+        label.get_style_context().add_class("pyot-h1")
+        self._add_widget(label)
 
     def _add_widget(self, widget):
         """Add the widget to _track_stats_widget.

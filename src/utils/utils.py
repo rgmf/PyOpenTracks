@@ -31,6 +31,8 @@ class DateTimeUtils:
         Returns:
         An string representing the timestamp_ms in a human readable style.
         """
+        if not timestamp_ms:
+            return "-"
         return datetime.fromtimestamp(timestamp_ms / 1000).strftime(
             "%a, %d %b %Y %H:%M:%S %Z"
         )
@@ -47,6 +49,8 @@ class TimeUtils:
         Returns:
         An string representing the time in HH:MM:SS format.
         """
+        if not time_ms:
+            return "-"
         return str(timedelta(seconds=int(time_ms / 1000)))
 
 
@@ -61,6 +65,8 @@ class DistanceUtils:
         Returns:
         An string representing the distance (in meters or km).
         """
+        if not distance_m:
+            return "-"
         return (
             str(int(distance_m)) + " m" if distance_m < 1000
             else str(round(distance_m / 1000, 2)) + " km"
@@ -78,6 +84,8 @@ class SpeedUtils:
         Returns:
         An string representing the speed_mps in a human readable format.
         """
+        if not speed_mps:
+            return "-"
         return str(round(speed_mps * 3.6, 1)) + " km/h"
 
 
@@ -92,6 +100,8 @@ class ElevationUtils:
         Returns:
         An string representing the elevation.
         """
+        if not elevation_m:
+            return "-"
         return (
             str(int(elevation_m)) + " m" if elevation_m is not None else "- m"
         )
@@ -124,8 +134,20 @@ class TypeActivityUtils:
     @staticmethod
     def get_icon_resource(activity_type: str) -> str:
         """Gets and returns resource path icon for activity's type."""
+        if not activity_type:
+            return "/es/rgmf/pyopentracks/icons/unknown_black_48dp.svg"
         icon = TypeActivityUtils._types.get(activity_type)
         if icon is None:
             return "/es/rgmf/pyopentracks/icons/unknown_black_48dp.svg"
 
         return "/es/rgmf/pyopentracks/" + icon
+
+
+class TrackPointUtils:
+
+    @staticmethod
+    def to_locations(trackpoints):
+        """Convert a list of track points to locations."""
+        if not trackpoints:
+            return []
+        return [tp.location_tuple for tp in trackpoints]
