@@ -10,6 +10,10 @@ This project is in an early stage so the current features are growing little by 
 
 Currently, the features are:
 - Open a GPX file to see all stats and the track on a map.
+- Import GPX files.
+- Import folders (PyOpenTracks gets all GPX files and import all of them).
+
+Users can see the list of all GPX files imported.
 
 # Develop, test, use, check it out...
 If you want to check PyOpenTracks out, participate in the development... you can read [DEVELOPMENT.md](DEVELOPMENT.md) to has PyOpenTracks ready to execute and use.
