@@ -159,15 +159,17 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         icon = Gtk.Image.new_from_pixbuf(pixbuf)
 
         name_label = Gtk.Label(label=track.name)
+        name_label.set_line_wrap(True)
+        name_label.set_justify(Gtk.Justification.LEFT)
         name_label.get_style_context().add_class("pyot-stats-header")
-        name_label.set_xalign(0.0)
 
         hbox.pack_start(icon, expand=False, fill=True, padding=0)
         hbox.pack_start(name_label, expand=False, fill=True, padding=10)
 
         desc_label = Gtk.Label(label=track.description)
+        desc_label.set_line_wrap(True)
+        desc_label.set_justify(Gtk.Justification.LEFT)
         desc_label.get_style_context().add_class("pyot-stats-value")
-        desc_label.set_xalign(0.0)
 
         vbox.pack_start(hbox, True, True, 0)
         vbox.pack_start(desc_label, True, True, 0)
@@ -176,7 +178,8 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def _add_item(
             self, label_text, value, left, top, width, height,
-            label_align=0.5, value_align=0.5
+            label_align=Gtk.Justification.CENTER,
+            value_align=Gtk.Justification.CENTER
     ):
         """Adds an stat item into the _main_widget (Gtk.Grid).
 
@@ -187,8 +190,8 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         top -- the row number to attach the top side of item to.
         width --  the number of columns that item will span.
         height -- the number of rows that item will span.
-        label_align -- (optional) xalign value for label (0.5 by default).
-        value_align -- (optional) xalign value for value (0.5 by default).
+        label_align -- (optional) justify value for label (center by default).
+        value_align -- (optional) justify value for value (center by default).
         """
         vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
         vbox.get_style_context().add_class("pyot-stats-bg-color")
@@ -196,11 +199,11 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
         label = Gtk.Label(label=label_text)
         label.get_style_context().add_class("pyot-stats-header")
-        label.set_xalign(label_align)
+        label.set_justify(label_align)
 
         value = Gtk.Label(label=value)
         value.get_style_context().add_class("pyot-stats-value")
-        value.set_xalign(value_align)
+        value.set_justify(value_align)
 
         vbox.pack_start(label, True, True, 0)
         vbox.pack_start(value, True, True, 0)
@@ -273,7 +276,8 @@ class TracksLayout(Gtk.Box, Layout):
     def _load_data(self):
         for track in self._tracks:
             row = TracksLayout.TrackRow(track._id, track.trackfile_path)
-            label = Gtk.Label(label=track.name, xalign=0.0)
+            label = Gtk.Label(label=track.name)
+            label.set_justify(Gtk.Justification.LEFT)
             label.get_style_context().add_class("pyot-list-tracks-label")
             row.add(label)
             self._list_widget.add(row)
