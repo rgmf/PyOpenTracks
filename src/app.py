@@ -19,7 +19,8 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Gio, Gdk
 
-from pyopentracks.io.gpx_parser import GpxParserHandle
+from pyopentracks.app_preferences import AppPreferences
+from pyopentracks.io.gpx_parser import GpxParserHandlerInThread
 from pyopentracks.app_window import PyopentracksWindow
 from pyopentracks.views.file_chooser import (
     FileChooserWindow, FolderChooserWindow
@@ -27,11 +28,12 @@ from pyopentracks.views.file_chooser import (
 from pyopentracks.models.migrations import Migration
 from pyopentracks.models.database import Database
 from pyopentracks.io.import_handler import (
-    ImportHandler, ImportFileHandler
+    ImportHandler, ImportFileHandler, AutoImportHandler
 )
 from pyopentracks.views.dialogs import (
     MessageDialogError,
-    ImportResultDialog
+    ImportResultDialog,
+    PreferencesDialog
 )
 
 
@@ -43,7 +45,7 @@ class Application(Gtk.Application):
         )
         self._menu: Gio.Menu = Gio.Menu()
         self._window: PyopentracksWindow = None
-        self._settings: Gtk.Settings = None
+        self._preferences: AppPreferences = None
         self._db: Database = Database()
 
     def do_activate(self):
@@ -70,6 +72,7 @@ class Application(Gtk.Application):
         self._setup_menu()
         self._setup_settings()
         self._setup_database()
+        self._auto_import()
 
     def on_open_file(self, action, param):
         dialog = FileChooserWindow(parent=self._window)
@@ -94,13 +97,26 @@ class Application(Gtk.Application):
         cb -- the callback to call after loading.
         """
         self._window.loading(0.5)
-        gpxParserHandle = GpxParserHandle()
+        gpxParserHandle = GpxParserHandlerInThread()
         gpxParserHandle.connect("end-parse", self._end_load_file_cb)
         gpxParserHandle.parse(filename, cb)
 
     def back_button_clicked(self, back_btn):
         back_btn.hide()
         self._load_tracks()
+
+    def preferences_button_clicked(self, prefs_btn):
+        dialog = PreferencesDialog(parent=self._window, app=self)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            pass
+        dialog.destroy()
+
+    def get_pref(self, pref):
+        return self._preferences.get_pref(pref)
+
+    def set_pref(self, pref, newvalue):
+        self._preferences.set_pref(pref, newvalue)
 
     def _setup_menu(self):
         action = Gio.SimpleAction.new("import_folder", None)
@@ -125,29 +141,41 @@ class Application(Gtk.Application):
         self._menu = builder.get_object("app-menu")
 
     def _setup_settings(self):
-        self._settings = Gio.Settings.new("es.rgmf.pyopentracks")
-        self._settings.connect(
-            "changed::trackspath", self._on_settings_folder_changed
-        )
+        self._preferences = AppPreferences()
 
     def _setup_database(self):
-        migration = Migration(self._db, self._settings.get_int("dbversion"))
+        migration = Migration(
+            self._db,
+            self._preferences.get_pref(AppPreferences.DB_VERSION)
+        )
         db_version = migration.migrate()
-        self._settings.set_int("dbversion", db_version)
+        self._preferences.set_pref(AppPreferences.DB_VERSION, db_version)
 
-    def _on_settings_folder_changed(self, settings, key):
-        #self._load_folder()
-        # dialog = FolderChooserWindow(parent=self._window)
-        # response = dialog.run()
-        # if response == Gtk.ResponseType.OK:
-        #     self._settings.set_string("trackspath", dialog.get_filename())
-        # dialog.destroy()
-        pass
+    def _auto_import(self):
+        folder = self._preferences.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
+        if not folder:
+            return
+        AutoImportHandler().import_folder(folder, self._auto_import_new_tracks)
+
+    def _auto_import_new_tracks(self):
+        ok_b = Gtk.Button(_("Ok"))
+        ok_b.connect("clicked", lambda b: self._load_tracks())
+        cancel_b = Gtk.Button(_("Cancel"))
+        cancel_b.connect("clicked", lambda b: self._window.clean_top_widget())
+        self._window.show_background_task_message(
+            title=_("Auto-import tracks"),
+            message=_(
+                "There are new tracks imported. "
+                "Do you want to load all tracks to "
+                "see the new ones?"
+            ),
+            buttons=[cancel_b, ok_b]
+        )
 
     def _load_tracks(self):
         self._window.load_tracks(self._db.get_tracks())
 
-    def _end_load_file_cb(self, gpxParserHandle):
+    def _end_load_file_cb(self, gpxParserHandler):
         self._window.loading(1.0)
 
     def _on_import_folder(self, action, param):

@@ -31,22 +31,23 @@ class Track:
     def __init__(self, *args):
         self._id = args[0]
         self._trackfile = args[1]
-        self._uuid = args[2]
-        self._name = args[3]
-        self._description = args[4]
-        self._category = args[5]
-        self._starttime_ms = args[6]
-        self._stoptime_ms = args[7]
-        self._totaldistance_m = args[8]
-        self._totaltime_ms = args[9]
-        self._movingtime_ms = args[10]
-        self._avgspeed_mps = args[11]
-        self._avgmovingspeed_mps = args[12]
-        self._maxspeed_mps = args[13]
-        self._minelevation_m = args[14]
-        self._maxelevation_m = args[15]
-        self._elevationgain_m = args[16]
-        self._elevationloss_m = args[17]
+        self._autoimportfile = args[2]
+        self._uuid = args[3]
+        self._name = args[4]
+        self._description = args[5]
+        self._category = args[6]
+        self._starttime_ms = args[7]
+        self._stoptime_ms = args[8]
+        self._totaldistance_m = args[9]
+        self._totaltime_ms = args[10]
+        self._movingtime_ms = args[11]
+        self._avgspeed_mps = args[12]
+        self._avgmovingspeed_mps = args[13]
+        self._maxspeed_mps = args[14]
+        self._minelevation_m = args[15]
+        self._maxelevation_m = args[16]
+        self._elevationgain_m = args[17]
+        self._elevationloss_m = args[18]
 
         self._track_points = None
 
@@ -75,7 +76,7 @@ class Track:
         """Returns the query for inserting a Track register."""
         return """
         INSERT INTO tracks VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -87,6 +88,7 @@ class Track:
         return (
             self._id,
             self._trackfile,
+            self._autoimportfile,
             self._uuid,
             self._name,
             self._description,
@@ -115,6 +117,9 @@ class Track:
 
     def set_trackfile_path(self, tfp: str):
         self._trackfile = tfp
+
+    def set_autoimportfile_path(self, path: str):
+        self._autoimportfile = path
 
     @property
     def name(self):

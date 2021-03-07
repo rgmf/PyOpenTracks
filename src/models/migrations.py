@@ -45,6 +45,7 @@ class Migration:
         CREATE TABLE tracks (
         _id INTEGER PRIMARY KEY AUTOINCREMENT,
         trackfile TEXT,
+        autoimportfile TEXT,
         uuid BLOB,
         name TEXT,
         description TEXT,
@@ -65,4 +66,8 @@ class Migration:
         """
         self._db.execute(query)
         query = "CREATE UNIQUE INDEX tracks_uuid_index ON tracks (uuid)"
+        self._db.execute(query)
+        query = "CREATE UNIQUE INDEX trackfile_index ON tracks (trackfile)"
+        self._db.execute(query)
+        query = "CREATE UNIQUE INDEX trackfile_index ON tracks (autoimportfile)"
         self._db.execute(query)

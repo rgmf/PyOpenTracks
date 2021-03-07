@@ -49,7 +49,12 @@ class GreeterLayout(Gtk.Box, Layout):
         self.show_all()
 
     def _setup_ui(self):
-        helptext = _("You can:\n1.- Import a folder with tracks.\n2.- Import a track's file.\n3.- Select a folder to synchronize the tracks files inside it.")
+        helptext = _(
+            "You can:\n"
+            "1.- Import a folder with tracks.\n"
+            "2.- Import a track's file.\n"
+            "3.- Select a folder to synchronize the tracks files inside it."
+        )
         vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
         vbox.set_homogeneous(False)
         labelh1 = Gtk.Label(label=_("Welcome to PyOpenTracks"))
@@ -62,6 +67,36 @@ class GreeterLayout(Gtk.Box, Layout):
 
     def get_top_widget(self):
         return self._top_widget
+
+
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/info_layout.ui")
+class InfoLayout(Gtk.Box):
+    __gtype_name__ = "InfoLayout"
+
+    _title: Gtk.Label = Gtk.Template.Child()
+    _message: Gtk.Label = Gtk.Template.Child()
+    _button_box: Gtk.ButtonBox = Gtk.Template.Child()
+
+    def __init__(self, title, message):
+        super().__init__()
+        self._has_buttons = False
+        self._title.set_text(title)
+        self._title.set_line_wrap(True)
+        self._title.set_xalign(0.5)
+        self._title.get_style_context().add_class("pyot-h3")
+        self._message.set_text(message)
+        self._message.set_line_wrap(True)
+        self._message.set_xalign(0.0)
+        self._message.get_style_context().add_class("pyot-p-small")
+
+    def show_all(self):
+        super().show_all()
+        if not self._has_buttons:
+            self._button_box.hide()
+
+    def append_button(self, button):
+        self._has_buttons = True
+        self._button_box.pack_start(button, False, False, 0)
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
@@ -178,8 +213,8 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def _add_item(
             self, label_text, value, left, top, width, height,
-            label_align=Gtk.Justification.CENTER,
-            value_align=Gtk.Justification.CENTER
+            label_align=0.5,
+            value_align=0.5
     ):
         """Adds an stat item into the _main_widget (Gtk.Grid).
 
@@ -197,11 +232,11 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         vbox.get_style_context().add_class("pyot-stats-bg-color")
         vbox.set_homogeneous(False)
 
-        label = Gtk.Label(label=label_text)
+        label = Gtk.Label(label=label_text, xalign=label_align)
         label.get_style_context().add_class("pyot-stats-header")
         label.set_justify(label_align)
 
-        value = Gtk.Label(label=value)
+        value = Gtk.Label(label=value, xalign=value_align)
         value.get_style_context().add_class("pyot-stats-value")
         value.set_justify(value_align)
 
@@ -276,8 +311,7 @@ class TracksLayout(Gtk.Box, Layout):
     def _load_data(self):
         for track in self._tracks:
             row = TracksLayout.TrackRow(track._id, track.trackfile_path)
-            label = Gtk.Label(label=track.name)
-            label.set_justify(Gtk.Justification.LEFT)
+            label = Gtk.Label(label=track.name, xalign=0.0)
             label.get_style_context().add_class("pyot-list-tracks-label")
             row.add(label)
             self._list_widget.add(row)

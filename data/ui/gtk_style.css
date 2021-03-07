@@ -4,12 +4,22 @@
     padding: 20px;
 }
 
+.pyot-h3 {
+    font-size: 1.15em;
+    font-weight: bolder;
+    padding: 5px;
+}
+
 .pyot-p-large {
     font-size: 2em;
 }
 
 .pyot-p-medium {
     font-size: 1.25em;
+}
+
+.pyot-p-small {
+    font-size: 1em;
 }
 
 .pyot-stats-bg-color {
@@ -30,4 +40,15 @@
     font-size: 1.1em;
     padding: 10px 0px 10px 0px;
     margin-left: 10px;
+}
+
+.pyot-prefs-header {
+    font-size: 1.25em;
+    font-weight: bolder;
+    padding-top: 20px;
+}
+
+.pyot-prefs-help {
+    font-size: 1em;
+    padding-top: 5px;
 }
