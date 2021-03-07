@@ -90,7 +90,7 @@ class GpxParser:
 
     def close(self):
         self._track = Track(
-            None, self._filename_path, None,
+            None, self._filename_path, None, None,
             self._name, self._desc, self._type,
             None, None, None, None, None, None,
             None, None, None, None, None, None,
@@ -125,7 +125,42 @@ class GpxParser:
             self._new_trk_point = None
 
 
-class GpxParserHandle(GObject.GObject):
+class GpxParserHandler:
+    """Handler the GPX parser task."""
+
+    def parse(self, filename):
+        try:
+            gpx_parser = GpxParser(filename)
+            parser = XMLParser(target=gpx_parser)
+            with open(filename, 'rb') as file:
+                for data in file:
+                    parser.feed(data)
+                parser.close()
+
+            if not gpx_parser._track:
+                raise Exception("empty track")
+
+            tp = gpx_parser._track.track_points
+            if not tp or len(tp) == 0:
+                raise Exception("empty track")
+
+            return {
+                "file": filename,
+                "track": gpx_parser._track,
+                "message": None
+            }
+        except Exception as error:
+            message = f"Error parsing the file {filename}: {error}"
+            # TODO print to logger system
+            print(message)
+            return {
+                "file": filename,
+                "track": None,
+                "message": message
+            }
+
+
+class GpxParserHandlerInThread(GObject.GObject):
     """Handle the GPX parser task into a thread."""
 
     __gsignals__ = {

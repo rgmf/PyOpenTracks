@@ -25,7 +25,7 @@ from pathlib import Path
 
 from gi.repository import GLib, GObject
 
-from pyopentracks.io.gpx_parser import GpxParserHandle
+from pyopentracks.io.gpx_parser import GpxParserHandler
 from pyopentracks.models.database import Database
 from pyopentracks.settings import imported_tracks_folder
 
@@ -36,7 +36,6 @@ class ImportHandler():
     EXISTS = 3
 
     def __init__(self):
-        self._db = Database()
         self._callback = None
 
     def _import_finished(self, result):
@@ -63,7 +62,8 @@ class ImportHandler():
         else:
             track = import_result["track"]
             try:
-                tracks = self._db.get_existed_tracks(
+                db = Database()
+                tracks = db.get_existed_tracks(
                     track.uuid, track.start_time_ms, track.end_time_ms
                 )
                 if tracks:
@@ -138,8 +138,9 @@ class ImportHandler():
 
         dst_path = self._copy_file(track.trackfile_path)
         if dst_path:
+            db = Database()
             track.set_trackfile_path(dst_path)
-            trackid = self._db.insert(track)
+            trackid = db.insert(track)
             if not trackid:
                 shutil.remove(dst_path)
 
@@ -176,8 +177,9 @@ class ImportFileHandler(ImportHandler):
         thread.start()
 
     def _import_in_thread(self):
-        parser = GpxParserHandle()
-        parser.parse(self._filename, self._import_track)
+        parser = GpxParserHandler()
+        result = parser.parse(self._filename)
+        self._import_track(result)
 
     def _import_finished(self, result: dict):
         GLib.idle_add(self._callback, result)
@@ -213,9 +215,10 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
         files_name = [f for f in p.glob("*.gpx")]
         self._result["total"] = len(files_name)
         self.emit("total-files-to-import", int(self._result["total"]))
-        parser = GpxParserHandle()
+        parser = GpxParserHandler()
         for f in files_name:
-            parser.parse(f, self._import_track)
+            result = parser.parse(f)
+            self._import_track(result)
 
     def _import_finished(self, result: dict):
         if result["import"] == ImportHandler.OK:
@@ -231,3 +234,55 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
         self.emit("end-import-file", total_imported)
         if self._result["total"] == total_imported:
             GLib.idle_add(self._callback, self._result)
+
+
+class AutoImportHandler(ImportHandler):
+
+    def __init__(self):
+        super().__init__()
+        self._folder = None
+        self._callback = None
+        self._imported = 0
+        self._not_imported = 0
+        self._total_to_import = 0
+
+    def import_folder(self, path: str, cb):
+        self._folder = path
+        self._callback = cb
+        thread = threading.Thread(target=self._checking_in_thread)
+        thread.daemon = True
+        thread.start()
+
+    def _checking_in_thread(self):
+        p = Path(self._folder)
+        if not p.is_dir():
+            return
+
+        files_to_import = []
+        parser = GpxParserHandler()
+        db = Database()
+        for f in p.glob("*.gpx"):
+            track = db.get_track_by_autoimport_file(str(f.absolute()))
+            if not track:
+                files_to_import.append(f)
+
+        self._total_to_import = len(files_to_import)
+        for f in files_to_import:
+            result = parser.parse(f)
+            self._import_track(result)
+
+    def _import(self, track):
+        """Inject autoimportfile value to the track before importing."""
+        filename = Path(track.trackfile_path).name
+        track.set_autoimportfile_path(path.join(self._folder, filename))
+        return super()._import(track)
+
+    def _import_finished(self, result: dict):
+        if result["import"] == ImportHandler.OK:
+            self._imported = self._imported + 1
+        else:
+            self._not_imported = self._not_imported + 1
+
+        total = self._imported + self._not_imported
+        if total == self._total_to_import and self._imported > 0:
+            GLib.idle_add(self._callback)

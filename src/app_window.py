@@ -20,7 +20,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk, Gio
 
 from pyopentracks.views.layout import (
-    TrackStatsLayout, GreeterLayout, TracksLayout
+    TrackStatsLayout, GreeterLayout, TracksLayout, InfoLayout
 )
 from pyopentracks.utils.utils import TrackPointUtils
 from pyopentracks.views.dialogs import MessageDialogError
@@ -31,6 +31,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "PyopentracksWindow"
 
     _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
+    _preferences_menu_btn: Gtk.Button = Gtk.Template.Child()
     _back_btn: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
@@ -55,7 +56,27 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             "clicked",
             lambda button: self._app.back_button_clicked(button)
         )
+        self._preferences_menu_btn.connect(
+            "clicked",
+            lambda button: self._app.preferences_button_clicked(button)
+        )
         self._primary_menu_btn.set_menu_model(menu)
+
+    def show_background_task_message(self, title, message, buttons):
+        """Shows information about a task ont top widget.
+
+        This method can be used to show a message to the user with
+        the result of a background task.
+        """
+        top_widget = self._layout.get_top_widget()
+        if not top_widget:
+            return
+
+        layout = InfoLayout(title, message)
+        for b in buttons:
+            layout.append_button(b)
+        top_widget.pack_start(layout, True, False, 10)
+        layout.show_all()
 
     def load_track_stats(self, result: dict):
         """Load track stats layout with new track.
@@ -91,6 +112,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         """
         if tracks and len(tracks) > 0:
             self.show_layout(TracksLayout(self._app, tracks))
+        else:
+            self.show_layout(GreeterLayout())
 
     def loading(self, total):
         """Handle a progress bar on the top of the loaded Layout.
@@ -123,3 +146,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         else:
             progress = top_widget.get_children()[0]
             progress.set_fraction(total)
+
+    def clean_top_widget(self):
+        widget = self._layout.get_top_widget()
+        widget.foreach(lambda child: widget.remove(child))

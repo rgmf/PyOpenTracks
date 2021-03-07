@@ -20,6 +20,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk
 
 from pyopentracks.io.import_handler import ImportFolderHandler
+from pyopentracks.app_preferences import AppPreferences
 
 
 class MessageDialogError(Gtk.MessageDialog):
@@ -111,3 +112,86 @@ class ImportResultDialog(Gtk.Dialog):
             self._list_box.show_all()
 
         self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+
+
+class PreferencesDialog(Gtk.Dialog):
+
+    def __init__(self, parent, app):
+        Gtk.Dialog.__init__(
+            self,
+            title=_("Preferences"),
+            transient_for=parent,
+            flags=0
+        )
+        self._app = app
+        self._box = self.get_content_area()
+        self._auto_import_folder = None
+        self._setup_ui()
+
+    def _setup_ui(self):
+        self.set_default_size(800, 600)
+
+        title = Gtk.Label(label=_("Preferences"))
+        title.get_style_context().add_class("pyot-h1")
+        self._box.pack_start(title, False, False, 10)
+
+        self._add_folder_pref()
+
+        self.show_all()
+
+    def _add_folder_pref(self):
+        self._add_header(text=_("Auto-import folder"))
+        self._add_help(text=_(
+            "Select a folder to import automatically new track files. "
+            "PyOpenTracks will check it for new files every time it opens."
+        ))
+
+        pref_value = self._app.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
+
+        hbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
+
+        switch = Gtk.Switch()
+        switch.set_active(pref_value)
+        switch.connect("notify::active", self._on_folder_pref_activated)
+
+        self._auto_import_folder = Gtk.FileChooserButton(_("Select a folder"))
+        if pref_value:
+            self._auto_import_folder.set_current_folder(pref_value)
+        else:
+            self._auto_import_folder.set_sensitive(False)
+        self._auto_import_folder.set_action(
+            Gtk.FileChooserAction.SELECT_FOLDER
+        )
+        self._auto_import_folder.connect(
+            "file-set", self._on_folder_pref_changed
+        )
+
+        hbox.pack_start(switch, False, False, 10)
+        hbox.pack_start(self._auto_import_folder, False, False, 10)
+
+        self._box.pack_start(hbox, False, False, 10)
+
+    def _on_folder_pref_activated(self, switch, gparam):
+        if switch.get_active():
+            self._auto_import_folder.set_sensitive(True)
+        else:
+            self._auto_import_folder.set_sensitive(False)
+            self._auto_import_folder.set_current_folder("")
+            self._app.set_pref(AppPreferences.AUTO_IMPORT_FOLDER, "")
+
+    def _on_folder_pref_changed(self, chooser):
+        self._app.set_pref(
+            AppPreferences.AUTO_IMPORT_FOLDER, chooser.get_filename()
+        )
+
+    def _add_header(self, text):
+        label = Gtk.Label(label=text, xalign=0.0)
+        label.get_style_context().add_class("pyot-prefs-header")
+        label.set_line_wrap(True)
+        self._box.pack_start(label, False, False, 0)
+
+    def _add_help(self, text):
+        label = Gtk.Label(label=text, xalign=0.0)
+        label.set_line_wrap(True)
+        label.get_style_context().add_class("pyot-prefs-help")
+        self._box.pack_start(label, False, False, 0)
