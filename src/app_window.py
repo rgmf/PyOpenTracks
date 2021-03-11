@@ -62,7 +62,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         )
         self._primary_menu_btn.set_menu_model(menu)
 
-    def show_background_task_message(self, title, message, buttons):
+    def show_infobar(self, itype, message, buttons):
         """Shows information about a task ont top widget.
 
         This method can be used to show a message to the user with
@@ -72,10 +72,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         if not top_widget:
             return
 
-        layout = InfoLayout(title, message)
-        for b in buttons:
-            layout.append_button(b)
-        top_widget.pack_start(layout, True, False, 10)
+        layout = InfoLayout(itype, message, buttons)
+        top_widget.pack_start(layout, False, False, 0)
         layout.show_all()
 
     def load_track_stats(self, result: dict):

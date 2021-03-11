@@ -158,18 +158,23 @@ class Application(Gtk.Application):
         AutoImportHandler().import_folder(folder, self._auto_import_new_tracks)
 
     def _auto_import_new_tracks(self):
-        ok_b = Gtk.Button(_("Ok"))
-        ok_b.connect("clicked", lambda b: self._load_tracks())
-        cancel_b = Gtk.Button(_("Cancel"))
-        cancel_b.connect("clicked", lambda b: self._window.clean_top_widget())
-        self._window.show_background_task_message(
-            title=_("Auto-import tracks"),
+        self._window.show_infobar(
+            itype=Gtk.MessageType.QUESTION,
             message=_(
                 "There are new tracks imported. "
-                "Do you want to load all tracks to "
+                "Do you want to re-load all tracks to "
                 "see the new ones?"
             ),
-            buttons=[cancel_b, ok_b]
+            buttons=[
+                {
+                    "text": _("Cancel"),
+                    "cb": lambda b: self._window.clean_top_widget()
+                },
+                {
+                    "text": _("Re-load"),
+                    "cb": lambda b: self._load_tracks()
+                }
+            ]
         )
 
     def _load_tracks(self):
