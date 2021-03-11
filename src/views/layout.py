@@ -69,34 +69,32 @@ class GreeterLayout(Gtk.Box, Layout):
         return self._top_widget
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/info_layout.ui")
-class InfoLayout(Gtk.Box):
-    __gtype_name__ = "InfoLayout"
+class InfoLayout(Gtk.InfoBar):
 
-    _title: Gtk.Label = Gtk.Template.Child()
-    _message: Gtk.Label = Gtk.Template.Child()
-    _button_box: Gtk.ButtonBox = Gtk.Template.Child()
+    def __init__(self, itype, message, buttons):
+        """Creates the InfoBar.
 
-    def __init__(self, title, message):
+        Arguments:
+        itype -- Gtk.MessageType.
+        message -- The message to show in the Gtk.InfoBar.
+        buttons -- a list of buttons information. Each item is a
+                   dictionary with following keys:
+                   - text: button's text.
+                   - cb: clicked's callback function.
+        """
         super().__init__()
-        self._has_buttons = False
-        self._title.set_text(title)
-        self._title.set_line_wrap(True)
-        self._title.set_xalign(0.5)
-        self._title.get_style_context().add_class("pyot-h3")
-        self._message.set_text(message)
-        self._message.set_line_wrap(True)
-        self._message.set_xalign(0.0)
-        self._message.get_style_context().add_class("pyot-p-small")
+        self.set_message_type(itype)
+        label = Gtk.Label(label=message, xalign=0.0)
+        label.set_line_wrap(True)
+        label.get_style_context().add_class("pyot-p-small")
+        content_area = self.get_content_area()
+        content_area.add(label)
+        self._add_buttons(buttons)
 
-    def show_all(self):
-        super().show_all()
-        if not self._has_buttons:
-            self._button_box.hide()
-
-    def append_button(self, button):
-        self._has_buttons = True
-        self._button_box.pack_start(button, False, False, 0)
+    def _add_buttons(self, buttons):
+        for b in buttons:
+            btn = self.add_button(b["text"], Gtk.ResponseType.OK)
+            btn.connect("clicked", b["cb"])
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
