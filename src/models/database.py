@@ -22,15 +22,11 @@ from os import path
 
 from pyopentracks.settings import xdg_data_home
 from pyopentracks.models.track import Track
+from pyopentracks.models.auto_import import AutoImport
 
 
 class Database:
     """SQLite database handler."""
-
-    def __init__(self):
-        #makedirs(path.dirname(self._db_file), exist_ok=True)
-        #self._conn = sqlite3.connect(self._db_file)
-        pass
 
     @property
     def _db_file(self) -> str:
@@ -70,26 +66,6 @@ class Database:
             try:
                 query = "SELECT * FROM tracks WHERE _id=?"
                 tuple_result = conn.execute(query, (_id,)).fetchone()
-                if tuple_result:
-                    return Track(*tuple_result)
-            except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
-        return None
-
-    def get_track_by_autoimport_file(self, path: str):
-        """Return Track object from autoimportfile.
-
-        Arguments:
-        path -- the path of the file to auto-import.
-
-        Return:
-        Track object or None if there is any Track with path.
-        """
-        with sqlite3.connect(self._db_file) as conn:
-            try:
-                query = "SELECT * FROM tracks WHERE autoimportfile=?"
-                tuple_result = conn.execute(query, (path,)).fetchone()
                 if tuple_result:
                     return Track(*tuple_result)
             except Exception as error:
@@ -166,4 +142,24 @@ class Database:
                 # TODO add this error message to a logger system
                 error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
                 print(error_msg)
+        return None
+
+    def get_autoimport_by_trackfile(self, path: str):
+        """Return AutoImport object from trackfile.
+
+        Arguments:
+        path -- the path of the file.
+
+        Return:
+        AutoImport object or None if there is any AutoImport with path.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = "SELECT * FROM autoimport WHERE trackfile=?"
+                tuple_result = conn.execute(query, (path,)).fetchone()
+                if tuple_result:
+                    return AutoImport(*tuple_result)
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
         return None

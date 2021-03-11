@@ -90,7 +90,7 @@ class GpxParser:
 
     def close(self):
         self._track = Track(
-            None, self._filename_path, None, None,
+            None, self._filename_path, None,
             self._name, self._desc, self._type,
             None, None, None, None, None, None,
             None, None, None, None, None, None,

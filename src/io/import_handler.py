@@ -27,6 +27,7 @@ from gi.repository import GLib, GObject
 
 from pyopentracks.io.gpx_parser import GpxParserHandler
 from pyopentracks.models.database import Database
+from pyopentracks.models.auto_import import AutoImport
 from pyopentracks.settings import imported_tracks_folder
 
 
@@ -262,8 +263,8 @@ class AutoImportHandler(ImportHandler):
         parser = GpxParserHandler()
         db = Database()
         for f in p.glob("*.gpx"):
-            track = db.get_track_by_autoimport_file(str(f.absolute()))
-            if not track:
+            ai_object = db.get_autoimport_by_trackfile(str(f.absolute()))
+            if not ai_object:
                 files_to_import.append(f)
 
         self._total_to_import = len(files_to_import)
@@ -271,18 +272,29 @@ class AutoImportHandler(ImportHandler):
             result = parser.parse(f)
             self._import_track(result)
 
-    def _import(self, track):
-        """Inject autoimportfile value to the track before importing."""
-        filename = Path(track.trackfile_path).name
-        track.set_autoimportfile_path(path.join(self._folder, filename))
-        return super()._import(track)
-
     def _import_finished(self, result: dict):
         if result["import"] == ImportHandler.OK:
             self._imported = self._imported + 1
         else:
             self._not_imported = self._not_imported + 1
 
+        self._insert_autoimport_info(result["file"], result["import"])
+
         total = self._imported + self._not_imported
         if total == self._total_to_import and self._imported > 0:
             GLib.idle_add(self._callback)
+
+    def _insert_autoimport_info(self, pathfile, result):
+        """Add information about imported file into database.
+
+        Arguments:
+        pathfile -- the origial track file that was tried to import.
+        result -- the result of the importing (see ImportHandler for values).
+        """
+        db = Database()
+        auto_import = AutoImport(
+            None,
+            path.join(self._folder, Path(pathfile).name),
+            result
+        )
+        db.insert(auto_import)
