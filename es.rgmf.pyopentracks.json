@@ -29,12 +29,22 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "file:///home/roman/workspace/PyOpenTracks"
+                    "url" : "file:///home/roman/workspace/PyOpenTracks",
+		    "branch": "main"
                 }
-            ],
+            ]
+        },
+	{
+            "name": "pip-install",
+            "buildsystem": "simple",
+            "build-options": {
+		"build-args": [
+                    "--share=network"
+		]
+            },
             "build-commands": [
-		"pip3 install --prefix=/app --no-cache-dir folium"
-	    ]
+		"pip3 install --prefix=/app --no-deps folium==0.12.1"
+            ]
         }
     ]
 }

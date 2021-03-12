@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
-	<id>es.rgmf.pyopentracks.desktop</id>
-	<metadata_license>CC0-1.0</metadata_license>
-	<project_license>GPL-3.0-or-later</project_license>
-	<description>
-	</description>
+  <id>es.rgmf.pyopentracks.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      PyOpenTracks is a desktop application for sport activities stats and analytics.
+    </p>
+  </description>
 </component>

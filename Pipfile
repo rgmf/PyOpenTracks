@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-folium = "*"
+folium = "0.12.1"
 pygobject = "*"
 
 [dev-packages]
