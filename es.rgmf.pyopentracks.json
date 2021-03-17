@@ -8,7 +8,8 @@
         "--share=network",
         "--share=ipc",
         "--socket=fallback-x11",
-        "--socket=wayland"
+        "--socket=wayland",
+	"--filesystem=host"
     ],
     "cleanup" : [
         "/include",
@@ -43,7 +44,7 @@
 		]
             },
             "build-commands": [
-		"pip3 install --prefix=/app --no-deps folium==0.12.1"
+		"pip3 install --prefix=/app folium==0.12.1"
             ]
         }
     ]

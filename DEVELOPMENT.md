@@ -20,3 +20,28 @@ After building enter to `buildir/buildir/testdir/bin` and execute `./pyopentrack
 
 # Internacionalization (i10n)
 Enter to `po/` directory and execute `update_potfiles.sh` to create a new language PO file or update the string to a language. Then edit the PO file and execute `compile_potfiles.sh` to generate mo file.
+
+# Flatpak
+## Build
+You can execute the following command indicating the folder where you want to build PyOpenTracks using flatpak:
+
+`flatpak-builder <flatpak build directory> es.rgmf.pyopentracks.json`
+
+Also, if you want to re-build and clean all:
+
+`flatpak-builder --force-clean <flatpak build directory> es.rgmf.pyopentracks.json`
+
+And, finally if you want to get verbose information about the build process use the option `-v`.
+
+## Build and install locally
+You can build and install locally at the same time with the following command:
+
+`flatpak-builder --user --install <flatpak build directory> es.rgmf.pyopentracks.json`
+
+## Execute the locally installation
+`flatpak run es.rgmf.pyopentracks`
+
+## Settings values on Flatpak environment
+After install PyOpenTracks through Flatpak, the settings values in the following file:
+
+`~/.var/app/es.rgmf.pyopentracks/config/glib-2.0/settings/keyfile`
