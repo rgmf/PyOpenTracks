@@ -144,11 +144,11 @@ class Database:
                 print(error_msg)
         return None
 
-    def get_autoimport_by_trackfile(self, path: str):
+    def get_autoimport_by_trackfile(self, pathfile: str):
         """Return AutoImport object from trackfile.
 
         Arguments:
-        path -- the path of the file.
+        pathfile -- the path of the file.
 
         Return:
         AutoImport object or None if there is any AutoImport with path.
@@ -156,7 +156,7 @@ class Database:
         with sqlite3.connect(self._db_file) as conn:
             try:
                 query = "SELECT * FROM autoimport WHERE trackfile=?"
-                tuple_result = conn.execute(query, (path,)).fetchone()
+                tuple_result = conn.execute(query, (pathfile,)).fetchone()
                 if tuple_result:
                     return AutoImport(*tuple_result)
             except Exception as error:
