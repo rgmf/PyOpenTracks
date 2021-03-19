@@ -38,7 +38,6 @@ class TrackStats:
             self._total_hr = 0
 
         def add_hr(self, hr_bpm: str, time_ms: float):
-            # print("-----------------------------------------------")
             if hr_bpm is None:
                 self.reset()
                 return
@@ -47,7 +46,6 @@ class TrackStats:
             self._max_hr = self._compute_max_hr(hr_bpm)
 
             if self._prev_time_ms is None:
-                # print("NONE... RESET...")
                 self._prev_time_ms = time_ms
                 self._prev_hr = hr_bpm
                 return
@@ -57,12 +55,6 @@ class TrackStats:
             self._total_hr = self._total_hr + (hr_bpm * elapsed_time_s)
 
             self._prev_time_ms = time_ms
-
-            # print("Current:", hr_bpm)
-            # print("Max:", self.max_hr)
-            # print("Avg:", self.avg_hr)
-            # print("Total Time:", self._total_time_s)
-            # print("Total HR:", self._total_hr)
 
         def reset(self):
             self._prev_time_ms = None
