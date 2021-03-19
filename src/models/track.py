@@ -26,6 +26,7 @@ from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.utils.utils import DistanceUtils as du
 from pyopentracks.utils.utils import SpeedUtils as su
 from pyopentracks.utils.utils import ElevationUtils as eu
+from pyopentracks.utils.utils import SensorUtils as se
 
 
 class Track(Model):
@@ -48,6 +49,8 @@ class Track(Model):
         self._maxelevation_m = args[15]
         self._elevationgain_m = args[16]
         self._elevationloss_m = args[17]
+        self._maxhr_bpm = args[18]
+        self._avghr_bpm = args[19]
 
         self._track_points = None
 
@@ -70,13 +73,15 @@ class Track(Model):
         self._maxelevation_m = ts.max_elevation
         self._elevationgain_m = ts.gain_elevation
         self._elevationloss_m = ts.loss_elevation
+        self._maxhr_bpm = ts.max_hr
+        self._avghr_bpm = ts.avg_hr
 
     @property
     def insert_query(self):
         """Returns the query for inserting a Track register."""
         return """
         INSERT INTO tracks VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -104,6 +109,8 @@ class Track(Model):
             self._maxelevation_m,
             self._elevationgain_m,
             self._elevationloss_m,
+            self._maxhr_bpm,
+            self._avghr_bpm,
         )
 
     @property
@@ -191,3 +198,11 @@ class Track(Model):
     @property
     def loss_elevation(self):
         return eu.elevation_to_str(self._elevationloss_m)
+
+    @property
+    def max_hr(self):
+        return se.hr_to_str(self._maxhr_bpm)
+
+    @property
+    def avg_hr(self):
+        return se.hr_to_str(self._avghr_bpm)

@@ -33,6 +33,7 @@ class GpxParser:
     TAG_NAME = "name"
     TAG_DESC = "desc"
     TAG_TYPE = "type"
+    TAG_TRACKID = "trackid"
 
     TAG_TRKSEG = "trkseg"
 
@@ -42,7 +43,7 @@ class GpxParser:
     TAG_ELEVATION = "ele"
     TAG_GAIN = "gain"
     TAG_LOSS = "loss"
-    TAG_TRACKID = "trackid"
+    TAG_HR = "hr"
 
     def __init__(self, filename_path):
         self._filename_path = filename_path
@@ -96,6 +97,7 @@ class GpxParser:
             self._name, self._desc, self._type,
             None, None, None, None, None, None,
             None, None, None, None, None, None,
+            None, None
         )
         self._track.add_track_stats(self._track_stats)
 
@@ -110,7 +112,6 @@ class GpxParser:
         elif tag == GpxParser.TAG_TRACKID:
             self._uuid = self._data
 
-
     def _end_tag_inside_trkpt(self, tag):
         """Compute the tag tag that is inside trkpt tag."""
         if tag == GpxParser.TAG_ELEVATION:
@@ -123,6 +124,8 @@ class GpxParser:
             self._new_trk_point.time = self._data
         elif tag == GpxParser.TAG_SPEED:
             self._new_trk_point.speed = self._data
+        elif tag == GpxParser.TAG_HR:
+            self._new_trk_point.heart_rate = self._data
         elif tag == GpxParser.TAG_TRKPT:
             self._track_stats.new_track_point(
                 self._new_trk_point, self._segment

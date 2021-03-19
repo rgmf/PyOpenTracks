@@ -53,6 +53,20 @@ class TimeUtils:
             return "-"
         return str(timedelta(seconds=int(time_ms / 1000)))
 
+    @staticmethod
+    def iso_to_ms(date_time: str) -> float:
+        """From ISO 8601 string date to milliseconds.
+
+        Arguments:
+        date_time -- ISO 8601 date time string.
+
+        Returns:
+        date_time's milliseconds.
+        """
+        return datetime.fromisoformat(
+            date_time.replace("Z", "+00:00")
+        ).timestamp() * 1000
+
 
 class DistanceUtils:
     @staticmethod
@@ -100,10 +114,8 @@ class ElevationUtils:
         Returns:
         An string representing the elevation.
         """
-        if not elevation_m:
-            return "-"
         return (
-            str(int(elevation_m)) + " m" if elevation_m is not None else "- m"
+            str(int(elevation_m)) + " m" if elevation_m is not None else "-"
         )
 
 
@@ -151,3 +163,19 @@ class TrackPointUtils:
         if not trackpoints:
             return []
         return [tp.location_tuple for tp in trackpoints]
+
+
+class SensorUtils:
+    @staticmethod
+    def hr_to_str(hr_bpm: str) -> str:
+        """From float representation heart rate to heart rate.
+
+        Arguments:
+        hr_bpm -- heart rate in bpm.
+
+        Returns:
+        An string representing the heart rate.
+        """
+        return (
+            str(int(hr_bpm)) + " bpm" if hr_bpm is not None else "-"
+        )
