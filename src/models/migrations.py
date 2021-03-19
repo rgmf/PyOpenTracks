@@ -60,7 +60,9 @@ class Migration:
         minelevation FLOAT,
         maxelevation FLOAT,
         elevationgain FLOAT,
-        elevationloss FLOAT
+        elevationloss FLOAT,
+        maxhr FLOAT,
+        avghr FLOAT
         );
         """
         self._db.execute(query)

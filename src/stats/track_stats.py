@@ -21,13 +21,77 @@ from datetime import datetime
 from parser import ParserError
 from math import radians, sin, cos, asin, sqrt
 
+from pyopentracks.utils.utils import TimeUtils as tu
+
 
 class TrackStats:
     # Speed threshold for considering that there is not movement (in mps).
     # TODO This should be a setting's option ¿?
     AUTO_PAUSE_SPEED_THRESHOLD = 0.1
 
+    class SensorNormalization:
+        def __init__(self):
+            self._max_hr = None
+            self._prev_hr = None
+            self._prev_time_ms = None
+            self._total_time_s = 0
+            self._total_hr = 0
+
+        def add_hr(self, hr_bpm: str, time_ms: float):
+            # print("-----------------------------------------------")
+            if hr_bpm is None:
+                self.reset()
+                return
+            hr_bpm = float(hr_bpm)
+
+            self._max_hr = self._compute_max_hr(hr_bpm)
+
+            if self._prev_time_ms is None:
+                # print("NONE... RESET...")
+                self._prev_time_ms = time_ms
+                self._prev_hr = hr_bpm
+                return
+
+            elapsed_time_s = (time_ms - self._prev_time_ms) / 1000
+            self._total_time_s = self._total_time_s + elapsed_time_s
+            self._total_hr = self._total_hr + (hr_bpm * elapsed_time_s)
+
+            self._prev_time_ms = time_ms
+
+            # print("Current:", hr_bpm)
+            # print("Max:", self.max_hr)
+            # print("Avg:", self.avg_hr)
+            # print("Total Time:", self._total_time_s)
+            # print("Total HR:", self._total_hr)
+
+        def reset(self):
+            self._prev_time_ms = None
+
+        @property
+        def avg_hr(self):
+            if self._total_hr == 0 and self._total_time_s == 0:
+                return None
+            return round(self._total_hr / self._total_time_s)
+
+        @property
+        def max_hr(self):
+            if self._max_hr:
+                return round(self._max_hr)
+            return None
+
+        def _compute_max_hr(self, new_hr):
+            if new_hr is None:
+                return self._max_hr
+            if self._max_hr is None:
+                return new_hr
+            if new_hr > self._max_hr:
+                return new_hr
+            else:
+                return self._max_hr
+
     def __init__(self):
+        self._sensor = TrackStats.SensorNormalization()
+
         self._segment = None
 
         self._start_time_ms = None
@@ -48,6 +112,9 @@ class TrackStats:
         self._min_elevation_m = None
         self._gain_elevation_m = None
         self._loss_elevation_m = None
+
+        self._max_hr = None
+        self._avg_hr = None
 
         self._track_points = []
 
@@ -103,6 +170,14 @@ class TrackStats:
     def track_points(self):
         return self._track_points
 
+    @property
+    def max_hr(self):
+        return self._sensor.max_hr
+
+    @property
+    def avg_hr(self):
+        return self._sensor.avg_hr
+
     def new_track_point(self, track_point, num_segment):
         """Compute all stats from new track point.
 
@@ -133,11 +208,19 @@ class TrackStats:
             self._get_float_or_none(track_point.elevation_gain),
             self._get_float_or_none(track_point.elevation_loss)
         )
-        if (not track_point.speed or
-            float(track_point.speed) < TrackStats.AUTO_PAUSE_SPEED_THRESHOLD):
+
+        if not self._is_moving(track_point.speed):
             self._end_segment_time_ms = None
+            self._sensor.reset()
         else:
             self._add_time(track_point.time)
+            self._sensor.add_hr(
+                track_point.heart_rate,
+                tu.iso_to_ms(track_point.time)
+            )
+
+    def _is_moving(self, speed):
+        return speed and float(speed) >= TrackStats.AUTO_PAUSE_SPEED_THRESHOLD
 
     def _get_float_or_none(self, data):
         return None if not data else float(data)
@@ -152,9 +235,7 @@ class TrackStats:
         time -- a string representing the time in ISO 8601 format.
         """
         try:
-            timestamp_ms = datetime.fromisoformat(
-                time.replace("Z", "+00:00")
-            ).timestamp() * 1000
+            timestamp_ms = tu.iso_to_ms(time)
 
             if self._end_time_ms is not None:
                 self._total_time_ms = (

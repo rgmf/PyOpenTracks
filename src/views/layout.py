@@ -153,6 +153,10 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._add_item(_("Elevation Gain"), track.gain_elevation, 0, 8, 1, 1)
         # Loss elevation
         self._add_item(_("Elevation Loss"), track.loss_elevation, 1, 8, 1, 1)
+        # Max. heart rate
+        self._add_item(_("Max. Heart Rate"), track.max_hr, 0, 9, 1, 1)
+        # Avg. heart rate
+        self._add_item(_("Avg. Heart Rate"), track.avg_hr, 1, 9, 1, 1)
 
         self.show_all()
 
@@ -164,7 +168,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
                      latitude and longitude.
         """
         # Map
-        self._add_map(locations, 2, 1, 2, 8)
+        self._add_map(locations, 2, 1, 2, 9)
         self.show_all()
 
     def _add_info_track(self, track, left, top, width, height):
