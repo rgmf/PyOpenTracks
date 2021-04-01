@@ -154,6 +154,13 @@ class TypeActivityUtils:
 
         return "/es/rgmf/pyopentracks/" + icon
 
+    @staticmethod
+    def get_activity_types():
+        """Return a list with a list of two items: type's name and icon."""
+        return [
+            [name, icon] for name, icon in TypeActivityUtils._types.items()
+        ]
+
 
 class TrackPointUtils:
 

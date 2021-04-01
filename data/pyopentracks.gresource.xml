@@ -6,6 +6,8 @@
     <file>ui/greeter_layout.ui</file>
     <file>ui/tracks_layout.ui</file>
 
+    <file>ui/track_edit_dialog.ui</file>
+
     <file>ui/menu.ui</file>
 
     <file>ui/gtk_style.css</file>
