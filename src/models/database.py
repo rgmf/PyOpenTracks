@@ -144,6 +144,38 @@ class Database:
                 print(error_msg)
         return None
 
+    def delete(self, model):
+        """Delete the model from the database.
+
+        Arguments:
+        model -- Model object to be deleted.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(model.delete_query, (model.id,))
+                conn.commit()
+            except Exception as error:
+                # TODO add this error message to a logger system
+                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+                print(error_msg)
+
+    def update(self, model):
+        """Update the model in the database.
+
+        Arguments:
+        model -- Model object to be updated.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                cursor = conn.cursor()
+                cursor.execute(model.update_query, model.update_data)
+                conn.commit()
+            except Exception as error:
+                # TODO add this error message to a logger system
+                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+                print(error_msg)
+
     def get_autoimport_by_trackfile(self, pathfile: str):
         """Return AutoImport object from trackfile.
 

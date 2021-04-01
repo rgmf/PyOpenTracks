@@ -26,5 +26,9 @@ class Model(ABC):
         pass
 
     @abstractmethod
+    def delete_query(self):
+        pass
+
+    @abstractmethod
     def fields(self):
         pass

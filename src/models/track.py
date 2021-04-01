@@ -86,6 +86,23 @@ class Track(Model):
         """
 
     @property
+    def delete_query(self):
+        """Returns the query for deleting a Track by id."""
+        return "DELETE FROM tracks WHERE _id=?"
+
+    @property
+    def update_query(self):
+        """Return the query for updating a Track by id."""
+        return """
+        UPDATE tracks SET name=?, description=?, category=?
+        WHERE _id=?
+        """
+
+    @property
+    def update_data(self):
+        return (self._name, self._description, self._category, self._id)
+
+    @property
     def fields(self):
         """Returns a tuple with all Track fields.
         Maintain the database table tracks order of the fields.
@@ -114,6 +131,10 @@ class Track(Model):
         )
 
     @property
+    def id(self):
+        return self._id
+
+    @property
     def uuid(self):
         return self._uuid
 
@@ -123,9 +144,6 @@ class Track(Model):
 
     def set_trackfile_path(self, tfp: str):
         self._trackfile = tfp
-
-    def set_autoimportfile_path(self, path: str):
-        self._autoimportfile = path
 
     @property
     def name(self):
@@ -206,3 +224,12 @@ class Track(Model):
     @property
     def avg_hr(self):
         return se.hr_to_str(self._avghr_bpm)
+
+    def set_name(self, new_name):
+        self._name = new_name
+
+    def set_description(self, new_desc):
+        self._description = new_desc
+
+    def set_activity_type(self, new_category):
+        self._category = new_category

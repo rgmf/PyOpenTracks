@@ -28,7 +28,12 @@ from pyopentracks.views.dialogs import MessageDialogError
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
 class PyopentracksWindow(Gtk.ApplicationWindow):
+    # TODO Describe what this app window offer and works
+    # TODO Refactor all around the action buttons: edit, del, back buttons.
     __gtype_name__ = "PyopentracksWindow"
+
+    _edit_btn: Gtk.Button = Gtk.Template.Child()
+    _del_btn: Gtk.Button = Gtk.Template.Child()
 
     _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
     _preferences_menu_btn: Gtk.Button = Gtk.Template.Child()
@@ -36,6 +41,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._action_buttons_handlers = []
         self.set_title("PyOpenTracks")
         self._app = kwargs["application"]
         self._layout = None
@@ -76,6 +82,28 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         top_widget.pack_start(layout, False, False, 0)
         layout.show_all()
 
+    def connect_button_del(self, action_cb, *args):
+        self._del_btn.show()
+        handler_id = self._del_btn.connect("clicked", action_cb, *args)
+        self._action_buttons_handlers.append({
+            "widget": self._del_btn,
+            "handler_id": handler_id
+        })
+
+    def connect_button_edit(self, action_cb, *args):
+        self._edit_btn.show()
+        handler_id = self._edit_btn.connect("clicked", action_cb, *args)
+        self._action_buttons_handlers.append({
+            "widget": self._edit_btn,
+            "handler_id": handler_id
+        })
+
+    def disconnect_action_buttons(self):
+        for dict_item in self._action_buttons_handlers:
+            dict_item["widget"].disconnect(dict_item["handler_id"])
+            dict_item["widget"].hide()
+        self._action_buttons_handlers = []
+
     def load_track_stats(self, result: dict):
         """Load track stats layout with new track.
 
@@ -109,7 +137,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         tracks -- a list of Track objects.
         """
         if tracks and len(tracks) > 0:
-            self.show_layout(TracksLayout(self._app, tracks))
+            self.show_layout(TracksLayout(self, tracks))
         else:
             self.show_layout(GreeterLayout())
 

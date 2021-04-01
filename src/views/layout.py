@@ -23,6 +23,7 @@ from pyopentracks.views.maps import TrackMap
 from pyopentracks.utils.utils import TypeActivityUtils as TAU
 from pyopentracks.models.database import Database
 from pyopentracks.io.gpx_parser import GpxLocationsHandle
+from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
 
 
 class Layout():
@@ -266,6 +267,31 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._main_widget.attach(scrolled_window, left, top, width, height)
 
 
+class TrackRow(Gtk.ListBoxRow):
+
+    def __init__(self, track):
+        super().__init__()
+        self._track = track
+        self._build_ui()
+
+    def _build_ui(self):
+        label = Gtk.Label(label=self._track.name, xalign=0.0)
+        label.get_style_context().add_class("pyot-list-tracks-label")
+        self.add(label)
+
+    def update_ui(self, track):
+        """Update the row UI according to the new track data."""
+        self._track = track
+        for w in self.get_children():
+            self.remove(w)
+        self._build_ui()
+        self.show_all()
+
+    @property
+    def track(self):
+        return self._track
+
+
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
 class TracksLayout(Gtk.Box, Layout):
     __gtype_name__ = "TracksLayout"
@@ -277,24 +303,11 @@ class TracksLayout(Gtk.Box, Layout):
     _list_widget: Gtk.ListBox = Gtk.Template.Child()
     _track_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
 
-    class TrackRow(Gtk.ListBoxRow):
-        def __init__(self, _id, path):
-            super().__init__()
-            self._id = _id
-            self._path = path
-
-        @property
-        def id(self):
-            return self._id
-
-        @property
-        def path(self):
-            return self._path
-
-    def __init__(self, app, tracks):
+    def __init__(self, app_window, tracks):
         super().__init__()
 
-        self._app = app
+        self._app_window = app_window
+
         self._db = Database()
 
         self._list_widget.set_selection_mode(Gtk.SelectionMode.SINGLE)
@@ -310,22 +323,62 @@ class TracksLayout(Gtk.Box, Layout):
     def get_top_widget(self):
         return self._top_widget
 
+    def on_remove(self, widget, row):
+        """Callback to remove the row."""
+        dialog = QuestionDialog(
+            parent=self._app_window,
+            title=_("Remove Track"),
+            question=_(f"Do you really want to remove track {row.track.name}")
+        )
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.CANCEL:
+            return
+
+        try:
+            db = Database()
+            db.delete(row.track)
+            self._show_message(_("Select a track to view its stats..."))
+            self._app_window.disconnect_action_buttons()
+            row.destroy()
+        except ValueError:
+            # TODO use logger here.
+            print(f"Error: deleting track {row.track.name}")
+
+    def on_edit(self, widget, row):
+        """Callback to edit the row."""
+        dialog = TrackEditDialog(parent=self._app_window, track=row.track)
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.OK:
+            track = dialog.get_track()
+            try:
+                db = Database()
+                db.update(track)
+                self._on_row_activated(self._list_widget, row)
+                self._app_window.disconnect_action_buttons()
+                row.update_ui(track)
+            except ValueError:
+                # TODO use logger here.
+                print(f"Error: updating track {row.track.name}")
+        self._app_window.disconnect_action_buttons()
+
     def _load_data(self):
         for track in self._tracks:
-            row = TracksLayout.TrackRow(track._id, track.trackfile_path)
-            label = Gtk.Label(label=track.name, xalign=0.0)
-            label.get_style_context().add_class("pyot-list-tracks-label")
-            row.add(label)
+            row = TrackRow(track)
             self._list_widget.add(row)
 
     def _on_row_activated(self, listbox, row):
-        track = self._db.get_track_by_id(row.id)
-        if not track:
+        if not row.track:
             self._show_message(_("There was an error and the track cannot be showed"))
             return
-        self._load_track_stats(track)
+        self._load_track_stats(row.track)
         loc_handle = GpxLocationsHandle()
-        loc_handle.get_locations(track.trackfile_path, self._on_locations_end)
+        loc_handle.get_locations(
+            row.track.trackfile_path, self._on_locations_end
+        )
+        self._app_window.connect_button_del(self.on_remove, row)
+        self._app_window.connect_button_edit(self.on_edit, row)
 
     def _on_locations_end(self, locations):
         """Load a map with locations.

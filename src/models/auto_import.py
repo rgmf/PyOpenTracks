@@ -32,6 +32,23 @@ class AutoImport(Model):
         return "INSERT INTO autoimport VALUES (?, ?, ?)"
 
     @property
+    def delete_query(self):
+        """Returns the query for deleting an AutoImport by id."""
+        return "DELETE FROM autoimport WHERE _id=?"
+
+    @property
+    def update_query(self):
+        """Return the query for updating a Track by id."""
+        return """
+        UPDATE autoimport SET trackfile=?, result=?
+        WHERE _id=?
+        """
+
+    @property
+    def update_data(self):
+        return (self._trackfile, self._result, self._id)
+
+    @property
     def fields(self):
         """Returns a tuple with all AutoImport fields.
         Maintain the database table autoimport order of the fields.

@@ -21,6 +21,30 @@ from gi.repository import Gtk
 
 from pyopentracks.io.import_handler import ImportFolderHandler
 from pyopentracks.app_preferences import AppPreferences
+from pyopentracks.utils.utils import TypeActivityUtils as TAU
+
+
+class QuestionDialog(Gtk.Dialog):
+
+    def __init__(self, parent, title, question):
+        Gtk.Dialog.__init__(
+            self,
+            title=title,
+            transient_for=parent,
+            flags=0
+        )
+        self.add_buttons(
+            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OK, Gtk.ResponseType.OK
+        )
+
+        self.set_default_size(150, 100)
+
+        label = Gtk.Label(label=question)
+
+        box = self.get_content_area()
+        box.add(label)
+        self.show_all()
 
 
 class MessageDialogError(Gtk.MessageDialog):
@@ -195,3 +219,65 @@ class PreferencesDialog(Gtk.Dialog):
         label.set_line_wrap(True)
         label.get_style_context().add_class("pyot-prefs-help")
         self._box.pack_start(label, False, False, 0)
+
+
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_edit_dialog.ui")
+class TrackEditDialog(Gtk.Dialog):
+    """Track's dialog editor.
+
+    This dialog can be used to edit a track: name, description and
+    activity type (category).
+
+    It offers a method (get_track) to get the track's changes.
+    """
+
+    __gtype_name__ = "TrackEditDialog"
+
+    _name: Gtk.Entry = Gtk.Template.Child()
+    _description: Gtk.Entry = Gtk.Template.Child()
+    _activity_type: Gtk.ComboBox = Gtk.Template.Child()
+    _type_list_store: Gtk.ListStore = Gtk.Template.Child()
+
+    def __init__(self, parent, track):
+        Gtk.Dialog.__init__(
+            self,
+            title=_("Edit Track"),
+            transient_for=parent,
+            flags=0
+        )
+        self._track = track
+        self._set_data()
+        self.add_buttons(
+            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OK, Gtk.ResponseType.OK
+        )
+        self.show_all()
+
+    def _set_data(self):
+        self._name.set_text(self._track.name)
+        self._name.connect("changed", self._on_name_changed)
+
+        self._description.set_text(self._track.description)
+        self._description.connect("changed", self._on_description_changed)
+
+        for idx, item in enumerate(TAU.get_activity_types()):
+            self._type_list_store.append(item)
+            if item[0] == self._track.activity_type:
+                self._activity_type_name = item[0]
+                self._activity_type.set_active(idx)
+        self._activity_type.connect("changed", self._on_activity_type_changed)
+
+    def _on_name_changed(self, entry):
+        self._track.set_name(entry.get_text())
+
+    def _on_description_changed(self, entry):
+        self._track.set_description(entry.get_text())
+
+    def _on_activity_type_changed(self, combo):
+        iter_item = combo.get_active_iter()
+        if iter_item is not None:
+            name, icon = self._type_list_store[iter_item][:2]
+            self._track.set_activity_type(name)
+
+    def get_track(self):
+        return self._track
