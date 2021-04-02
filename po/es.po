@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: es.rgmf.pyopentracks 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-11 19:22+0100\n"
+"POT-Creation-Date: 2021-04-02 20:10+0200\n"
 "PO-Revision-Date: 2021-02-17 13:40+0100\n"
 "Last-Translator: roman <rgmf@riseup.net>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../src/app_window.py:93
+#: ../src/app_window.py:121
 msgid "Error opening the file {result['file']}"
 msgstr "No se ha podido abrir el fichero {result['file']}"
 
-#: ../src/app_window.py:96
+#: ../src/app_window.py:124
 msgid "Error opening track file"
 msgstr "Error al abrir el fichero"
 
@@ -52,11 +52,11 @@ msgstr ""
 msgid "Error importing the file {result['file']}: {result['message']}"
 msgstr "Error al importar el fichero {result['file']}: {result['message']}"
 
-#: ../src/views/dialogs.py:50
+#: ../src/views/dialogs.py:74
 msgid "Importing..."
 msgstr "Importando..."
 
-#: ../src/views/dialogs.py:65
+#: ../src/views/dialogs.py:89
 #, python-brace-format
 msgid ""
 "Importing files from folder:\n"
@@ -65,23 +65,23 @@ msgstr ""
 "Importando ficheros desde la carpeta:\n"
 "{self._folder}"
 
-#: ../src/views/dialogs.py:101
+#: ../src/views/dialogs.py:125
 msgid "Total imported: {result['imported']}"
 msgstr "Total importados: {result['imported']}"
 
-#: ../src/views/dialogs.py:105
+#: ../src/views/dialogs.py:129
 msgid "Finished with errors"
 msgstr "Finalizó con errores"
 
-#: ../src/views/dialogs.py:122 ../src/views/dialogs.py:134
+#: ../src/views/dialogs.py:146 ../src/views/dialogs.py:158
 msgid "Preferences"
 msgstr "Preferencias"
 
-#: ../src/views/dialogs.py:143
+#: ../src/views/dialogs.py:167
 msgid "Auto-import folder"
 msgstr "Carpeta de importación automática"
 
-#: ../src/views/dialogs.py:145
+#: ../src/views/dialogs.py:169
 msgid ""
 "Select a folder to import automatically new track files. PyOpenTracks will "
 "check it for new files every time it opens."
@@ -90,11 +90,15 @@ msgstr ""
 "actividad. PyOpenTracks buscará nuevos ficheros de actividad cada vez que se "
 "abra."
 
-#: ../src/views/dialogs.py:157 ../src/views/file_chooser.py:60
+#: ../src/views/dialogs.py:181 ../src/views/file_chooser.py:60
 msgid "Select a folder"
 msgstr "Selecciona una carpeta"
 
-#: ../src/views/layout.py:53
+#: ../src/views/dialogs.py:244
+msgid "Edit Track"
+msgstr ""
+
+#: ../src/views/layout.py:54
 msgid ""
 "You can:\n"
 "1.- Import a folder with tracks.\n"
@@ -106,69 +110,87 @@ msgstr ""
 "2.- Importar un fichero de actividad.\n"
 "3.- Configurar una carpeta para sincronizar todos sus ficheros de actividad."
 
-#: ../src/views/layout.py:60
+#: ../src/views/layout.py:61
 msgid "Welcome to PyOpenTracks"
 msgstr "Bienvenid@ a PyOpenTracks"
 
-#: ../src/views/layout.py:124
+#: ../src/views/layout.py:125
 msgid "Track Stats"
 msgstr "Estadísticas de la actividad"
 
-#: ../src/views/layout.py:131
+#: ../src/views/layout.py:132
 msgid "Start"
 msgstr "Comienzo"
 
-#: ../src/views/layout.py:133
+#: ../src/views/layout.py:134
 msgid "End"
 msgstr "Final"
 
-#: ../src/views/layout.py:135
+#: ../src/views/layout.py:136
 msgid "Distance"
 msgstr "Distancia"
 
-#: ../src/views/layout.py:137
+#: ../src/views/layout.py:138
 msgid "Moving Time"
 msgstr "Tiempo en movimiento"
 
-#: ../src/views/layout.py:139
+#: ../src/views/layout.py:140
 msgid "Total Time"
 msgstr "Tiempo total"
 
-#: ../src/views/layout.py:142
+#: ../src/views/layout.py:143
 msgid "Avg. Moving Speed"
 msgstr "Velocidad media en movimiento"
 
-#: ../src/views/layout.py:145
+#: ../src/views/layout.py:146
 msgid "Avg. Speed"
 msgstr "Velocidad media"
 
-#: ../src/views/layout.py:147
+#: ../src/views/layout.py:148
 msgid "Max. Speed"
 msgstr "Velocidad máxima"
 
-#: ../src/views/layout.py:149
+#: ../src/views/layout.py:150
 msgid "Max. Altitude"
 msgstr "Altitud máxima"
 
-#: ../src/views/layout.py:151
+#: ../src/views/layout.py:152
 msgid "Min. Altitude"
 msgstr "Altitud mínima"
 
-#: ../src/views/layout.py:153
+#: ../src/views/layout.py:154
 msgid "Elevation Gain"
 msgstr "Ganancia de altitud"
 
-#: ../src/views/layout.py:155
+#: ../src/views/layout.py:156
 msgid "Elevation Loss"
 msgstr "Pérdida de altitud"
 
-#: ../src/views/layout.py:299 ../src/views/layout.py:350
+#: ../src/views/layout.py:158
+msgid "Max. Heart Rate"
+msgstr ""
+
+#: ../src/views/layout.py:160
+msgid "Avg. Heart Rate"
+msgstr ""
+
+#: ../src/views/layout.py:316 ../src/views/layout.py:341
+#: ../src/views/layout.py:407
 msgid "Select a track to view its stats..."
 msgstr "Selecciona una actividad para ver sus estadísticas..."
 
-#: ../src/views/layout.py:320
-msgid "There was an error and the track cannot be showed"
+#: ../src/views/layout.py:330
+msgid "Remove Track"
 msgstr ""
+
+#: ../src/views/layout.py:331
+#, python-brace-format
+msgid "Do you really want to remove track {row.track.name}"
+msgstr ""
+
+#: ../src/views/layout.py:373
+msgid "There was an error and the track cannot be showed"
+msgstr "Se produjo un error y la actividad no se puede mostrar"
 
 #: ../src/views/file_chooser.py:26
 msgid "Select a track file"
@@ -228,6 +250,18 @@ msgstr "_Abrir fichero..."
 #: ../data/ui/menu.ui:24
 msgid "_Quit"
 msgstr "_Salir"
+
+#: ../data/ui/track_edit_dialog.ui:48
+msgid "Name"
+msgstr ""
+
+#: ../data/ui/track_edit_dialog.ui:86
+msgid "Description"
+msgstr ""
+
+#: ../data/ui/track_edit_dialog.ui:123
+msgid "Activity Type"
+msgstr ""
 
 #~ msgid "Select a track"
 #~ msgstr "Selecciona un track"
