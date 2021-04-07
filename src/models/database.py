@@ -23,6 +23,7 @@ from os import path
 from pyopentracks.settings import xdg_data_home
 from pyopentracks.models.track import Track
 from pyopentracks.models.auto_import import AutoImport
+from pyopentracks.models.aggregated_stats import AggregatedStats
 
 
 class Database:
@@ -122,6 +123,87 @@ class Database:
                 error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
                 print(error_msg)
                 raise
+
+    def get_aggregated_stats(self, date_from=None, date_to=None):
+        """Query for aggregated stats.
+
+        Arguments:
+        date_from -- (optional) milliseconds to filter dates from.
+        date_to -- (optional) milliseconds to filter dates to.
+
+        Return:
+        the aggregated stats model.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                if date_from and date_to:
+                    where = f"""
+                    WHERE starttime>={date_from} and starttime<={date_to}
+                    """
+                elif date_from:
+                    where = f"WHERE starttime>={date_from}"
+                elif date_to:
+                    where = f"WHERE starttime<={date_to}"
+                else:
+                    where = ""
+
+                query = f"""
+                SELECT
+                category,
+                COUNT(*) total_activities,
+                SUM(totaltime) total_time,
+                SUM(movingtime) total_moving_time,
+                SUM(totaldistance) total_distance,
+                SUM(elevationgain) total_gain,
+                AVG(totaltime) avg_time,
+                AVG(movingtime) avg_moving_time,
+                AVG(totaldistance) avg_distance,
+                AVG(elevationgain) avg_gain,
+                AVG(avgspeed) avg_speed,
+                AVG(avghr) avg_heart_rate,
+                MAX(totaltime) max_time,
+                MAX(movingtime) max_moving_time,
+                MAX(totaldistance) max_distance,
+                MAX(elevationgain) max_gain,
+                MAX(maxspeed) max_speed,
+                MAX(maxhr) max_heart_rate
+                FROM tracks
+                {where}
+                GROUP BY category
+                ORDER BY total_activities DESC;
+                """
+
+                stats = conn.execute(query).fetchall()
+                if stats:
+                    return [AggregatedStats(*s) for s in stats]
+                return None
+            except Exception as error:
+                # TODO add this error message to a logger system
+                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+                print(error_msg)
+                raise
+
+    def get_years(self):
+        """Returns all years where there are activities.
+
+        Return
+        List of years.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = """
+                SELECT distinct strftime('%Y', starttime / 1000, 'unixepoch')
+                FROM tracks
+                ORDER BY starttime DESC
+                """
+                items = conn.execute(query).fetchall()
+                if items:
+                    return [i[0] for i in items]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+                print(error_msg)
+        return []
 
     def insert(self, model):
         """Insert the model in the database.

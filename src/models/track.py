@@ -27,6 +27,7 @@ from pyopentracks.utils.utils import DistanceUtils as du
 from pyopentracks.utils.utils import SpeedUtils as su
 from pyopentracks.utils.utils import ElevationUtils as eu
 from pyopentracks.utils.utils import SensorUtils as se
+from pyopentracks.utils.utils import TypeActivityUtils as tau
 
 
 class Track(Model):
@@ -170,6 +171,10 @@ class Track(Model):
         return self._starttime_ms
 
     @property
+    def start_time_label(self):
+        return _("Start")
+
+    @property
     def end_time(self):
         return dtu.ms_to_str(self._stoptime_ms)
 
@@ -178,52 +183,104 @@ class Track(Model):
         return self._stoptime_ms
 
     @property
+    def end_time_label(self):
+        return _("End")
+
+    @property
     def total_time(self):
         return tu.ms_to_str(self._totaltime_ms)
+
+    @property
+    def total_time_label(self):
+        return _("Total Time")
 
     @property
     def moving_time(self):
         return tu.ms_to_str(self._movingtime_ms)
 
     @property
+    def moving_time_label(self):
+        return _("Moving Time")
+
+    @property
     def total_distance(self):
         return du.m_to_str(self._totaldistance_m)
 
     @property
+    def total_distance_label(self):
+        return _("Distance")
+
+    @property
     def avg_speed(self):
-        return su.mps_to_kph(self._avgspeed_mps)
+        return su.mps_to_category_rate(self._avgspeed_mps, self._category)
+
+    @property
+    def avg_speed_label(self):
+        return _("Avg. Speed") if tau.is_speed(self._category) else _("Avg. Pace")
 
     @property
     def max_speed(self):
-        return su.mps_to_kph(self._maxspeed_mps)
+        return su.mps_to_category_rate(self._maxspeed_mps, self._category)
+
+    @property
+    def max_speed_label(self):
+        return _("Max. Speed") if tau.is_speed(self._category) else _("Max. Pace")
 
     @property
     def avg_moving_speed(self):
-        return su.mps_to_kph(self._avgmovingspeed_mps)
+        return su.mps_to_category_rate(self._avgmovingspeed_mps, self._category)
+
+    @property
+    def avg_moving_speed_label(self):
+        return _("Avg. Moving Speed") if tau.is_speed(self._category) else _("Avg. Moving Pace")
 
     @property
     def max_elevation(self):
         return eu.elevation_to_str(self._maxelevation_m)
 
     @property
+    def max_elevation_label(self):
+        return _("Max. Altitude")
+
+    @property
     def min_elevation(self):
         return eu.elevation_to_str(self._minelevation_m)
+
+    @property
+    def min_elevation_label(self):
+        return _("Min. Altitude")
 
     @property
     def gain_elevation(self):
         return eu.elevation_to_str(self._elevationgain_m)
 
     @property
+    def gain_elevation_label(self):
+        return _("Elevation Gain")
+
+    @property
     def loss_elevation(self):
         return eu.elevation_to_str(self._elevationloss_m)
+
+    @property
+    def loss_elevation_label(self):
+        return _("Elevation Loss")
 
     @property
     def max_hr(self):
         return se.hr_to_str(self._maxhr_bpm)
 
     @property
+    def max_hr_label(self):
+        return _("Max. Heart Rate")
+
+    @property
     def avg_hr(self):
         return se.hr_to_str(self._avghr_bpm)
+
+    @property
+    def avg_hr_label(self):
+        return _("Avg. Heart Rate")
 
     def set_name(self, new_name):
         self._name = new_name

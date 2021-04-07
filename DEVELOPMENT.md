@@ -45,3 +45,8 @@ You can build and install locally at the same time with the following command:
 After install PyOpenTracks through Flatpak, the settings values in the following file:
 
 `~/.var/app/es.rgmf.pyopentracks/config/glib-2.0/settings/keyfile`
+
+# Icons
+If you want or need to add icons you can do it using these two resources:
+- https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
+- Icon Library: https://gitlab.gnome.org/World/design/icon-library

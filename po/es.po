@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: es.rgmf.pyopentracks 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-02 20:10+0200\n"
+"POT-Creation-Date: 2021-05-10 15:02+0200\n"
 "PO-Revision-Date: 2021-02-17 13:40+0100\n"
 "Last-Translator: roman <rgmf@riseup.net>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
@@ -17,13 +17,109 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../src/app_window.py:121
+#: ../src/app_window.py:126
 msgid "Error opening the file {result['file']}"
 msgstr "No se ha podido abrir el fichero {result['file']}"
 
-#: ../src/app_window.py:124
+#: ../src/app_window.py:129
 msgid "Error opening track file"
 msgstr "Error al abrir el fichero"
+
+#: ../src/app_analytic.py:34
+msgid "Aggregated Stats"
+msgstr "Estadísticas agregadas"
+
+#: ../src/app_analytic.py:37
+msgid "Stats by year"
+msgstr "Estadísticas por año"
+
+#: ../src/models/track.py:175
+msgid "Start"
+msgstr "Comienzo"
+
+#: ../src/models/track.py:187
+msgid "End"
+msgstr "Final"
+
+#: ../src/models/track.py:195
+msgid "Total Time"
+msgstr "Tiempo total"
+
+#: ../src/models/track.py:203 ../src/models/aggregated_stats.py:135
+msgid "Moving Time"
+msgstr "Tiempo en movimiento"
+
+#: ../src/models/track.py:211 ../src/models/aggregated_stats.py:139
+msgid "Distance"
+msgstr "Distancia"
+
+#: ../src/models/track.py:219
+msgid "Avg. Speed"
+msgstr "Velocidad media"
+
+#: ../src/models/track.py:219
+msgid "Avg. Pace"
+msgstr "Ritmo medio"
+
+#: ../src/models/track.py:227
+msgid "Max. Speed"
+msgstr "Velocidad máxima"
+
+#: ../src/models/track.py:227
+msgid "Max. Pace"
+msgstr "Ritmo máximo"
+
+#: ../src/models/track.py:235
+msgid "Avg. Moving Speed"
+msgstr "Velocidad media en movimiento"
+
+#: ../src/models/track.py:235
+msgid "Avg. Moving Pace"
+msgstr "Ritmo medio en movimiento"
+
+#: ../src/models/track.py:243
+msgid "Max. Altitude"
+msgstr "Altitud máxima"
+
+#: ../src/models/track.py:251
+msgid "Min. Altitude"
+msgstr "Altitud mínima"
+
+#: ../src/models/track.py:259 ../src/models/aggregated_stats.py:143
+msgid "Elevation Gain"
+msgstr "Ganancia de altitud"
+
+#: ../src/models/track.py:267
+msgid "Elevation Loss"
+msgstr "Pérdida de altitud"
+
+#: ../src/models/track.py:275
+msgid "Max. Heart Rate"
+msgstr "Ritmo cardíaco máximo"
+
+#: ../src/models/track.py:283
+msgid "Avg. Heart Rate"
+msgstr "Ritmo cardíaco medio"
+
+#: ../src/models/aggregated_stats.py:127
+msgid "Activities"
+msgstr "Actividades"
+
+#: ../src/models/aggregated_stats.py:131
+msgid "Time"
+msgstr "Tiempo"
+
+#: ../src/models/aggregated_stats.py:147
+msgid "Speed"
+msgstr "Velocidad"
+
+#: ../src/models/aggregated_stats.py:147
+msgid "Pace"
+msgstr "Ritmo"
+
+#: ../src/models/aggregated_stats.py:151
+msgid "Heart Rate"
+msgstr "Ritmo cardíaco"
 
 #: ../src/io/import_handler.py:75
 msgid "Track already exists"
@@ -96,7 +192,15 @@ msgstr "Selecciona una carpeta"
 
 #: ../src/views/dialogs.py:244
 msgid "Edit Track"
-msgstr ""
+msgstr "Editar track"
+
+#: ../src/views/analytic.py:127
+msgid "There are not any aggregated statistics"
+msgstr "No hay estadísticas agregadas"
+
+#: ../src/views/analytic.py:183
+msgid "There are not stats for this date"
+msgstr "No hay estadísticas para esta fecha"
 
 #: ../src/views/layout.py:54
 msgid ""
@@ -118,77 +222,21 @@ msgstr "Bienvenid@ a PyOpenTracks"
 msgid "Track Stats"
 msgstr "Estadísticas de la actividad"
 
-#: ../src/views/layout.py:132
-msgid "Start"
-msgstr "Comienzo"
-
-#: ../src/views/layout.py:134
-msgid "End"
-msgstr "Final"
-
-#: ../src/views/layout.py:136
-msgid "Distance"
-msgstr "Distancia"
-
-#: ../src/views/layout.py:138
-msgid "Moving Time"
-msgstr "Tiempo en movimiento"
-
-#: ../src/views/layout.py:140
-msgid "Total Time"
-msgstr "Tiempo total"
-
-#: ../src/views/layout.py:143
-msgid "Avg. Moving Speed"
-msgstr "Velocidad media en movimiento"
-
-#: ../src/views/layout.py:146
-msgid "Avg. Speed"
-msgstr "Velocidad media"
-
-#: ../src/views/layout.py:148
-msgid "Max. Speed"
-msgstr "Velocidad máxima"
-
-#: ../src/views/layout.py:150
-msgid "Max. Altitude"
-msgstr "Altitud máxima"
-
-#: ../src/views/layout.py:152
-msgid "Min. Altitude"
-msgstr "Altitud mínima"
-
-#: ../src/views/layout.py:154
-msgid "Elevation Gain"
-msgstr "Ganancia de altitud"
-
-#: ../src/views/layout.py:156
-msgid "Elevation Loss"
-msgstr "Pérdida de altitud"
-
-#: ../src/views/layout.py:158
-msgid "Max. Heart Rate"
-msgstr ""
-
-#: ../src/views/layout.py:160
-msgid "Avg. Heart Rate"
-msgstr ""
-
-#: ../src/views/layout.py:316 ../src/views/layout.py:341
-#: ../src/views/layout.py:407
+#: ../src/views/layout.py:310 ../src/views/layout.py:335
+#: ../src/views/layout.py:402
 msgid "Select a track to view its stats..."
 msgstr "Selecciona una actividad para ver sus estadísticas..."
 
-#: ../src/views/layout.py:330
+#: ../src/views/layout.py:324
 msgid "Remove Track"
-msgstr ""
+msgstr "Eliminar track"
 
-#: ../src/views/layout.py:331
+#: ../src/views/layout.py:325
 #, python-brace-format
 msgid "Do you really want to remove track {row.track.name}"
-msgstr ""
+msgstr "¿Quieres eliminar el track {row.track.name}"
 
-#: ../src/views/layout.py:373
+#: ../src/views/layout.py:367
 msgid "There was an error and the track cannot be showed"
 msgstr "Se produjo un error y la actividad no se puede mostrar"
 
@@ -212,26 +260,26 @@ msgstr "Ficheros KMZ"
 msgid "Any files"
 msgstr "Cualquier fichero"
 
-#: ../src/app.py:164
+#: ../src/app.py:169
 msgid ""
 "There are new tracks imported. Do you want to re-load all tracks to see the "
 "new ones?"
 msgstr ""
 "Hay nuevas actividades importadas. ¿Quieres recargar todas las actividades?"
 
-#: ../src/app.py:170
+#: ../src/app.py:175
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: ../src/app.py:174
+#: ../src/app.py:179
 msgid "Re-load"
 msgstr "Recargar"
 
-#: ../src/app.py:227
+#: ../src/app.py:232
 msgid "Error importing the file {result['file']}"
 msgstr "Error al importar el fichero {result['file']}"
 
-#: ../src/app.py:230
+#: ../src/app.py:235
 msgid "Error importing track file"
 msgstr "Error al importar fichero de actividad"
 
@@ -251,17 +299,53 @@ msgstr "_Abrir fichero..."
 msgid "_Quit"
 msgstr "_Salir"
 
+#: ../data/ui/analytic_summary_sport_layout.ui:35
+msgid "Road Biking"
+msgstr "Bicicleta de carretera"
+
+#: ../data/ui/analytic_summary_sport_layout.ui:70
+msgid "Totals"
+msgstr "Totales"
+
+#: ../data/ui/analytic_summary_sport_layout.ui:141
+#: ../data/ui/analytic_summary_sport_layout.ui:157
+#: ../data/ui/analytic_summary_sport_layout.ui:173
+#: ../data/ui/analytic_summary_sport_layout.ui:205
+#: ../data/ui/analytic_summary_sport_layout.ui:237
+#: ../data/ui/analytic_summary_sport_layout.ui:330
+#: ../data/ui/analytic_summary_sport_layout.ui:346
+#: ../data/ui/analytic_summary_sport_layout.ui:378
+#: ../data/ui/analytic_summary_sport_layout.ui:410
+#: ../data/ui/analytic_summary_sport_layout.ui:442
+#: ../data/ui/analytic_summary_sport_layout.ui:474
+#: ../data/ui/analytic_summary_sport_layout.ui:567
+#: ../data/ui/analytic_summary_sport_layout.ui:583
+#: ../data/ui/analytic_summary_sport_layout.ui:615
+#: ../data/ui/analytic_summary_sport_layout.ui:647
+#: ../data/ui/analytic_summary_sport_layout.ui:679
+#: ../data/ui/analytic_summary_sport_layout.ui:711
+msgid "label"
+msgstr ""
+
+#: ../data/ui/analytic_summary_sport_layout.ui:275
+msgid "Averages"
+msgstr "Medias"
+
+#: ../data/ui/analytic_summary_sport_layout.ui:512
+msgid "Maximums"
+msgstr "Máximos"
+
 #: ../data/ui/track_edit_dialog.ui:48
 msgid "Name"
-msgstr ""
+msgstr "Nombre"
 
 #: ../data/ui/track_edit_dialog.ui:86
 msgid "Description"
-msgstr ""
+msgstr "Descripción"
 
 #: ../data/ui/track_edit_dialog.ui:123
 msgid "Activity Type"
-msgstr ""
+msgstr "Tipo de actividad"
 
 #~ msgid "Select a track"
 #~ msgstr "Selecciona un track"

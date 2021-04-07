@@ -35,6 +35,7 @@ from pyopentracks.views.dialogs import (
     ImportResultDialog,
     PreferencesDialog
 )
+from pyopentracks.app_analytic import AppAnalytic
 
 
 class Application(Gtk.Application):
@@ -111,6 +112,10 @@ class Application(Gtk.Application):
         if response == Gtk.ResponseType.OK:
             pass
         dialog.destroy()
+
+    def analytic_button_clicked(self, btn):
+        app_analytic = AppAnalytic()
+        self._window.load_analytics(app_analytic.get_layout())
 
     def get_pref(self, pref):
         return self._preferences.get_pref(pref)

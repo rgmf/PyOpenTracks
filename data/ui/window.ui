@@ -21,7 +21,7 @@
               <object class="GtkImage" id="_back_menu_image">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="icon_name">go-previous</property>
+                <property name="icon_name">left-symbolic</property>
                 <property name="icon_size">1</property>
               </object>
             </child>
@@ -39,7 +39,7 @@
               <object class="GtkImage" id="_del_menu_image">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="icon_name">edit-delete</property>
+                <property name="icon_name">trash-symbolic</property>
                 <property name="icon_size">1</property>
               </object>
             </child>
@@ -57,7 +57,7 @@
               <object class="GtkImage" id="_edit_menu_image">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="icon_name">preferences-desktop-theme</property>
+                <property name="icon_name">edit-symbolic</property>
                 <property name="icon_size">1</property>
               </object>
             </child>
@@ -93,7 +93,25 @@
               <object class="GtkImage" id="_preferences_menu_image">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="icon_name">preferences-system</property>
+                <property name="icon_name">settings-symbolic</property>
+                <property name="icon_size">1</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack_type">end</property>
+          </packing>
+        </child>
+	<child>
+          <object class="GtkButton" id="_analytic_menu_btn">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <child>
+              <object class="GtkImage" id="_analytic_menu_image">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">stats-symbolic</property>
                 <property name="icon_size">1</property>
               </object>
             </child>

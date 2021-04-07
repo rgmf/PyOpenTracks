@@ -1,3 +1,7 @@
+.pyot-bg {
+    background-color: #f6f5f4;
+}
+
 .pyot-h1 {
     font-size: 3em;
     font-weight: bolder;
@@ -30,10 +34,16 @@
 .pyot-stats-header {
     font-size: 1.5em;
     font-weight: bolder;
+    margin-bottom: 10px;
 }
 
 .pyot-stats-value {
     font-size: 1.5em;
+}
+
+.pyot-stats-small-header {
+    font-size: 1.1em;
+    font-weight: bolder;
 }
 
 .pyot-list-tracks-label {
