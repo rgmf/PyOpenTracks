@@ -17,7 +17,11 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from datetime import datetime, timedelta
+from gi.repository import GdkPixbuf
+
+from datetime import datetime, timedelta, date
+from calendar import monthrange
+from locale import setlocale, LC_ALL
 
 
 class DateTimeUtils:
@@ -37,6 +41,34 @@ class DateTimeUtils:
             "%a, %d %b %Y %H:%M:%S %Z"
         )
 
+    @staticmethod
+    def first_day_ms(year: int, month: int) -> int:
+        """Return the millis of the first day of the year/month."""
+        return datetime(year, month, 1, 0, 0, 0).timestamp() * 1000
+
+    @staticmethod
+    def last_day_ms(year: int, month: int) -> int:
+        """Return the millis of the last day of the year/month."""
+        weekday, num_days = monthrange(year, month)
+        return datetime(year, month, num_days, 23, 59, 59).timestamp() * 1000
+
+
+class DateUtils:
+    @staticmethod
+    def get_months():
+        """Return the list of months names."""
+        setlocale(LC_ALL, '')
+        return [
+            datetime.strptime(str(i), "%m").strftime("%B")\
+            for i in range(1, 13)
+        ]
+
+    @staticmethod
+    def get_today():
+        """Return year, month and day of today."""
+        t = date.today()
+        return t.year, t.month, t.day
+
 
 class TimeUtils:
     @staticmethod
@@ -51,7 +83,11 @@ class TimeUtils:
         """
         if not time_ms:
             return "-"
-        return str(timedelta(seconds=int(time_ms / 1000)))
+        seconds = timedelta(seconds=int(time_ms) / 1000).total_seconds()
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = (seconds % 3600) % 60
+        return f"{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}"
 
     @staticmethod
     def iso_to_ms(date_time: str) -> float:
@@ -102,6 +138,18 @@ class SpeedUtils:
             return "-"
         return str(round(speed_mps * 3.6, 1)) + " km/h"
 
+    @staticmethod
+    def mps_to_category_rate(speed_mps: float, category: str) -> str:
+        if not speed_mps:
+            return "-"
+        if TypeActivityUtils.is_speed(category):
+            return SpeedUtils.mps_to_kph(speed_mps)
+        else:
+            seconds = timedelta(minutes=(1000 / 60) / speed_mps).total_seconds()
+            minutes = seconds // 60
+            seconds = seconds % 60
+            return f"{int(minutes):d}:{int(seconds):02d} min/km"
+
 
 class ElevationUtils:
     @staticmethod
@@ -143,6 +191,11 @@ class TypeActivityUtils:
         "driving": "icons/drive_car_black_48dp.svg",
     }
 
+    _speed = [
+        "biking", "cycling", "road biking", "mountain biking",
+        "driving"
+    ]
+
     @staticmethod
     def get_icon_resource(activity_type: str) -> str:
         """Gets and returns resource path icon for activity's type."""
@@ -155,11 +208,26 @@ class TypeActivityUtils:
         return "/es/rgmf/pyopentracks/" + icon
 
     @staticmethod
+    def get_icon_pixbuf(activity_type: str):
+        """Gets GdkPixbuf.Pixbuf icon from activity type (category)."""
+        res = TypeActivityUtils.get_icon_resource(activity_type)
+        return GdkPixbuf.Pixbuf.new_from_resource_at_scale(
+            resource_path=res,
+            width=48,
+            height=48,
+            preserve_aspect_ratio=True
+        )
+
+    @staticmethod
     def get_activity_types():
         """Return a list with a list of two items: type's name and icon."""
         return [
             [name, icon] for name, icon in TypeActivityUtils._types.items()
         ]
+
+    @staticmethod
+    def is_speed(category: str) -> bool:
+        return category in TypeActivityUtils._speed
 
 
 class TrackPointUtils:

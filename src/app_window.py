@@ -37,6 +37,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
     _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
     _preferences_menu_btn: Gtk.Button = Gtk.Template.Child()
+    _analytic_menu_btn: Gtk.Button = Gtk.Template.Child()
     _back_btn: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
@@ -65,6 +66,10 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._preferences_menu_btn.connect(
             "clicked",
             lambda button: self._app.preferences_button_clicked(button)
+        )
+        self._analytic_menu_btn.connect(
+            "clicked",
+            lambda button: self._app.analytic_button_clicked(button)
         )
         self._primary_menu_btn.set_menu_model(menu)
 
@@ -129,6 +134,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             layout.load_map(TrackPointUtils.to_locations(track.track_points))
             self.show_layout(layout)
             self._back_btn.show()
+            self._analytic_menu_btn.hide()
+            self._preferences_menu_btn.hide()
 
     def load_tracks(self, tracks):
         """Load all tracks in the correspondig layout.
@@ -136,10 +143,20 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         Arguments:
         tracks -- a list of Track objects.
         """
+        self._analytic_menu_btn.show()
+        self._preferences_menu_btn.show()
         if tracks and len(tracks) > 0:
             self.show_layout(TracksLayout(self, tracks))
         else:
             self.show_layout(GreeterLayout())
+
+    def load_analytics(self, layout):
+        self.show_layout(layout)
+        self._back_btn.show()
+        self._analytic_menu_btn.hide()
+        self._preferences_menu_btn.hide()
+        self._edit_btn.hide()
+        self._del_btn.hide()
 
     def loading(self, total):
         """Handle a progress bar on the top of the loaded Layout.

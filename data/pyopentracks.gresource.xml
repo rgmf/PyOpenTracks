@@ -6,11 +6,21 @@
     <file>ui/greeter_layout.ui</file>
     <file>ui/tracks_layout.ui</file>
 
+    <file>ui/analytic_layout.ui</file>
+    <file>ui/analytic_summary_sport_layout.ui</file>
+    <file>ui/analytic_year_layout.ui</file>
+
     <file>ui/track_edit_dialog.ui</file>
 
     <file>ui/menu.ui</file>
 
     <file>ui/gtk_style.css</file>
+
+    <file>icons/trash-symbolic.svg</file>
+    <file>icons/edit-symbolic.svg</file>
+    <file>icons/settings-symbolic.svg</file>
+    <file>icons/stats-symbolic.svg</file>
+    <file>icons/left-symbolic.svg</file>
 
     <file>icons/bike_black_48dp.svg</file>
     <file>icons/drive_car_black_48dp.svg</file>

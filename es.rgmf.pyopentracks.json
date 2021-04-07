@@ -44,7 +44,8 @@
 		]
             },
             "build-commands": [
-		"pip3 install --prefix=/app folium==0.12.1"
+		"pip3 install --prefix=/app folium==0.12.1",
+		"pip3 install --prefix=/app matplotlib==3.3.4"
             ]
         }
     ]

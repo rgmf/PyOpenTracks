@@ -17,10 +17,10 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk, GdkPixbuf, WebKit2
+from gi.repository import Gtk, WebKit2
 
 from pyopentracks.views.maps import TrackMap
-from pyopentracks.utils.utils import TypeActivityUtils as TAU
+from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.models.database import Database
 from pyopentracks.io.gpx_parser import GpxLocationsHandle
 from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
@@ -129,35 +129,33 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         # Track's name, description and type
         self._add_info_track(track, 0, 1, 2, 1)
         # Start datetime
-        self._add_item(_("Start"), track.start_time, 0, 2, 1, 1)
+        self._add_item(track.start_time_label, track.start_time, 0, 2, 1, 1)
         # End datetime
-        self._add_item(_("End"), track.end_time, 1, 2, 1, 1)
+        self._add_item(track.end_time_label, track.end_time, 1, 2, 1, 1)
         # Total distance
-        self._add_item(_("Distance"), track.total_distance, 0, 3, 1, 1)
+        self._add_item(track.total_distance_label, track.total_distance, 0, 3, 1, 1)
         # Total moving time
-        self._add_item(_("Moving Time"), track.moving_time, 1, 3, 1, 1)
+        self._add_item(track.moving_time_label, track.moving_time, 1, 3, 1, 1)
         # Total time
-        self._add_item(_("Total Time"), track.total_time, 0, 4, 1, 1)
+        self._add_item(track.total_time_label, track.total_time, 0, 4, 1, 1)
         # Avg. moving speed
-        self._add_item(
-            _("Avg. Moving Speed"),
-            track.avg_moving_speed, 0, 5, 1, 1)
+        self._add_item(track.avg_moving_speed_label, track.avg_moving_speed, 0, 5, 1, 1)
         # Avg. speed
-        self._add_item(_("Avg. Speed"), track.avg_speed, 1, 5, 1, 1)
+        self._add_item(track.avg_speed_label, track.avg_speed, 1, 5, 1, 1)
         # Max. speed
-        self._add_item(_("Max. Speed"), track.max_speed, 0, 6, 1, 1)
+        self._add_item(track.max_speed_label, track.max_speed, 0, 6, 1, 1)
         # Max. elevation
-        self._add_item(_("Max. Altitude"), track.max_elevation, 0, 7, 1, 1)
+        self._add_item(track.max_elevation_label, track.max_elevation, 0, 7, 1, 1)
         # Min. elevation
-        self._add_item(_("Min. Altitude"), track.min_elevation, 1, 7, 1, 1)
+        self._add_item(track.min_elevation_label, track.min_elevation, 1, 7, 1, 1)
         # Gain elevation
-        self._add_item(_("Elevation Gain"), track.gain_elevation, 0, 8, 1, 1)
+        self._add_item(track.gain_elevation_label, track.gain_elevation, 0, 8, 1, 1)
         # Loss elevation
-        self._add_item(_("Elevation Loss"), track.loss_elevation, 1, 8, 1, 1)
+        self._add_item(track.loss_elevation_label, track.loss_elevation, 1, 8, 1, 1)
         # Max. heart rate
-        self._add_item(_("Max. Heart Rate"), track.max_hr, 0, 9, 1, 1)
+        self._add_item(track.max_hr_label, track.max_hr, 0, 9, 1, 1)
         # Avg. heart rate
-        self._add_item(_("Avg. Heart Rate"), track.avg_hr, 1, 9, 1, 1)
+        self._add_item(track.avg_hr_label, track.avg_hr, 1, 9, 1, 1)
 
         self.show_all()
 
@@ -188,13 +186,9 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         hbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
         hbox.set_homogeneous(False)
 
-        pixbuf = GdkPixbuf.Pixbuf.new_from_resource_at_scale(
-            resource_path=TAU.get_icon_resource(track.activity_type),
-            width=48,
-            height=48,
-            preserve_aspect_ratio=True
+        icon = Gtk.Image.new_from_pixbuf(
+            tau.get_icon_pixbuf(track.activity_type)
         )
-        icon = Gtk.Image.new_from_pixbuf(pixbuf)
 
         name_label = Gtk.Label(label=track.name)
         name_label.set_line_wrap(True)
@@ -377,6 +371,7 @@ class TracksLayout(Gtk.Box, Layout):
         loc_handle.get_locations(
             row.track.trackfile_path, self._on_locations_end
         )
+        self._app_window.disconnect_action_buttons()
         self._app_window.connect_button_del(self.on_remove, row)
         self._app_window.connect_button_edit(self.on_edit, row)
 
