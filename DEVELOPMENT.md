@@ -46,6 +46,11 @@ After install PyOpenTracks through Flatpak, the settings values in the following
 
 `~/.var/app/es.rgmf.pyopentracks/config/glib-2.0/settings/keyfile`
 
+## PyOpenTracks data on Flatpak environment
+After install PyOpenTracks through Flatpak, the database and local app data are in the following folder:
+
+`~/.var/app/es.rgmf.pyopentracks/data/PyOpenTracks/`
+
 # Icons
 If you want or need to add icons you can do it using these two resources:
 - https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
