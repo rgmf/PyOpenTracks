@@ -159,7 +159,7 @@ class Database:
                 AVG(movingtime) avg_moving_time,
                 AVG(totaldistance) avg_distance,
                 AVG(elevationgain) avg_gain,
-                AVG(avgspeed) avg_speed,
+                SUM(totaldistance) / (SUM(movingtime) / 1000) avg_speed,
                 AVG(avghr) avg_heart_rate,
                 MAX(totaltime) max_time,
                 MAX(movingtime) max_moving_time,
