@@ -47,7 +47,6 @@ class Application(Gtk.Application):
         self._menu: Gio.Menu = Gio.Menu()
         self._window: PyopentracksWindow = None
         self._preferences: AppPreferences = None
-        self._db: Database = Database()
 
     def do_activate(self):
         stylecontext = Gtk.StyleContext()
@@ -149,8 +148,9 @@ class Application(Gtk.Application):
         self._preferences = AppPreferences()
 
     def _setup_database(self):
+        db = Database()
         migration = Migration(
-            self._db,
+            db,
             self._preferences.get_pref(AppPreferences.DB_VERSION)
         )
         db_version = migration.migrate()
@@ -183,7 +183,8 @@ class Application(Gtk.Application):
         )
 
     def _load_tracks(self):
-        self._window.load_tracks(self._db.get_tracks())
+        db = Database()
+        self._window.load_tracks(db.get_tracks())
 
     def _end_load_file_cb(self, gpxParserHandler):
         self._window.loading(1.0)

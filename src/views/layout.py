@@ -312,6 +312,8 @@ class TracksLayout(Gtk.Box, Layout):
         self._tracks = tracks
         self._load_data()
 
+        self._select_first_row()
+
         self.show_all()
 
     def get_top_widget(self):
@@ -361,6 +363,12 @@ class TracksLayout(Gtk.Box, Layout):
         for track in self._tracks:
             row = TrackRow(track)
             self._list_widget.add(row)
+
+    def _select_first_row(self):
+        first_row = self._list_widget.get_row_at_index(0)
+        if first_row:
+            self._list_widget.select_row(first_row)
+            self._on_row_activated(self._list_widget, first_row)
 
     def _on_row_activated(self, listbox, row):
         if not row.track:
