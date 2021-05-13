@@ -133,6 +133,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             layout.load_data(track)
             layout.load_map(TrackPointUtils.to_locations(track.track_points))
             self.show_layout(layout)
+            self._edit_btn.hide()
+            self._del_btn.hide()
             self._back_btn.show()
             self._analytic_menu_btn.hide()
             self._preferences_menu_btn.hide()
