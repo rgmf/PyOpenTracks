@@ -23,6 +23,9 @@ from gi.repository import Gio
 class AppPreferences:
     DB_VERSION = 0
     AUTO_IMPORT_FOLDER = 1
+    WIN_STATE_WIDTH = 2
+    WIN_STATE_HEIGHT = 3
+    WIN_STATE_IS_MAXIMIZED = 4
 
     _settings: Gio.Settings = None
 
@@ -37,12 +40,24 @@ class AppPreferences:
             return self._settings.get_int("dbversion")
         elif pref == AppPreferences.AUTO_IMPORT_FOLDER:
             return self._settings.get_string("trackspath")
+        elif pref == AppPreferences.WIN_STATE_WIDTH:
+            return self._settings.get_int("win-state-width")
+        elif pref == AppPreferences.WIN_STATE_HEIGHT:
+            return self._settings.get_int("win-state-height")
+        elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
+            return self._settings.get_boolean("win-state-is-mamixmized")
 
     def set_pref(self, pref, new_value):
         if pref == AppPreferences.DB_VERSION:
             self._settings.set_int("dbversion", new_value)
         elif pref == AppPreferences.AUTO_IMPORT_FOLDER:
             self._settings.set_string("trackspath", new_value)
+        elif pref == AppPreferences.WIN_STATE_WIDTH:
+            self._settings.set_int("win-state-width", new_value)
+        elif pref == AppPreferences.WIN_STATE_HEIGHT:
+            self._settings.set_int("win-state-height", new_value)
+        elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
+            self._settings.set_boolean("win-state-is-mamixmized", new_value)
 
     def _on_settings_folder_changed(self, settings, key):
         #self._load_folder()

@@ -11,5 +11,30 @@
       <summary>Track's Path</summary>
       <description>Select a directory where PyOpenTracks will load all tracks from.</description>
     </key>
+    <key name="win-state-width" type="i">
+      <default>800</default>
+      <summary>Window's width</summary>
+      <description>The window's width state.</description>
+    </key>
+    <key name="win-state-height" type="i">
+      <default>600</default>
+      <summary>Window's height</summary>
+      <description>The window's height state.</description>
+    </key>
+    <key name="win-state-x" type="i">
+      <default>0</default>
+      <summary>Window's x position</summary>
+      <description>The window's x position.</description>
+    </key>
+    <key name="win-state-y" type="i">
+      <default>0</default>
+      <summary>Window's y position</summary>
+      <description>The window's y position.</description>
+    </key>
+    <key name="win-state-is-mamixmized" type="b">
+      <default>false</default>
+      <summary>Window's maximized</summary>
+      <description>The window's maximized state.</description>
+    </key>
   </schema>
 </schemalist>

@@ -48,6 +48,13 @@ class Application(Gtk.Application):
         self._window: PyopentracksWindow = None
         self._preferences: AppPreferences = None
 
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+        self._setup_menu()
+        self._setup_settings()
+        self._setup_database()
+        self._auto_import()
+
     def do_activate(self):
         stylecontext = Gtk.StyleContext()
         provider = Gtk.CssProvider()
@@ -67,13 +74,6 @@ class Application(Gtk.Application):
             self._load_tracks()
         win.present()
 
-    def do_startup(self):
-        Gtk.Application.do_startup(self)
-        self._setup_menu()
-        self._setup_settings()
-        self._setup_database()
-        self._auto_import()
-
     def on_open_file(self, action, param):
         dialog = FileChooserWindow(parent=self._window)
         response = dialog.run()
@@ -84,6 +84,7 @@ class Application(Gtk.Application):
         dialog.destroy()
 
     def on_quit(self, action, param):
+        self._window.on_quit()
         self.quit()
 
     def load_file(self, filename: str, cb):

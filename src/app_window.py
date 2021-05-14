@@ -24,6 +24,7 @@ from pyopentracks.views.layout import (
 )
 from pyopentracks.utils.utils import TrackPointUtils
 from pyopentracks.views.dialogs import MessageDialogError
+from pyopentracks.app_preferences import AppPreferences
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
@@ -42,6 +43,12 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.connect("size-allocate", self._on_window_state_event)
+        self.connect("delete-event", self._on_destroy)
+        self._width = None
+        self._height = None
+        self._is_maximized = None
+        self._load_window_state()
         self._action_buttons_handlers = []
         self.set_title("PyOpenTracks")
         self._app = kwargs["application"]
@@ -195,3 +202,30 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
     def clean_top_widget(self):
         widget = self._layout.get_top_widget()
         widget.foreach(lambda child: widget.remove(child))
+
+    def on_quit(self):
+        self._save_state()
+
+    def _load_window_state(self):
+        prefs = AppPreferences()
+        self._width = prefs.get_pref(AppPreferences.WIN_STATE_WIDTH)
+        self._height = prefs.get_pref(AppPreferences.WIN_STATE_HEIGHT)
+        self._is_maximized = prefs.get_pref(AppPreferences.WIN_STATE_IS_MAXIMIZED)
+        if self._is_maximized or not (self._width and self._height):
+            self.maximize()
+        else:
+            self.set_default_size(self._width, self._height)
+            self.move(0, 0)
+
+    def _save_state(self):
+        prefs = AppPreferences()
+        prefs.set_pref(AppPreferences.WIN_STATE_WIDTH, self._width)
+        prefs.set_pref(AppPreferences.WIN_STATE_HEIGHT, self._height)
+        prefs.set_pref(AppPreferences.WIN_STATE_IS_MAXIMIZED, self._is_maximized)
+
+    def _on_window_state_event(self, widget, event):
+        self._width, self._height = self.get_size()
+        self._is_maximized = self.is_maximized()
+
+    def _on_destroy(self, widget, event):
+        self._save_state()
