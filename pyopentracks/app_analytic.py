@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pyopentracks.views.analytic import (
+from pyopentracks.views.layouts.analytic import (
     AnalyticLayout, AggregatedStatsYear, AggregatedStats
 )
 

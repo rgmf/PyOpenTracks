@@ -17,11 +17,10 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from datetime import datetime
 from parser import ParserError
-from math import radians, sin, cos, asin, sqrt
 
 from pyopentracks.utils.utils import TimeUtils as tu
+from pyopentracks.utils.utils import LocationUtils
 
 
 class TrackStats:
@@ -257,7 +256,7 @@ class TrackStats:
         if self._total_distance_m is None:
             self._total_distance_m = 0
         else:
-            to_accum = self._distance_to(
+            to_accum = LocationUtils.distance_between(
                 float(self._last_latitude),
                 float(self._last_longitude),
                 float(location["latitude"]),
@@ -323,18 +322,3 @@ class TrackStats:
             print("Valid location exception:", e)
             return False
         return True
-
-    def _distance_to(self, lat1, lon1, lat2, lon2):
-        """Hervasian algorithm.
-
-        Return:
-        Distance between the two locations (lat1, lon1) to (lat2, lon2)
-        in meters.
-        """
-        lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
-
-        dlon = lon2 - lon1
-        dlat = lat2 - lat1
-
-        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-        return 2 * 6371 * asin(sqrt(a)) * 1000
