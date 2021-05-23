@@ -19,9 +19,10 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Gio
 
-from pyopentracks.views.layout import (
-    TrackStatsLayout, GreeterLayout, TracksLayout, InfoLayout
-)
+from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
+from pyopentracks.views.layouts.greeter_layout import GreeterLayout
+from pyopentracks.views.layouts.tracks_layout import TracksLayout
+from pyopentracks.views.layouts.info_layout import InfoLayout
 from pyopentracks.utils.utils import TrackPointUtils
 from pyopentracks.views.dialogs import MessageDialogError
 from pyopentracks.app_preferences import AppPreferences

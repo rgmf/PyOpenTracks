@@ -10,7 +10,7 @@ i18n = import('i18n')
 application_id = 'es.rgmf.pyopentracks'
 
 subdir('data')
-subdir('src')
+subdir('pyopentracks')
 subdir('po')
 
 meson.add_install_script('build-aux/meson/postinstall.py')

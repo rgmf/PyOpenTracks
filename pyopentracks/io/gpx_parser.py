@@ -230,18 +230,35 @@ class GpxParserHandlerInThread(GObject.GObject):
             })
 
 
-class GpxLocationsParser:
+class GpxTrackPointsParser:
     TAG_TRKPT = "trkpt"
 
     def __init__(self):
-        self._locations = []
+        self._track_points = []
+        self._new_track_point = None
+        self._data = ""
+        self._tag = None
 
     def start(self, tag, attr):
         _, _, tag = tag.rpartition("}")
         self._data = ""
 
         if tag == GpxParser.TAG_TRKPT and self._is_location(attr):
-            self._locations.append((float(attr["lat"]), float(attr["lon"])))
+            self._tag = tag
+            self._new_track_point = TrackPoint()
+            self._new_track_point.location = {"latitude": attr["lat"], "longitude": attr["lon"]}
+
+    def end(self, tag):
+        _, _, tag = tag.rpartition("}")
+
+        if self._tag == GpxParser.TAG_TRKPT:
+            self._end_tag_inside_trkpt(tag)
+
+    def data(self, d):
+        self._data = self._data + d
+
+    def close(self):
+        pass
 
     def _is_location(self, loc):
         if "lat" not in loc or "lon" not in loc:
@@ -250,18 +267,26 @@ class GpxLocationsParser:
             return False
         return True
 
-    def end(self, tag):
-        pass
+    def _end_tag_inside_trkpt(self, tag):
+        if tag == GpxParser.TAG_ELEVATION:
+            self._new_track_point.elevation = self._data
+        elif tag == GpxParser.TAG_GAIN:
+            self._new_track_point.elevation_gain = self._data
+        elif tag == GpxParser.TAG_LOSS:
+            self._new_track_point.elevation_loss = self._data
+        elif tag == GpxParser.TAG_TIME:
+            self._new_track_point.time = self._data
+        elif tag == GpxParser.TAG_SPEED:
+            self._new_track_point.speed = self._data
+        elif tag == GpxParser.TAG_HR:
+            self._new_track_point.heart_rate = self._data
+        elif tag == GpxParser.TAG_TRKPT:
+            self._track_points.append(self._new_track_point)
+            self._new_track_point = None
 
-    def data(self, d):
-        pass
 
-    def close(self):
-        pass
-
-
-class GpxLocationsHandle(GObject.GObject):
-    """Handle the GPX locations extraction into a thread."""
+class GpxTrackPointsHandle(GObject.GObject):
+    """Handle the GPX track points extraction into a thread."""
 
     __gsignals__ = {
         "end-parse": (GObject.SIGNAL_RUN_FIRST, None, ()),
@@ -272,7 +297,7 @@ class GpxLocationsHandle(GObject.GObject):
         self._filename = None
         self._callback = None
 
-    def get_locations(self, filename, callback):
+    def get_track_points(self, filename, callback):
         """Get all trackpoints from filename.
 
         Arguments:
@@ -280,18 +305,18 @@ class GpxLocationsHandle(GObject.GObject):
         callback -- a function that accept a list of tuple of locations.
 
         Return:
-        list of tuple with two items (float): latitude and longitude.
-        Can return None if there are not locations into the GPX file.
+        list of track points (TrackPoint).
+        Can return None if there are not track points into the GPX file.
         """
         self._filename = filename
         self._callback = callback
-        thread = threading.Thread(target=self._get_locations_in_thread)
+        thread = threading.Thread(target=self._get_track_points_in_thread)
         thread.daemon = True
         thread.start()
 
-    def _get_locations_in_thread(self):
+    def _get_track_points_in_thread(self):
         try:
-            gpx_parser = GpxLocationsParser()
+            gpx_parser = GpxTrackPointsParser()
             parser = XMLParser(target=gpx_parser)
             with open(self._filename, 'rb') as file:
                 for data in file:
@@ -299,7 +324,7 @@ class GpxLocationsHandle(GObject.GObject):
                 parser.close()
 
             self.emit("end-parse")
-            GLib.idle_add(self._callback, gpx_parser._locations)
+            GLib.idle_add(self._callback, gpx_parser._track_points)
         except Exception as error:
             # TODO print to logger system
-            print(f"Error get locations on the file {self._filename}: {error}")
+            print(f"Error getting track points on the file {self._filename}: {error}")

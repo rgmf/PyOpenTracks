@@ -8,6 +8,12 @@
     padding: 20px;
 }
 
+.pyot-h2 {
+    font-size: 2em;
+    font-weight: bolder;
+    padding: 5px;
+}
+
 .pyot-h3 {
     font-size: 1.15em;
     font-weight: bolder;
@@ -27,18 +33,17 @@
 }
 
 .pyot-stats-bg-color {
-    background-color: #fefefe;
     padding: 20px;
+    background-color: #fefefe;
 }
 
 .pyot-stats-header {
-    font-size: 1.5em;
-    font-weight: bolder;
-    margin-bottom: 10px;
+    font-size: 1em;
 }
 
 .pyot-stats-value {
-    font-size: 1.5em;
+    font-size: 1.75em;
+    font-weight: bolder;
 }
 
 .pyot-stats-small-header {
@@ -61,4 +66,8 @@
 .pyot-prefs-help {
     font-size: 1em;
     padding-top: 5px;
+}
+
+.pyot-box-with-margin {
+    margin: 20px;
 }

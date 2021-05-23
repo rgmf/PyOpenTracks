@@ -18,20 +18,11 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-class TrackPoint:
-
+class Layout:
     def __init__(self):
-        self.location = {"longitude": None, "latitude": None}
-        self.time = None
-        self.speed = None
-        self.elevation = None
-        self.elevation_gain = None
-        self.elevation_loss = None
-        self.heart_rate = None
-        self.cadence = None
-        self.power = None
+        self._top_widget = None
+        self._main_widget = None
+        self._bottom_widget = None
 
-    @property
-    def location_tuple(self):
-        """Build and return a tuple object representing location."""
-        return (float(self.location["latitude"]), float(self.location["longitude"]))
+    def get_top_widget(self):
+        raise NotImplementedError

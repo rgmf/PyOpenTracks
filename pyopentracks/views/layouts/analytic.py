@@ -19,7 +19,6 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
-from pyopentracks.views.layout import Layout
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.utils.utils import DateUtils as du
 from pyopentracks.utils.utils import DateTimeUtils as dtu
@@ -28,7 +27,7 @@ from pyopentracks.views.graphs import AggregatedStatsChart
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_layout.ui")
-class AnalyticLayout(Gtk.Notebook, Layout):
+class AnalyticLayout(Gtk.Notebook):
     __gtype_name__ = "AnalyticLayout"
 
     def __init__(self):

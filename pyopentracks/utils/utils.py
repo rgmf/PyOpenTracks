@@ -19,6 +19,8 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import GdkPixbuf
 
+from math import radians, sin, cos, asin, sqrt
+
 from datetime import datetime, timedelta, date
 from calendar import monthrange
 from locale import setlocale, LC_ALL
@@ -238,6 +240,55 @@ class TrackPointUtils:
         if not trackpoints:
             return []
         return [tp.location_tuple for tp in trackpoints]
+
+    @staticmethod
+    def xy_distance_elevation(trackpoints, distance_threshold=5):
+        """Return two lists with distances and elevations from trackpoints.
+
+        It returns the values every distance_threshold meters.
+
+        Arguments:
+        trackpoints -- track point's list (TrackPoint object's list).
+        distance_threshold -- it determines points to be added (every x number of meters add the track point).
+
+        Return:
+        Two lists: distances in km and elevations in meters.
+        """
+        if not trackpoints:
+            return [], []
+        distances = [0]
+        elevations = [float(trackpoints[0].elevation)]
+        dist_acc = 0
+        total_distance = 0
+        last_tp = trackpoints[0]
+        for tp in trackpoints:
+            dist_acc = dist_acc + LocationUtils.distance_between(last_tp.latitude, last_tp.longitude, tp.latitude, tp.longitude)
+            last_tp = tp
+            if dist_acc >= distance_threshold:
+                total_distance = total_distance + dist_acc
+                distances.append(total_distance / 1000)
+                elevations.append(float(tp.elevation))
+                dist_acc = 0
+        return distances, elevations
+
+
+class LocationUtils:
+
+    @staticmethod
+    def distance_between(lat1, lon1, lat2, lon2):
+        """Hervasian algorithm.
+
+        Return:
+        Distance between the two locations (lat1, lon1) to (lat2, lon2)
+        in meters.
+        """
+        lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+
+        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+        return 2 * 6371 * asin(sqrt(a)) * 1000
 
 
 class SensorUtils:
