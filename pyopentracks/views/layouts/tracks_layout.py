@@ -22,9 +22,7 @@ from gi.repository import Gtk
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
 from pyopentracks.models.database import Database
-from pyopentracks.io.gpx_parser import GpxTrackPointsHandle
 from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
-from pyopentracks.utils.utils import TrackPointUtils
 
 
 class TrackRow(Gtk.ListBoxRow):
@@ -141,39 +139,12 @@ class TracksLayout(Gtk.Box, Layout):
         if not row.track:
             self._show_message(_("There was an error and the track cannot be showed"))
             return
-        self._load_track_stats(row.track)
-        tp_handle = GpxTrackPointsHandle()
-        tp_handle.get_track_points(
-            row.track.trackfile_path, self._on_track_points_end
-        )
+        layout = TrackStatsLayout()
+        self._add_widget(layout)
+        layout.load_data(row.track)
         self._app_window.disconnect_action_buttons()
         self._app_window.connect_button_del(self.on_remove, row)
         self._app_window.connect_button_edit(self.on_edit, row)
-
-    def _on_track_points_end(self, track_points):
-        """Load a map with locations from track_points.
-
-        Check if there is a TrackStatsLayout widget inside the Viewport
-        of the ScrolledWindow _track_stats_widget.
-
-        If all is ready then load map with locations.
-        """
-        if (
-            not self._track_stats_widget or
-            not self._track_stats_widget.get_child()
-        ):
-            return
-
-        child = self._track_stats_widget.get_child().get_child()
-        if child and isinstance(child, TrackStatsLayout):
-            child.load_map(TrackPointUtils.to_locations(track_points))
-            xvalues, yvalues = TrackPointUtils.xy_distance_elevation(track_points, 10)
-            child.load_plots(xvalues, yvalues)
-
-    def _load_track_stats(self, track):
-        layout = TrackStatsLayout()
-        layout.load_data(track)
-        self._add_widget(layout)
 
     def _show_message(self, msg):
         label = Gtk.Label(label=_("Select a track to view its stats..."))

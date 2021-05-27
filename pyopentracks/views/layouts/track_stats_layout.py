@@ -17,12 +17,16 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk, WebKit2
+import threading
+
+from gi.repository import Gtk, WebKit2, GLib
 
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.maps import TrackMap
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.views.graphs import LinePlot
+from pyopentracks.io.gpx_parser import GpxTrackPointsHandle
+from pyopentracks.utils.utils import TrackPointUtils
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
@@ -72,7 +76,17 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         # Avg. heart rate
         self._add_item(track.avg_hr_label, track.avg_hr, 1, 6, 1, 1)
 
-    def load_map(self, locations):
+        # Get track points to build map and plots
+        tp_handle = GpxTrackPointsHandle()
+        tp_handle.get_track_points(
+            track.trackfile_path, self._on_track_points_end
+        )
+
+    def _on_track_points_end(self, track_points):
+        self._load_map(TrackPointUtils.to_locations(track_points))
+        self._load_plots(track_points)
+
+    def _load_map(self, locations):
         """Load the map with the locations.
 
         Arguments:
@@ -83,8 +97,24 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._add_map(locations, 2, 1, 2, 6)
         self.show_all()
 
-    def load_plots(self, xvalues, yvalues):
-        plot = LinePlot(xvalues, yvalues)
+    def _load_plots(self, track_points):
+        """Loads the plot in a thread."""
+
+        def build_plot(track_points):
+            """Builds the plot"""
+            xvalues, yvalues = TrackPointUtils.xy_distance_elevation(track_points, 10)
+            plot = LinePlot(xvalues, yvalues)
+            GLib.idle_add(self._on_plot_created, plot)
+
+        self._thread = threading.Thread(target=build_plot, args=(track_points,), daemon=True)
+        self._thread.start()
+
+    def _on_plot_created(self, plot: LinePlot):
+        """Adds and shows the plot.
+
+        Arguments:
+        plot -- a plot created and ready to be shown.
+        """
         self._main_widget.attach(plot.get_canvas(), 0, 7, 4, 4)
         plot.draw_and_show()
 
