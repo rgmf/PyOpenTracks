@@ -33,6 +33,7 @@ class TrackMap(folium.Map):
             ).add_to(self)
         else:
             super().__init__()
+            self._locations = None
 
         self._data = io.BytesIO()
         self.save(self._data, close_file=False)

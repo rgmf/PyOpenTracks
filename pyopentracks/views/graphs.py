@@ -92,16 +92,18 @@ class AggregatedStatsChart:
 
 
 class LinePlot:
+    EVENT_X_CURSOR_POS = 1
+
     def __init__(self, xvalues, yvalues):
         self._xvalues = xvalues
         self._yvalues = yvalues
 
-        self.figure = Figure()
-        self.figure.subplots()
+        self._figure = Figure()
+        self._figure.subplots()
 
-        self.figure.canvas = FigureCanvas(self.figure)
+        self._canvas = FigureCanvas(self._figure)
 
-        self.axes = self.figure.axes[0]
+        self.axes = self._figure.axes[0]
         self.axes.spines["left"].set_visible(True)
         self.axes.spines["right"].set_visible(False)
         self.axes.spines["bottom"].set_visible(True)
@@ -109,12 +111,13 @@ class LinePlot:
         #self.axes.plot([0, 200],[50, 50],'--g',label='min: '+str(50)+' m')
         self.axes.fill_between(xvalues, 0, yvalues, facecolor="green", alpha=0.5)
 
-        self.figure.canvas.set_size_request(300, 200)
-        self.figure.canvas.set_has_window(False)
-
     def get_canvas(self):
-        return self.figure.canvas
+        return self._canvas
 
     def draw_and_show(self):
-        self.figure.canvas.draw()
-        self.figure.canvas.show()
+        self._canvas.draw()
+        self._canvas.show()
+
+    def connect(self, event, cb):
+        if event == self.EVENT_X_CURSOR_POS:
+            self._canvas.mpl_connect("motion_notify_event", lambda e: cb(e.xdata, [x for x, z in enumerate(self._xvalues) if e.xdata and z == round(e.xdata, 2) ]))

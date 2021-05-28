@@ -39,6 +39,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def __init__(self):
         super().__init__()
+        self._map = None
 
     def get_top_widget(self):
         return self._top_widget
@@ -81,42 +82,6 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         tp_handle.get_track_points(
             track.trackfile_path, self._on_track_points_end
         )
-
-    def _on_track_points_end(self, track_points):
-        self._load_map(TrackPointUtils.to_locations(track_points))
-        self._load_plots(track_points)
-
-    def _load_map(self, locations):
-        """Load the map with the locations.
-
-        Arguments:
-        locations -- list of tuple with two items (float):
-                     latitude and longitude.
-        """
-        # Map
-        self._add_map(locations, 2, 1, 2, 6)
-        self.show_all()
-
-    def _load_plots(self, track_points):
-        """Loads the plot in a thread."""
-
-        def build_plot(track_points):
-            """Builds the plot"""
-            xvalues, yvalues = TrackPointUtils.xy_distance_elevation(track_points, 10)
-            plot = LinePlot(xvalues, yvalues)
-            GLib.idle_add(self._on_plot_created, plot)
-
-        self._thread = threading.Thread(target=build_plot, args=(track_points,), daemon=True)
-        self._thread.start()
-
-    def _on_plot_created(self, plot: LinePlot):
-        """Adds and shows the plot.
-
-        Arguments:
-        plot -- a plot created and ready to be shown.
-        """
-        self._main_widget.attach(plot.get_canvas(), 0, 7, 4, 4)
-        plot.draw_and_show()
 
     def _add_info_track(self, track, left, top, width, height):
         """Adds track information to main widget.
@@ -210,20 +175,39 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
         self._main_widget.attach(vbox, left, top, width, height)
 
-    def _add_map(self, locations, left, top, width, height):
-        """Adds a map with track_points values into the _main_widget.
+    def _on_track_points_end(self, track_points):
+        def build(track_points):
+            xvalues, yvalues, locations = TrackPointUtils.distance_elevation_locations(track_points, 10)
+            plot = LinePlot(xvalues, yvalues)
+            map = TrackMap(TrackPointUtils.to_locations(track_points))
+            GLib.idle_add(self._on_prepare_data_done, plot, map)
+        self._thread = threading.Thread(target=build, args=(track_points,), daemon=True)
+        self._thread.start()
+
+    def _on_prepare_data_done(self, plot, map):
+        self._load_map(map)
+        self._load_plot(plot)
+
+    def _load_map(self, map: TrackMap):
+        """Load the map with the locations.
 
         Arguments:
-        locations -- a list of locations.
-        left -- the column number to attach the left side of map to.
-        top -- the row number to attach the top side of map to.
-        width --  the number of columns that map will span.
-        height -- the number of rows that map will span.
+        map -- the TrackMap object.
         """
-        m = TrackMap(locations)
+        self._map = map
         scrolled_window = Gtk.ScrolledWindow()
         webview = WebKit2.WebView()
-        webview.load_html(m.get_data().getvalue().decode())
+        webview.load_html(map.get_data().getvalue().decode())
         scrolled_window.add(webview)
+        self._main_widget.attach(scrolled_window, 2, 1, 2, 6)
+        self.show_all()
 
-        self._main_widget.attach(scrolled_window, left, top, width, height)
+    def _load_plot(self, plot):
+        self._main_widget.attach(plot.get_canvas(), 0, 7, 4, 24)
+        plot.draw_and_show()
+    #     plot.connect(LinePlot.EVENT_X_CURSOR_POS, self._on_position_in_plot)
+    #
+    # def _on_position_in_plot(self, distance, idx):
+    #     if idx:
+    #         self._map.set_marker(idx[0])
+
