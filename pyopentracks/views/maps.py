@@ -24,13 +24,16 @@ import folium
 class TrackMap(folium.Map):
     def __init__(self, locations):
         if locations:
-            super().__init__(location=locations[0], zoom_start=13)
+            super().__init__()
+            x_coordinates, y_coordinates = zip(*locations)
+            bounding_box = [(min(x_coordinates), min(y_coordinates)), (max(x_coordinates), max(y_coordinates))]
             folium.PolyLine(
                 locations=locations,
                 popup="Path",
                 tooltip="Path",
                 color="green"
             ).add_to(self)
+            self.fit_bounds(bounding_box)
         else:
             super().__init__()
             self._locations = None
