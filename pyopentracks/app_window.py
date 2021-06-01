@@ -139,7 +139,6 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         else:
             layout = TrackStatsLayout()
             layout.load_data(track)
-            layout.load_map(TrackPointUtils.to_locations(track.track_points))
             self.show_layout(layout)
             self._edit_btn.hide()
             self._del_btn.hide()
@@ -153,11 +152,12 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         Arguments:
         tracks -- a list of Track objects.
         """
-        self._analytic_menu_btn.show()
         self._preferences_menu_btn.show()
         if tracks and len(tracks) > 0:
+            self._analytic_menu_btn.show()
             self.show_layout(TracksLayout(self, tracks))
         else:
+            self._analytic_menu_btn.hide()
             self.show_layout(GreeterLayout())
 
     def load_analytics(self, layout):
