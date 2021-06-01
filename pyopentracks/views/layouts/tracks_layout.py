@@ -100,7 +100,12 @@ class TracksLayout(Gtk.Box, Layout):
             db = Database()
             db.delete(row.track)
             row.destroy()
-            self._select_row(idx if len(self._list_widget.get_children()) > idx else idx - 1)
+            if len(self._list_widget.get_children()) > 0:
+                self._select_row(idx if len(self._list_widget.get_children()) > idx else idx - 1)
+            else:
+                self._app_window.disconnect_action_buttons()
+                self._app_window.load_tracks(None)
+                self.destroy()
         except ValueError:
             # TODO use logger here.
             print(f"Error: deleting track {row.track.name}")

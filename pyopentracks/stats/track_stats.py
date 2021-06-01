@@ -175,7 +175,7 @@ class TrackStats:
         Arguments:
         track_point -- TrackPoint object with, at least, location
                        (with latitude and longitude) and time.
-        num_segment -- a GPX file consiste in a number of segments.
+        num_segment -- a GPX file consist in a number of segments.
                        This argument contains the number of segment the
                        track point belongs.
         """
@@ -186,13 +186,7 @@ class TrackStats:
         if not self._is_valid_location(track_point.location):
             return
 
-        self._end_segment_time_ms = (
-            self._end_segment_time_ms if num_segment == self._segment else None
-        )
-        self._segment = num_segment
-
         self._add_track_point(track_point)
-        self._add_distance(track_point.location)
         self._add_speed(self._get_float_or_none(track_point.speed))
         self._add_elevation(
             self._get_float_or_none(track_point.elevation),
@@ -200,15 +194,20 @@ class TrackStats:
             self._get_float_or_none(track_point.elevation_loss)
         )
 
-        if not self._is_moving(track_point.speed):
+        if not self._is_moving(track_point.speed) or num_segment != self._segment:
             self._end_segment_time_ms = None
             self._sensor.reset()
         else:
+            self._add_distance(track_point.location)
             self._add_time(track_point.time)
             self._sensor.add_hr(
                 track_point.heart_rate,
                 tu.iso_to_ms(track_point.time)
             )
+
+        self._segment = num_segment
+        self._last_latitude = track_point.location["latitude"]
+        self._last_longitude = track_point.location["longitude"]
 
     def _is_moving(self, speed):
         return speed and float(speed) >= TrackStats.AUTO_PAUSE_SPEED_THRESHOLD
@@ -263,8 +262,6 @@ class TrackStats:
                 float(location["longitude"])
             )
             self._total_distance_m = (self._total_distance_m + to_accum)
-        self._last_latitude = location["latitude"]
-        self._last_longitude = location["longitude"]
 
     def _add_speed(self, speed):
         if speed is not None:
