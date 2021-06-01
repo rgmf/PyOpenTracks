@@ -77,6 +77,9 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         # Avg. heart rate
         self._add_item(track.avg_hr_label, track.avg_hr, 1, 6, 1, 1)
 
+        # Show all
+        self.show_all()
+
         # Get track points to build map and plots
         tp_handle = GpxTrackPointsHandle()
         tp_handle.get_track_points(
@@ -200,7 +203,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         webview.load_html(map.get_data().getvalue().decode())
         scrolled_window.add(webview)
         self._main_widget.attach(scrolled_window, 2, 1, 2, 6)
-        self.show_all()
+        scrolled_window.show_all()
 
     def _load_plot(self, plot):
         self._main_widget.attach(plot.get_canvas(), 0, 7, 4, 24)
