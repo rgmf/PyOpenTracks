@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk, WebKit2
+from gi.repository import Gtk
 
 
 class InfoLayout(Gtk.InfoBar):

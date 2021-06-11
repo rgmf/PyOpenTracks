@@ -19,14 +19,14 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 import threading
 
-from gi.repository import Gtk, WebKit2, GLib
+from gi.repository import Gtk, GLib
 
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.maps import TrackMap
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.views.graphs import LinePlot
 from pyopentracks.io.gpx_parser import GpxTrackPointsHandle
-from pyopentracks.utils.utils import TrackPointUtils
+from pyopentracks.utils.utils import TrackPointUtils, DistanceUtils
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
@@ -39,7 +39,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def __init__(self):
         super().__init__()
-        self._map = None
+        self._map = TrackMap()
 
     def get_top_widget(self):
         return self._top_widget
@@ -76,6 +76,9 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._add_item(track.max_hr_label, track.max_hr, 0, 6, 1, 1)
         # Avg. heart rate
         self._add_item(track.avg_hr_label, track.avg_hr, 1, 6, 1, 1)
+
+        # Loads the map
+        self._load_map()
 
         # Show all
         self.show_all()
@@ -180,37 +183,24 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def _on_track_points_end(self, track_points):
         def build(track_points):
-            xvalues, yvalues, locations = TrackPointUtils.distance_elevation_locations(track_points, 10)
-            plot = LinePlot(xvalues, yvalues)
-            map = TrackMap(TrackPointUtils.to_locations(track_points))
-            GLib.idle_add(self._on_prepare_data_done, plot, map)
+            plot = LinePlot(TrackPointUtils.distance_elevation_locations(track_points, 10))
+            GLib.idle_add(self._on_prepare_data_done, plot, TrackPointUtils.to_locations(track_points))
         self._thread = threading.Thread(target=build, args=(track_points,), daemon=True)
         self._thread.start()
 
-    def _on_prepare_data_done(self, plot, map):
-        self._load_map(map)
+    def _on_prepare_data_done(self, plot, locations):
+        self._map.add_polyline(locations)
         self._load_plot(plot)
 
-    def _load_map(self, map: TrackMap):
-        """Load the map with the locations.
-
-        Arguments:
-        map -- the TrackMap object.
-        """
-        self._map = map
-        scrolled_window = Gtk.ScrolledWindow()
-        webview = WebKit2.WebView()
-        webview.load_html(map.get_data().getvalue().decode())
-        scrolled_window.add(webview)
-        self._main_widget.attach(scrolled_window, 2, 1, 2, 6)
-        scrolled_window.show_all()
+    def _load_map(self):
+        """Load the map with."""
+        self._main_widget.attach(self._map.get_widget(), 2, 1, 2, 6)
 
     def _load_plot(self, plot):
         self._main_widget.attach(plot.get_canvas(), 0, 7, 4, 24)
         plot.draw_and_show()
-    #     plot.connect(LinePlot.EVENT_X_CURSOR_POS, self._on_position_in_plot)
-    #
-    # def _on_position_in_plot(self, distance, idx):
-    #     if idx:
-    #         self._map.set_marker(idx[0])
+        plot.connect(LinePlot.EVENT_X_CURSOR_POS, self._on_position_in_plot)
 
+    def _on_position_in_plot(self, distance, location):
+        if location and location[0]:
+            self._map.set_location_marker(location[0], DistanceUtils.m_to_str(distance * 1000))

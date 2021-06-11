@@ -31,21 +31,21 @@
                 {
                     "type" : "git",
                     "url" : "file:///home/roman/workspace/PyOpenTracks",
-		    "branch": "main"
+		            "branch": "main"
                 }
             ]
         },
-	{
+	    {
             "name": "pip-install",
             "buildsystem": "simple",
             "build-options": {
-		"build-args": [
-                    "--share=network"
-		]
+                "build-args": [
+                        "--share=network"
+                ]
             },
             "build-commands": [
-		"pip3 install --prefix=/app folium==0.12.1",
-		"pip3 install --prefix=/app matplotlib==3.3.4"
+                "pip3 install --prefix=/app libchamplain==0.12.20",
+                "pip3 install --prefix=/app matplotlib==3.3.4"
             ]
         }
     ]
