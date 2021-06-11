@@ -243,7 +243,7 @@ class TrackPointUtils:
 
     @staticmethod
     def distance_elevation_locations(trackpoints, distance_threshold=5):
-        """Return two lists with distances and elevations from trackpoints.
+        """Returns a list with all information from trackpoints: distances, elevations and locations.
 
         It returns the values every distance_threshold meters.
 
@@ -252,13 +252,20 @@ class TrackPointUtils:
         distance_threshold -- it determines points to be added (every x number of meters add the track point).
 
         Return:
-        Two lists: distances in km and elevations in meters.
+        A list with a dictionary like this:
+        {
+          'distance': <value in km>,
+          'elevation': <value in meters>,
+          'location': <location's tuple: latitude and longitude>
+        }
         """
         if not trackpoints:
-            return [], []
-        distances = [0]
-        elevations = [float(trackpoints[0].elevation)]
-        locations = [trackpoints[0].location_tuple]
+            return []
+        result = [{
+            'distance': 0,
+            'elevation': float(trackpoints[0].elevation),
+            'location': trackpoints[0].location_tuple
+        }]
         dist_acc = 0
         total_distance = 0
         last_tp = trackpoints[0]
@@ -267,11 +274,13 @@ class TrackPointUtils:
             last_tp = tp
             if dist_acc >= distance_threshold:
                 total_distance = total_distance + dist_acc
-                distances.append(round(total_distance / 1000, 2))
-                elevations.append(float(tp.elevation))
-                locations.append(tp.location_tuple)
+                result.append({
+                    'distance': round(total_distance / 1000, 2),
+                    'elevation': float(tp.elevation),
+                    'location': tp.location_tuple
+                })
                 dist_acc = 0
-        return distances, elevations, locations
+        return result
 
 
 class LocationUtils:

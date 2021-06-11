@@ -94,9 +94,20 @@ class AggregatedStatsChart:
 class LinePlot:
     EVENT_X_CURSOR_POS = 1
 
-    def __init__(self, xvalues, yvalues):
-        self._xvalues = xvalues
-        self._yvalues = yvalues
+    def __init__(self, values):
+        """Create a LinePlot object.
+
+        Arguments:
+        values - A list with a dictionary with ditance, elevation and location information:
+            {
+              'distance': <value in km>,
+              'elevation': <value in meters>,
+              'location': <location's tuple: latitude and longitude>
+            }
+        """
+        self._xvalues = [ item['distance'] for item in values ]
+        self._yvalues = [ item['elevation'] for item in values ]
+        self._locations = [ item['location'] for item in values ]
 
         self._figure = Figure()
         self._figure.subplots()
@@ -109,7 +120,7 @@ class LinePlot:
         self.axes.spines["bottom"].set_visible(True)
         self.axes.spines["top"].set_visible(False)
         #self.axes.plot([0, 200],[50, 50],'--g',label='min: '+str(50)+' m')
-        self.axes.fill_between(xvalues, 0, yvalues, facecolor="green", alpha=0.5)
+        self.axes.fill_between(self._xvalues, 0, self._yvalues, facecolor="green", alpha=0.5)
 
     def get_canvas(self):
         return self._canvas
@@ -120,4 +131,7 @@ class LinePlot:
 
     def connect(self, event, cb):
         if event == self.EVENT_X_CURSOR_POS:
-            self._canvas.mpl_connect("motion_notify_event", lambda e: cb(e.xdata, [x for x, z in enumerate(self._xvalues) if e.xdata and z == round(e.xdata, 2) ]))
+            # e.xdata contains the km.
+            # x is the self._xvalues index for that km.
+            # z is the same that e.xdata (the km).
+            self._canvas.mpl_connect("motion_notify_event", lambda e: cb(e.xdata, [ self._locations[x] for x, z in enumerate(self._xvalues) if e.xdata and z == round(e.xdata, 2) ]))
