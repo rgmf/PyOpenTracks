@@ -40,12 +40,23 @@
             "buildsystem": "simple",
             "build-options": {
                 "build-args": [
-                        "--share=network"
+                    "--share=network"
                 ]
             },
             "build-commands": [
-                "pip3 install --prefix=/app libchamplain==0.12.20",
                 "pip3 install --prefix=/app matplotlib==3.3.4"
+            ]
+        },
+        {
+            "name" : "libchamplain",
+            "builddir" : true,
+            "buildsystem" : "meson",
+            "sources" : [
+                {
+                    "type" : "git",
+                    "url" : "https://gitlab.gnome.org/GNOME/libchamplain.git",
+		            "branch": "main"
+                }
             ]
         }
     ]
