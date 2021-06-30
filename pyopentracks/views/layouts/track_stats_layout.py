@@ -40,6 +40,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
     def __init__(self):
         super().__init__()
         self._map = TrackMap()
+        self._plot = LinePlot()
 
     def get_top_widget(self):
         return self._top_widget
@@ -77,11 +78,12 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         # Avg. heart rate
         self._add_item(track.avg_hr_label, track.avg_hr, 1, 6, 1, 1)
 
-        # Loads the map
-        self._load_map()
+        # Loads boxes where map and plot will be
+        self._main_widget.attach(Gtk.Label(_("Loading Map...")), 2, 1, 2, 6)
+        self._main_widget.attach(Gtk.Label(_("Loading Graph...")), 0, 7, 4, 24)
 
         # Show all
-        self.show_all()
+        self._main_widget.show_all()
 
         # Get track points to build map and plots
         tp_handle = GpxTrackPointsHandle()
@@ -183,23 +185,26 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def _on_track_points_end(self, track_points):
         def build(track_points):
-            plot = LinePlot(TrackPointUtils.distance_elevation_locations(track_points, 10))
-            GLib.idle_add(self._on_prepare_data_done, plot, TrackPointUtils.to_locations(track_points))
+            self._map.add_polyline(TrackPointUtils.to_locations(track_points))
+            self._plot.add_values(TrackPointUtils.extract_dict_values(track_points, 10))
+            self._plot.draw_and_show()
+            self._plot.connect(LinePlot.EVENT_X_CURSOR_POS, self._on_position_in_plot)
+            GLib.idle_add(self._on_prepare_data_done)
         self._thread = threading.Thread(target=build, args=(track_points,), daemon=True)
         self._thread.start()
 
-    def _on_prepare_data_done(self, plot, locations):
-        self._map.add_polyline(locations)
-        self._load_plot(plot)
+    def _on_prepare_data_done(self):
+        self._load_map()
+        self._load_plot()
 
     def _load_map(self):
         """Load the map with."""
         self._main_widget.attach(self._map.get_widget(), 2, 1, 2, 6)
+        self._map.get_widget().show_all()
 
-    def _load_plot(self, plot):
-        self._main_widget.attach(plot.get_canvas(), 0, 7, 4, 24)
-        plot.draw_and_show()
-        plot.connect(LinePlot.EVENT_X_CURSOR_POS, self._on_position_in_plot)
+    def _load_plot(self):
+        self._main_widget.attach(self._plot.get_canvas(), 0, 7, 4, 24)
+        self._plot.draw_and_show()
 
     def _on_position_in_plot(self, distance, location):
         if location and location[0]:

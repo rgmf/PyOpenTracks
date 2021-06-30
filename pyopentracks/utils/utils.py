@@ -242,7 +242,7 @@ class TrackPointUtils:
         return [tp.location_tuple for tp in trackpoints]
 
     @staticmethod
-    def distance_elevation_locations(trackpoints, distance_threshold=5):
+    def extract_dict_values(trackpoints, distance_threshold=5):
         """Returns a list with all information from trackpoints: distances, elevations and locations.
 
         It returns the values every distance_threshold meters.
