@@ -28,13 +28,29 @@ class TrackMap:
         self._view = self._widget.get_view()
         self._view.set_property('kinetic-mode', True)
         self._view.set_property('zoom-level', 5)
-        self._layer = None
+        self._layer_polyline = Champlain.PathLayer()
+        self._layer_marker = None
         self._marker = None
         self._init_location_marker()
 
-    def _append_point(self, layer, lat, lon):
+    def _append_point(self, lat, lon):
         coord = Champlain.Coordinate.new_full(lat, lon)
-        layer.add_node(coord)
+        self._layer_polyline.add_node(coord)
+        
+    def _init_location_marker(self):
+        orange = Clutter.Color.new(0xf3, 0x94, 0x07, 0xbb)
+        self._marker = Champlain.Label.new_with_text("0 km", "Serif 10", None, orange)
+        self._marker.set_use_markup(True)
+        self._marker.set_alignment(Pango.Alignment.RIGHT)
+
+        # self._marker = Champlain.Point.new()
+        # self._marker.set_color(orange)
+        #self._marker.set_location(40.77, -73.98)
+
+        self._layer_marker = Champlain.MarkerLayer()
+        self._layer_marker.add_marker(self._marker)
+        self._view.add_layer(self._layer_marker)
+        self._layer_marker.hide()
 
     def get_widget(self):
         return self._widget
@@ -42,10 +58,9 @@ class TrackMap:
     def add_polyline(self, locations):
         self._locations = locations
 
-        layer = Champlain.PathLayer()
         for loc in locations:
-            self._append_point(layer, loc[0], loc[1])
-        self._view.add_layer(layer)
+            self._append_point(loc[0], loc[1])
+        self._view.add_layer(self._layer_polyline)
 
         x_coordinates, y_coordinates = zip(*locations)
         # bbox = self._view.get_bounding_box()
@@ -58,22 +73,7 @@ class TrackMap:
         self._view.ensure_visible(bbox, False)
         self._view.set_zoom_level(10)
 
-    def _init_location_marker(self):
-        orange = Clutter.Color.new(0xf3, 0x94, 0x07, 0xbb)
-        self._marker = Champlain.Label.new_with_text("0 km", "Serif 10", None, orange)
-        self._marker.set_use_markup(True)
-        self._marker.set_alignment(Pango.Alignment.RIGHT)
-
-        # self._marker = Champlain.Point.new()
-        # self._marker.set_color(orange)
-        #self._marker.set_location(40.77, -73.98)
-
-        self._layer = Champlain.MarkerLayer()
-        self._layer.add_marker(self._marker)
-        self._view.add_layer(self._layer)
-        self._layer.hide()
-
     def set_location_marker(self, location_tuple, text):
-        self._layer.show()
+        self._layer_marker.show()
         self._marker.set_location(location_tuple[0], location_tuple[1])
         self._marker.set_text(text)

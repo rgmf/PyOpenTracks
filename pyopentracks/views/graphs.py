@@ -94,8 +94,14 @@ class AggregatedStatsChart:
 class LinePlot:
     EVENT_X_CURSOR_POS = 1
 
-    def __init__(self, values):
-        """Create a LinePlot object.
+    def __init__(self):
+        self._figure = Figure()
+        self._figure.subplots()
+
+        self._canvas = FigureCanvas(self._figure)
+
+    def add_values(self, values):
+        """Add values to the LinePlot object.
 
         Arguments:
         values - A list with a dictionary with ditance, elevation and location information:
@@ -108,11 +114,6 @@ class LinePlot:
         self._xvalues = [ item['distance'] for item in values ]
         self._yvalues = [ item['elevation'] for item in values ]
         self._locations = [ item['location'] for item in values ]
-
-        self._figure = Figure()
-        self._figure.subplots()
-
-        self._canvas = FigureCanvas(self._figure)
 
         self.axes = self._figure.axes[0]
         self.axes.spines["left"].set_visible(True)
