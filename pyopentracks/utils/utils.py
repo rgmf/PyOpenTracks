@@ -210,13 +210,13 @@ class TypeActivityUtils:
         return "/es/rgmf/pyopentracks/" + icon
 
     @staticmethod
-    def get_icon_pixbuf(activity_type: str):
+    def get_icon_pixbuf(activity_type: str, width=48, height=48):
         """Gets GdkPixbuf.Pixbuf icon from activity type (category)."""
         res = TypeActivityUtils.get_icon_resource(activity_type)
         return GdkPixbuf.Pixbuf.new_from_resource_at_scale(
             resource_path=res,
-            width=48,
-            height=48,
+            width=width,
+            height=height,
             preserve_aspect_ratio=True
         )
 
