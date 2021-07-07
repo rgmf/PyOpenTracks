@@ -43,8 +43,8 @@ class TracksLayout(Gtk.Box, Layout):
         super().__init__()
 
         self._app_window = app_window
-
         self._db = Database()
+        self._treepath_selected = None
 
         self._show_message(_("Select a track to view its stats..."))
 
@@ -82,7 +82,7 @@ class TracksLayout(Gtk.Box, Layout):
 
         def deletion_done():
             for treeiter in treeiter_list:
-                self._list_store.remove(treeiter)
+                self._remove_item_from_list_store(treeiter)
 
         def delete_in_thread():
             total = len(treeiter_list)
@@ -115,7 +115,7 @@ class TracksLayout(Gtk.Box, Layout):
         if response == Gtk.ResponseType.CANCEL:
             return
         self._remove_item_from_db(treeiter)
-        self._list_store.remove(treeiter)
+        self._remove_item_from_list_store(treeiter)
 
     def on_edit(self, widget, treeiter):
         """Callback to edit the treeiter item from list store.
@@ -144,11 +144,16 @@ class TracksLayout(Gtk.Box, Layout):
                 print(f"Error: updating track {trackname}")
 
     def _select_row(self, treepath):
+        if self._treepath_selected == treepath:
+            return
+        self._treepath_selected = treepath
+
         treeiter = self._list_store.get_iter(treepath)
         track_id = self._list_store.get_value(treeiter, 0)
         track = self._db.get_track_by_id(track_id)
         if not track:
             return
+
         layout = TrackStatsLayout()
         self._add_widget(layout)
         layout.load_data(track)
@@ -187,6 +192,15 @@ class TracksLayout(Gtk.Box, Layout):
         except ValueError:
             # TODO use logger here.
             print(f"Error: deleting track {self._list_store.get_value(treeiter, 1)}")
+
+    def _remove_item_from_list_store(self, treeiter):
+        """Remove from Gtk.ListStore the item pointed by treeiter.
+
+        Arguments
+        treeiter -- Gtk.TreeIter object that point to the item to be deleted from Gtk.ListStore.
+        """
+        self._treepath_selected = None
+        self._list_store.remove(treeiter)
 
     def _on_tree_selection_changed(self, selection):
         model, treepath_list = selection.get_selected_rows()

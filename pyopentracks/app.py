@@ -203,8 +203,8 @@ class Application(Gtk.Application):
                 folder=folder
             )
             response = import_dialog.run()
-            self._load_tracks()
             import_dialog.destroy()
+            self._load_tracks()
         else:
             dialog.destroy()
 
