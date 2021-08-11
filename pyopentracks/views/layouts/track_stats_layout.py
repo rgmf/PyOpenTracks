@@ -25,8 +25,8 @@ from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.maps import TrackMap
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.views.graphs import LinePlot
-from pyopentracks.io.gpx_parser import GpxTrackPointsHandle
 from pyopentracks.utils.utils import TrackPointUtils, DistanceUtils
+from pyopentracks.models.database import Database
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
@@ -86,10 +86,9 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._main_widget.show_all()
 
         # Get track points to build map and plots
-        tp_handle = GpxTrackPointsHandle()
-        tp_handle.get_track_points(
-            track.trackfile_path, self._on_track_points_end
-        )
+        db = Database()
+        track_points = db.get_track_points(track.id)
+        self._on_track_points_end(track_points)
 
     def _add_info_track(self, track, left, top, width, height):
         """Adds track information to main widget.

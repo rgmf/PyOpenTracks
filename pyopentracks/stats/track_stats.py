@@ -19,7 +19,6 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from parser import ParserError
 
-from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.utils.utils import LocationUtils
 
 
@@ -181,7 +180,7 @@ class TrackStats:
         """
         if not track_point:
             return
-        if not track_point.location or not track_point.time:
+        if not track_point.location or not track_point.time_ms:
             return
         if not self._is_valid_location(track_point.location):
             return
@@ -189,7 +188,7 @@ class TrackStats:
         self._add_track_point(track_point)
         self._add_speed(self._get_float_or_none(track_point.speed))
         self._add_elevation(
-            self._get_float_or_none(track_point.elevation),
+            self._get_float_or_none(track_point.altitude),
             self._get_float_or_none(track_point.elevation_gain),
             self._get_float_or_none(track_point.elevation_loss)
         )
@@ -199,11 +198,8 @@ class TrackStats:
             self._sensor.reset()
         else:
             self._add_distance(track_point.location)
-            self._add_time(track_point.time)
-            self._sensor.add_hr(
-                track_point.heart_rate,
-                tu.iso_to_ms(track_point.time)
-            )
+            self._add_time(track_point.time_ms)
+            self._sensor.add_hr(track_point.heart_rate, track_point.time_ms)
 
         self._segment = num_segment
         self._last_latitude = track_point.location["latitude"]
@@ -218,15 +214,13 @@ class TrackStats:
     def _add_track_point(self, track_point):
         self._track_points.append(track_point)
 
-    def _add_time(self, time):
+    def _add_time(self, timestamp_ms):
         """Add the time to the stats.
 
         Arguments:
-        time -- a string representing the time in ISO 8601 format.
+        timestamp_ms -- time in millis.
         """
         try:
-            timestamp_ms = tu.iso_to_ms(time)
-
             if self._end_time_ms is not None:
                 self._total_time_ms = (
                     self._total_time_ms + (timestamp_ms - self._end_time_ms)

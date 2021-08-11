@@ -23,7 +23,6 @@ from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
 from pyopentracks.views.layouts.greeter_layout import GreeterLayout
 from pyopentracks.views.layouts.tracks_layout import TracksLayout
 from pyopentracks.views.layouts.info_layout import InfoLayout
-from pyopentracks.utils.utils import TrackPointUtils
 from pyopentracks.views.dialogs import MessageDialogError
 from pyopentracks.app_preferences import AppPreferences
 
@@ -147,7 +146,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             self._preferences_menu_btn.hide()
 
     def load_tracks(self, tracks):
-        """Load all tracks in the correspondig layout.
+        """Load all tracks in the corresponding layout.
 
         Arguments:
         tracks -- a list of Track objects.
