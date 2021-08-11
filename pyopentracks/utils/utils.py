@@ -28,7 +28,7 @@ from locale import setlocale, LC_ALL
 
 class DateTimeUtils:
     @staticmethod
-    def ms_to_str(timestamp_ms: float) -> str:
+    def ms_to_str(timestamp_ms: float, short=False) -> str:
         """From datetime millis to human readable string.
 
         Arguments:
@@ -40,7 +40,7 @@ class DateTimeUtils:
         if not timestamp_ms:
             return "-"
         return datetime.fromtimestamp(timestamp_ms / 1000).strftime(
-            "%a, %d %b %Y %H:%M:%S %Z"
+            "%a, %d %b %Y %H:%M:%S %Z" if not short else "%d %b %Y"
         )
 
     @staticmethod
@@ -167,6 +167,10 @@ class ElevationUtils:
         return (
             str(int(elevation_m)) + " m" if elevation_m is not None else "-"
         )
+
+    @staticmethod
+    def slope_to_str(slope):
+        return str(round(slope, 1)) + "%"
 
 
 class TypeActivityUtils:
@@ -315,4 +319,10 @@ class SensorUtils:
         """
         return (
             str(int(hr_bpm)) + " bpm" if hr_bpm is not None else "-"
+        )
+
+    @staticmethod
+    def cadence_to_str(avg_cadence) -> str:
+        return (
+            str(int(avg_cadence)) + " rpm" if avg_cadence is not None else "-"
         )

@@ -17,26 +17,27 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pyopentracks.views.layouts.analytic_layout import (
-    AnalyticLayout, AggregatedStatsYear, AggregatedStats
-)
+from gi.repository import Gtk
+
+from pyopentracks.views.layouts.segments_layout import SegmentsLayout
+from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
 from pyopentracks.app_external import AppExternal
 
 
-class AppAnalytic(AppExternal):
-    """Handler of Analytics App.
+class AppSegments(AppExternal):
+    """Handler of Segments App.
 
-    This is the controller of the analytic's views.
+    This is the controller of the segments's views.
     """
 
     def __init__(self):
-        self._layout = AnalyticLayout()
-
-        self._layout.append(AggregatedStats(), _("Aggregated Stats"))
-
-        aggregated_year = AggregatedStatsYear()
-        self._layout.append(aggregated_year, _("Stats by year"))
-        aggregated_year.show_today()
+        self._layout = SegmentsLayout()
+        segments_list_layout = SegmentsListLayout.from_segments()
+        if segments_list_layout.get_number_rows() > 0:
+            self._layout.append(segments_list_layout, _("Segment's List"))
+        else:
+            self._layout.append(Gtk.Label(_("There are not segments.")), _("Segment's List"))
+        #self._layout.append(Gtk.Label("Lista de segmentos"), _("Segment's Map"))
 
     def get_layout(self):
         return self._layout

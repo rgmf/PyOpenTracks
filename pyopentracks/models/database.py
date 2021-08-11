@@ -25,6 +25,9 @@ from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.models.auto_import import AutoImport
 from pyopentracks.models.aggregated_stats import AggregatedStats
+from pyopentracks.models.segment_track import SegmentTrack
+from pyopentracks.models.segment import Segment
+from pyopentracks.models.segment_point import SegmentPoint
 
 
 class Database:
@@ -75,6 +78,62 @@ class Database:
                 print(f"Error: [SQL] Couldn't execute the query: {error}")
         return None
 
+    def get_segment_by_id(self, _id):
+        """Return Segment object from _id.
+
+        Arguments:
+        _id -- id of the segment to look up in the database.
+
+        Return:
+        Segment object or None if there is any Track identified by _id.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = "SELECT * FROM segments WHERE _id=?"
+                tuple_result = conn.execute(query, (_id,)).fetchone()
+                if tuple_result:
+                    return Segment(*tuple_result)
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return None
+
+    def get_segment_tracks_by_trackid(self, trackid):
+        """Return segmentracks from track's id."""
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = """
+                    SELECT * 
+                    FROM segmentracks 
+                    WHERE trackid=?
+                    ORDER BY _id
+                """
+                return [
+                    SegmentTrack(*st) for st in conn.execute(query, (trackid,)).fetchall()
+                ]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
+    def get_segment_tracks_by_segmentid(self, segmentid):
+        """Return segmentracks from segment's id."""
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = """
+                    SELECT * 
+                    FROM segmentracks 
+                    WHERE segmentid=?
+                    ORDER BY time ASC
+                """
+                return [
+                    SegmentTrack(*st) for st in conn.execute(query, (segmentid,)).fetchall()
+                ]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
     def get_tracks(self):
         """Get all tracks from database.
 
@@ -87,6 +146,86 @@ class Database:
                 return [
                     Track(*track) for track in conn.execute(query).fetchall()
                 ]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
+    def get_tracks_with_near_point_start(self, bbox, trackid=None):
+        """Look for points inside trackpoints table that are inside the bounding box bbox.
+
+        Arguments:
+        bbox    -- the BoundingBox's object (north, east, south and west Locations).
+        trackid -- (optional) track's id where looking for points.
+
+        Returns:
+        list of SegmentTrack.Point with all points inside p1, p2, p3 and p4 bounding box.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                where = f" trackid = {trackid} AND " if trackid else ""
+                query = f"""
+                    SELECT
+                        trackid,
+                        _id,
+                        latitude,
+                        longitude,
+                        strftime('%Y%m%d%H%M', time / 1000, 'unixepoch') datetimetominutes
+                    FROM
+                        trackpoints
+                    WHERE
+                        {where}
+                        latitude > {bbox.south.latitude} AND
+                        latitude < {bbox.north.latitude} AND
+                        longitude < {bbox.east.longitude} AND
+                        longitude > {bbox.west.longitude}
+                    GROUP BY datetimetominutes
+                    ORDER BY trackid DESC, _id ASC
+                """
+                return [
+                    SegmentTrack.Point(*row) for row in conn.execute(query).fetchall()
+                ]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
+    def get_tracks_with_near_point_end(self, bbox, trackid, trackpoint_id_from):
+        """Look for points inside tracks identify by trackid that are inside the bounding box bbox.
+
+        Only trackpoints identify by an id greater than trackpoint_id_from.
+
+        Arguments:
+        bbox               -- the BoundingBox's object (north, east, south and west Locations).
+        trackid            -- track id where it'll look for points inside p1, p2, p3 and p4.
+        trackpoint_id_from -- trackpoints id from it'll look for points inside p1, p2, p3 and p4.
+
+        Returns:
+        The recorded SegmentTrack.Point sooner inside p1, p2, p3 and p4.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = f"""
+                    SELECT
+                        trackid,
+                        _id,
+                        latitude,
+                        longitude,
+                        MIN(time)
+                    FROM
+                        trackpoints
+                    WHERE
+                        trackid = {trackid} AND
+                        _id > {trackpoint_id_from} AND
+                        latitude > {bbox.south.latitude} AND
+                        latitude < {bbox.north.latitude} AND
+                        longitude < {bbox.east.longitude} AND
+                        longitude > {bbox.west.longitude}
+                    GROUP BY time
+                    ORDER BY _id ASC
+                """
+                tuple_result = conn.execute(query).fetchone()
+                return SegmentTrack.Point(*tuple_result) if tuple_result else None
             except Exception as error:
                 # TODO add this error message to a logger system
                 print(f"Error: [SQL] Couldn't execute the query: {error}")
@@ -150,24 +289,24 @@ class Database:
 
                 query = f"""
                 SELECT
-                category,
-                COUNT(*) total_activities,
-                SUM(totaltime) total_time,
-                SUM(movingtime) total_moving_time,
-                SUM(totaldistance) total_distance,
-                SUM(elevationgain) total_gain,
-                AVG(totaltime) avg_time,
-                AVG(movingtime) avg_moving_time,
-                AVG(totaldistance) avg_distance,
-                AVG(elevationgain) avg_gain,
-                SUM(totaldistance) / (SUM(movingtime) / 1000) avg_speed,
-                AVG(avghr) avg_heart_rate,
-                MAX(totaltime) max_time,
-                MAX(movingtime) max_moving_time,
-                MAX(totaldistance) max_distance,
-                MAX(elevationgain) max_gain,
-                MAX(maxspeed) max_speed,
-                MAX(maxhr) max_heart_rate
+                    category,
+                    COUNT(*) total_activities,
+                    SUM(totaltime) total_time,
+                    SUM(movingtime) total_moving_time,
+                    SUM(totaldistance) total_distance,
+                    SUM(elevationgain) total_gain,
+                    AVG(totaltime) avg_time,
+                    AVG(movingtime) avg_moving_time,
+                    AVG(totaldistance) avg_distance,
+                    AVG(elevationgain) avg_gain,
+                    SUM(totaldistance) / (SUM(movingtime) / 1000) avg_speed,
+                    AVG(avghr) avg_heart_rate,
+                    MAX(totaltime) max_time,
+                    MAX(movingtime) max_moving_time,
+                    MAX(totaldistance) max_distance,
+                    MAX(elevationgain) max_gain,
+                    MAX(maxspeed) max_speed,
+                    MAX(maxhr) max_heart_rate
                 FROM tracks
                 {where}
                 GROUP BY category
@@ -218,12 +357,7 @@ class Database:
         """
         with sqlite3.connect(self._db_file) as conn:
             try:
-                query = """
-                SELECT *
-                FROM trackpoints
-                WHERE trackid=?
-                ORDER BY _id ASC
-                """
+                query = "SELECT * FROM trackpoints WHERE trackid=? ORDER BY _id ASC"
                 trackpoints = conn.execute(query, (trackid,)).fetchall()
                 if trackpoints:
                     return [TrackPoint(*tp) for tp in trackpoints]
@@ -231,6 +365,66 @@ class Database:
                 # TODO add this error message to a logger system
                 error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
                 print(error_msg)
+        return []
+
+    def get_track_points_between(self, trackpoint_from_id, trackpoint_to_id):
+        """Get all track points from trackpoint_from_id to trackpoint_to_id.
+
+        Arguments:
+        trackpoint_from_id -- TrackPoint's beginning id.
+        trackpoint_to_id   -- TrackPoint's ending id.
+
+        Returns:
+        The TrackPoint's list (ordered by id).
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = """
+                SELECT *
+                FROM trackpoints
+                WHERE _id >= ? and _id <= ?
+                ORDER BY _id ASC
+                """
+                trackpoints = conn.execute(query, (trackpoint_from_id, trackpoint_to_id)).fetchall()
+                if trackpoints:
+                    return [TrackPoint(*tp) for tp in trackpoints]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
+    def get_segments(self):
+        """Get all segments.
+
+        Return:
+        list of Segment object sorted by _id.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = "SELECT * FROM segments ORDER BY _id"
+                return [
+                    Segment(*segment_tuple) for segment_tuple in conn.execute(query).fetchall()
+                ]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
+    def get_segment_points(self, segmentid):
+        """Get all segmentpoints from segment identify by segmentid.
+
+        Return:
+        list of SegmentPoint object sorted by _id.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = f"SELECT * FROM segmentpoints WHERE segmentid={segmentid} ORDER BY _id"
+                return [
+                    SegmentPoint(*segmentpoint_tuple) for segmentpoint_tuple in conn.execute(query).fetchall()
+                ]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
         return []
 
     def insert(self, model):

@@ -17,26 +17,10 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pyopentracks.views.layouts.analytic_layout import (
-    AnalyticLayout, AggregatedStatsYear, AggregatedStats
-)
-from pyopentracks.app_external import AppExternal
+from abc import ABC, abstractmethod
 
 
-class AppAnalytic(AppExternal):
-    """Handler of Analytics App.
-
-    This is the controller of the analytic's views.
-    """
-
-    def __init__(self):
-        self._layout = AnalyticLayout()
-
-        self._layout.append(AggregatedStats(), _("Aggregated Stats"))
-
-        aggregated_year = AggregatedStatsYear()
-        self._layout.append(aggregated_year, _("Stats by year"))
-        aggregated_year.show_today()
-
+class AppExternal(ABC):
+    @abstractmethod
     def get_layout(self):
-        return self._layout
+        pass
