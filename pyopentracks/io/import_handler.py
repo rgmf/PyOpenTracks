@@ -146,9 +146,8 @@ class ImportHandler():
             trackid = db.insert(track)
             if not trackid:
                 shutil.remove(dst_path)
-            for tp in track.track_points:
-                tp.set_trackid(trackid)
-                db.insert(tp)
+            else:
+                db.bulk_insert(track.track_points, trackid)
 
             import_res = ImportHandler.OK if trackid else ImportHandler.ERROR
             message = _("Track imported") if trackid else _(f"Error importing the file {track.trackfile_path}.\nIt couldn't be inserted in the database")

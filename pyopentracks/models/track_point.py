@@ -86,6 +86,24 @@ class TrackPoint(Model):
             self._power_w
         )
 
+    def bulk_insert_fields(self, fk_value):
+        """returns a tuple with all TrackPoint fields.
+        the trackid's value is in fk_value argument."""
+        return (
+            self._id,
+            fk_value,
+            self._longitude,
+            self._latitude,
+            self._time_ms,
+            self._speed_mps,
+            self._altitude_m,
+            self._elevation_gain_m,
+            self._elevation_loss_m,
+            self._heart_rate_bpm,
+            self._cadence,
+            self._power_w
+        )
+
     @property
     def location_tuple(self):
         """Build and return a tuple object representing location."""

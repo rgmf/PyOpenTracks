@@ -131,6 +131,9 @@ class Track(Model):
             self._avghr_bpm,
         )
 
+    def bulk_insert_fields(self, fk_value):
+        pass
+
     @property
     def id(self):
         return self._id

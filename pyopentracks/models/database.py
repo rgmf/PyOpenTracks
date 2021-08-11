@@ -254,6 +254,30 @@ class Database:
                 print(error_msg)
         return None
 
+    def bulk_insert(self, model_list, fk_value):
+        """Bulk insertion for a model list.
+
+        This method insert a list of models in an only transaction.
+
+        Arguments:
+        model_list -- a list of a model.
+        fk_value   -- the value of the foreign key for the model.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                cursor = conn.cursor()
+                rowsInserted = 0
+                for model in model_list:
+                    cursor.execute(model.insert_query, model.bulk_insert_fields(fk_value))
+                    rowsInserted = rowsInserted + 1
+                conn.commit()
+                return rowsInserted
+            except Exception as error:
+                # TODO add this error message to a logger system
+                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+                print(error_msg)
+        return 0
+
     def delete(self, model):
         """Delete the model from the database.
 

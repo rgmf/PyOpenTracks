@@ -30,5 +30,17 @@ class Model(ABC):
         pass
 
     @abstractmethod
+    def update_query(self):
+        pass
+
+    @abstractmethod
+    def update_data(self):
+        pass
+
+    @abstractmethod
     def fields(self):
+        pass
+
+    @abstractmethod
+    def bulk_insert_fields(self, fk_value):
         pass
