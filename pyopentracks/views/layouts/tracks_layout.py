@@ -138,13 +138,20 @@ class TracksLayout(Gtk.Box, Layout):
             try:
                 self._db.update(track)
                 self._list_store.set_value(treeiter, 1, track.name)
-                self._select_row(self._list_store.get_path(treeiter))
+                self._list_store.set_value(treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32))
+                self._select_row(self._list_store.get_path(treeiter), force=True)
             except ValueError:
                 # TODO use logger here.
                 print(f"Error: updating track {trackname}")
 
-    def _select_row(self, treepath):
-        if self._treepath_selected == treepath:
+    def _select_row(self, treepath, force=False):
+        """It loads treepath item.
+
+        It only loads the treepath item if it's a different currently load one.
+
+        Also, if force == True, then it forces the treepath loading.
+        """
+        if self._treepath_selected == treepath and not force:
             return
         self._treepath_selected = treepath
 
