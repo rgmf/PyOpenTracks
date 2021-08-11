@@ -17,33 +17,153 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from .model import Model
 
-class TrackPoint:
 
-    def __init__(self):
-        self.location = {"longitude": None, "latitude": None}
-        self.time = None
-        self.speed = None
-        self.elevation = None
-        self.elevation_gain = None
-        self.elevation_loss = None
-        self.heart_rate = None
-        self.cadence = None
-        self.power = None
+class TrackPoint(Model):
+
+    def __init__(self, *args):
+        self._id = args[0] if args else None
+        self._trackid = args[1] if args else None
+        self._longitude = args[2] if args else None
+        self._latitude = args[3] if args else None
+        self._time_ms = args[4] if args else None
+        self._speed_mps = args[5] if args else None
+        self._altitude_m = args[6] if args else None
+        self._elevation_gain_m = args[7] if args else None
+        self._elevation_loss_m = args[8] if args else None
+        self._heart_rate_bpm = args[9] if args else None
+        self._cadence = args[10] if args else None
+        self._power_w = args[11] if args else None
+
+    @property
+    def insert_query(self):
+        """Returns the query for inserting a TrackPoint register."""
+        return """
+        INSERT INTO trackpoints VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
+        """
+
+    @property
+    def delete_query(self):
+        """Returns the query for deleting a TrackPoint by id."""
+        return "DELETE FROM trackpoints WHERE _id=?"
+
+    @property
+    def update_query(self):
+        """Returns the query for updating a TrackPoint by id."""
+        return """
+        UPDATE trackpoints SET longitude=?, latitude=?, time=?, speed=?, altitude=?,
+        gain=?, loss=?, heartrate=?, cadence=?, power=?
+        WHERE _id=?
+        """
+
+    @property
+    def update_data(self):
+        return (
+            self._longitude, self._latitude, self._time_ms, self._speed_mps,
+            self._altitude_m, self._elevation_gain_m, self._elevation_loss_m,
+            self._heart_rate_bpm, self._cadence, self._power_w
+        )
+
+    @property
+    def fields(self):
+        """Returns a tuple with all TrackPoint fields.
+        Maintain the database table trackpoints order of the fields."""
+        return (
+            self._id,
+            self._trackid,
+            self._longitude,
+            self._latitude,
+            self._time_ms,
+            self._speed_mps,
+            self._altitude_m,
+            self._elevation_gain_m,
+            self._elevation_loss_m,
+            self._heart_rate_bpm,
+            self._cadence,
+            self._power_w
+        )
 
     @property
     def location_tuple(self):
         """Build and return a tuple object representing location."""
-        return (float(self.location["latitude"]), float(self.location["longitude"]))
+        return (float(self._latitude), float(self._longitude))
 
     @property
     def longitude(self):
-        if self.location["longitude"]:
-            return float(self.location["longitude"])
+        if self._longitude:
+            return float(self._longitude)
         return 0
 
     @property
     def latitude(self):
-        if self.location["latitude"]:
-            return float(self.location["latitude"])
+        if self._latitude:
+            return float(self._latitude)
         return 0
+
+    @property
+    def location(self):
+        return {"latitude": self._latitude, "longitude": self._longitude}
+
+    @property
+    def speed(self):
+        if self._speed_mps:
+            return float(self._speed_mps)
+        return 0
+
+    @property
+    def altitude(self):
+        if self._altitude_m:
+            return float(self._altitude_m)
+        return 0
+
+    @property
+    def elevation_gain(self):
+        if self._elevation_gain_m:
+            return float(self._elevation_gain_m)
+        return 0
+
+    @property
+    def elevation_loss(self):
+        if self._elevation_loss_m:
+            return float(self._elevation_loss_m)
+        return 0
+
+    @property
+    def heart_rate(self):
+        if self._heart_rate_bpm:
+            return float(self._heart_rate_bpm)
+        return 0
+
+    @property
+    def time_ms(self):
+        return self._time_ms
+
+    def set_latitude(self, latitude):
+        self._latitude = latitude
+
+    def set_longitude(self, longitude):
+        self._longitude = longitude
+
+    def set_trackid(self, trackid):
+        self._trackid = trackid
+
+    def set_altitude(self, altitude):
+        self._altitude_m = altitude
+
+    def set_elevation_gain(self, gain):
+        self._elevation_gain_m = gain
+
+    def set_elevation_loss(self, loss):
+        self._elevation_loss_m = loss
+
+    def set_time(self, time):
+        self._time_ms = time
+
+    def set_speed(self, speed):
+        self._speed_mps = speed
+
+    def set_heart_rate(self, hr):
+        self._heart_rate_bpm = hr

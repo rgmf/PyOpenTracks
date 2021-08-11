@@ -22,6 +22,7 @@ import threading
 from xml.etree.ElementTree import XMLParser
 from gi.repository import GLib, GObject
 
+from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
@@ -58,7 +59,7 @@ class GpxParser:
 
         self._segment = 0
 
-        self._new_trk_point = None
+        self._new_track_point = None
         self._track = None
         self._track_stats = TrackStats()
 
@@ -74,11 +75,9 @@ class GpxParser:
             self._segment = self._segment + 1
         elif tag == GpxParser.TAG_TRKPT:
             self._tag = tag
-            self._new_trk_point = TrackPoint()
-            self._new_trk_point.location = {
-                "latitude": attr["lat"] if "lat" in attr else None,
-                "longitude": attr["lon"] if "lon" in attr else None
-            }
+            self._new_track_point = TrackPoint()
+            self._new_track_point.set_latitude(attr["lat"] if "lat" in attr else None)
+            self._new_track_point.set_longitude(attr["lon"] if "lon" in attr else None)
 
     def end(self, tag):
         _, _, tag = tag.rpartition("}")
@@ -115,22 +114,22 @@ class GpxParser:
     def _end_tag_inside_trkpt(self, tag):
         """Compute the tag tag that is inside trkpt tag."""
         if tag == GpxParser.TAG_ELEVATION:
-            self._new_trk_point.elevation = self._data
+            self._new_track_point.set_altitude(self._data)
         elif tag == GpxParser.TAG_GAIN:
-            self._new_trk_point.elevation_gain = self._data
+            self._new_track_point.set_elevation_gain(self._data)
         elif tag == GpxParser.TAG_LOSS:
-            self._new_trk_point.elevation_loss = self._data
+            self._new_track_point.set_elevation_loss(self._data)
         elif tag == GpxParser.TAG_TIME:
-            self._new_trk_point.time = self._data
+            self._new_track_point.set_time(tu.iso_to_ms(self._data))
         elif tag == GpxParser.TAG_SPEED:
-            self._new_trk_point.speed = self._data
+            self._new_track_point.set_speed(self._data)
         elif tag == GpxParser.TAG_HR:
-            self._new_trk_point.heart_rate = self._data
+            self._new_track_point.set_heart_rate(self._data)
         elif tag == GpxParser.TAG_TRKPT:
             self._track_stats.new_track_point(
-                self._new_trk_point, self._segment
+                self._new_track_point, self._segment
             )
-            self._new_trk_point = None
+            self._new_track_point = None
 
 
 class GpxParserHandler:
@@ -165,7 +164,7 @@ class GpxParserHandler:
                 "file": filename,
                 "track": None,
                 "message": message
-            }
+                }
 
 
 class GpxParserHandlerInThread(GObject.GObject):
@@ -228,103 +227,3 @@ class GpxParserHandlerInThread(GObject.GObject):
                 "track": None,
                 "message": message
             })
-
-
-class GpxTrackPointsParser:
-    TAG_TRKPT = "trkpt"
-
-    def __init__(self):
-        self._track_points = []
-        self._new_track_point = None
-        self._data = ""
-        self._tag = None
-
-    def start(self, tag, attr):
-        _, _, tag = tag.rpartition("}")
-        self._data = ""
-
-        if tag == GpxParser.TAG_TRKPT and self._is_location(attr):
-            self._tag = tag
-            self._new_track_point = TrackPoint()
-            self._new_track_point.location = {"latitude": attr["lat"], "longitude": attr["lon"]}
-
-    def end(self, tag):
-        _, _, tag = tag.rpartition("}")
-
-        if self._tag == GpxParser.TAG_TRKPT:
-            self._end_tag_inside_trkpt(tag)
-
-    def data(self, d):
-        self._data = self._data + d
-
-    def close(self):
-        pass
-
-    def _is_location(self, loc):
-        if "lat" not in loc or "lon" not in loc:
-            return False
-        if not (abs(float(loc["lat"])) <= 90 and abs(float(loc["lon"])) <= 180):
-            return False
-        return True
-
-    def _end_tag_inside_trkpt(self, tag):
-        if tag == GpxParser.TAG_ELEVATION:
-            self._new_track_point.elevation = self._data
-        elif tag == GpxParser.TAG_GAIN:
-            self._new_track_point.elevation_gain = self._data
-        elif tag == GpxParser.TAG_LOSS:
-            self._new_track_point.elevation_loss = self._data
-        elif tag == GpxParser.TAG_TIME:
-            self._new_track_point.time = self._data
-        elif tag == GpxParser.TAG_SPEED:
-            self._new_track_point.speed = self._data
-        elif tag == GpxParser.TAG_HR:
-            self._new_track_point.heart_rate = self._data
-        elif tag == GpxParser.TAG_TRKPT:
-            self._track_points.append(self._new_track_point)
-            self._new_track_point = None
-
-
-class GpxTrackPointsHandle(GObject.GObject):
-    """Handle the GPX track points extraction into a thread."""
-
-    __gsignals__ = {
-        "end-parse": (GObject.SIGNAL_RUN_FIRST, None, ()),
-    }
-
-    def __init__(self):
-        GObject.GObject.__init__(self)
-        self._filename = None
-        self._callback = None
-
-    def get_track_points(self, filename, callback):
-        """Get all trackpoints from filename.
-
-        Arguments:
-        filename -- absolute string path to the GPX file.
-        callback -- a function that accept a list of tuple of locations.
-
-        Return:
-        list of track points (TrackPoint).
-        Can return None if there are not track points into the GPX file.
-        """
-        self._filename = filename
-        self._callback = callback
-        thread = threading.Thread(target=self._get_track_points_in_thread)
-        thread.daemon = True
-        thread.start()
-
-    def _get_track_points_in_thread(self):
-        try:
-            gpx_parser = GpxTrackPointsParser()
-            parser = XMLParser(target=gpx_parser)
-            with open(self._filename, 'rb') as file:
-                for data in file:
-                    parser.feed(data)
-                parser.close()
-
-            self.emit("end-parse")
-            GLib.idle_add(self._callback, gpx_parser._track_points)
-        except Exception as error:
-            # TODO print to logger system
-            print(f"Error getting track points on the file {self._filename}: {error}")

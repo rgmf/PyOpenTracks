@@ -263,7 +263,7 @@ class TrackPointUtils:
             return []
         result = [{
             'distance': 0,
-            'elevation': float(trackpoints[0].elevation),
+            'elevation': float(trackpoints[0].altitude),
             'location': trackpoints[0].location_tuple
         }]
         dist_acc = 0
@@ -276,7 +276,7 @@ class TrackPointUtils:
                 total_distance = total_distance + dist_acc
                 result.append({
                     'distance': round(total_distance / 1000, 2),
-                    'elevation': float(tp.elevation),
+                    'elevation': float(tp.altitude),
                     'location': tp.location_tuple
                 })
                 dist_acc = 0

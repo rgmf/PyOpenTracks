@@ -22,6 +22,7 @@ from os import path
 
 from pyopentracks.settings import xdg_data_home
 from pyopentracks.models.track import Track
+from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.models.auto_import import AutoImport
 from pyopentracks.models.aggregated_stats import AggregatedStats
 
@@ -205,6 +206,33 @@ class Database:
                 print(error_msg)
         return []
 
+    def get_track_points(self, trackid):
+        """Get all track points from track identified by trackid.
+
+        Arguments:
+        trackid -- Track's id.
+
+        Return:
+        list of all TrackPoint objects that hast the Track identified
+        by trackid.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = """
+                SELECT *
+                FROM trackpoints
+                WHERE trackid=?
+                ORDER BY _id ASC
+                """
+                trackpoints = conn.execute(query, (trackid,)).fetchall()
+                if trackpoints:
+                    return [TrackPoint(*tp) for tp in trackpoints]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+                print(error_msg)
+        return []
+
     def insert(self, model):
         """Insert the model in the database.
 
@@ -235,6 +263,9 @@ class Database:
         with sqlite3.connect(self._db_file) as conn:
             try:
                 cursor = conn.cursor()
+                # SQLite foreign keys are disabled for compatibility purposes.
+                # You need to enable them manually right after each connection to the database.
+                conn.execute("PRAGMA foreign_keys = ON")
                 cursor.execute(model.delete_query, (model.id,))
                 conn.commit()
             except Exception as error:
@@ -251,6 +282,9 @@ class Database:
         with sqlite3.connect(self._db_file) as conn:
             try:
                 cursor = conn.cursor()
+                # SQLite foreign keys are disabled for compatibility purposes.
+                # You need to enable them manually right after each connection to the database.
+                conn.execute("PRAGMA foreign_keys = ON")
                 cursor.execute(model.update_query, model.update_data)
                 conn.commit()
             except Exception as error:

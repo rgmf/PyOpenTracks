@@ -125,7 +125,9 @@ class ImportHandler():
     def _import(self, track):
         """Makes the importing of the track.
 
-        It copies the track file and then insert the track to the database.
+        It copies the track file and then insert the track and its track points
+        to the database.
+
         This method assumes track can be inserted in the database.
 
         Arguments:
@@ -144,6 +146,9 @@ class ImportHandler():
             trackid = db.insert(track)
             if not trackid:
                 shutil.remove(dst_path)
+            for tp in track.track_points:
+                tp.set_trackid(trackid)
+                db.insert(tp)
 
             import_res = ImportHandler.OK if trackid else ImportHandler.ERROR
             message = _("Track imported") if trackid else _(f"Error importing the file {track.trackfile_path}.\nIt couldn't be inserted in the database")

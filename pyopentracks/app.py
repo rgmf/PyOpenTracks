@@ -142,9 +142,7 @@ class Application(Gtk.Application):
         action.connect("activate", self.on_quit)
         self.add_action(action)
 
-        builder = Gtk.Builder.new_from_resource(
-            "/es/rgmf/pyopentracks/ui/menu.ui"
-        )
+        builder = Gtk.Builder.new_from_resource("/es/rgmf/pyopentracks/ui/menu.ui")
         self._menu = builder.get_object("app-menu")
 
     def _setup_settings(self):

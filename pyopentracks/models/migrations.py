@@ -72,6 +72,27 @@ class Migration:
         self._db.execute(query)
 
         query = """
+        CREATE TABLE trackpoints (
+        _id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trackid INTEGER NOT NULL,
+        longitude INTEGER NOT NULL,
+        latitude INTEGER NOT NULL,
+        time INTEGER NOT NULL,
+        speed FLOAT,
+        altitude FLOAT,
+        gain FLOAT,
+        loss FLOAT,
+        heartrate FLOAT,
+        cadence FLOAT,
+        power FLOAT,
+        FOREIGN KEY (trackid) REFERENCES tracks (_id) ON UPDATE CASCADE ON DELETE CASCADE
+        );
+        """
+        self._db.execute(query)
+        query = "CREATE INDEX trackpoints_trackid_index ON trackpoints (trackid)"
+        self._db.execute(query)
+
+        query = """
         CREATE TABLE autoimport (
         _id INTEGER PRIMARY KEY AUTOINCREMENT,
         trackfile TEXT,
