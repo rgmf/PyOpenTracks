@@ -170,6 +170,10 @@ class Track(Model):
         return dtu.ms_to_str(self._starttime_ms)
 
     @property
+    def short_start_time(self):
+        return dtu.ms_to_str(self._starttime_ms, short=True)
+
+    @property
     def start_time_ms(self):
         return self._starttime_ms
 

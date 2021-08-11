@@ -86,7 +86,7 @@ class SummarySport(Gtk.Box):
     def __init__(self, aggregated):
         super().__init__()
         self._icon.set_from_pixbuf(tau.get_icon_pixbuf(aggregated.category))
-        self._sport_name.set_label(aggregated.category)
+        self._sport_name.set_label(aggregated.category if aggregated.category else _("Unknown"))
         self._total_activities.set_label(str(aggregated.total_activities))
         self._total_time.set_label(aggregated.total_time)
         self._total_moving_time.set_label(aggregated.total_moving_time)

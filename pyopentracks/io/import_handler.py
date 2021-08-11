@@ -27,6 +27,7 @@ from gi.repository import GLib, GObject
 
 from pyopentracks.io.gpx_parser import GpxParserHandler
 from pyopentracks.models.database import Database
+from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.auto_import import AutoImport
 from pyopentracks.settings import imported_tracks_folder
 
@@ -141,13 +142,12 @@ class ImportHandler():
 
         dst_path = self._copy_file(track.trackfile_path)
         if dst_path:
-            db = Database()
             track.set_trackfile_path(dst_path)
-            trackid = db.insert(track)
+            trackid = DatabaseHelper.insert(track)
             if not trackid:
                 shutil.remove(dst_path)
             else:
-                db.bulk_insert(track.track_points, trackid)
+                DatabaseHelper.bulk_insert(track.track_points, trackid)
 
             import_res = ImportHandler.OK if trackid else ImportHandler.ERROR
             message = _("Track imported") if trackid else _(f"Error importing the file {track.trackfile_path}.\nIt couldn't be inserted in the database")

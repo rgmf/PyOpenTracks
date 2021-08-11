@@ -3,12 +3,16 @@
   <gresource prefix="/es/rgmf/pyopentracks">
     <file>ui/window.ui</file>
     <file>ui/track_stats_layout.ui</file>
+    <file>ui/track_stats_segment_layout.ui</file>
     <file>ui/greeter_layout.ui</file>
     <file>ui/tracks_layout.ui</file>
 
     <file>ui/analytic_layout.ui</file>
     <file>ui/analytic_summary_sport_layout.ui</file>
     <file>ui/analytic_year_layout.ui</file>
+
+    <file>ui/segments_layout.ui</file>
+    <file>ui/segments_list_layout.ui</file>
 
     <file>ui/track_edit_dialog.ui</file>
 
@@ -21,6 +25,10 @@
     <file>icons/settings-symbolic.svg</file>
     <file>icons/stats-symbolic.svg</file>
     <file>icons/left-symbolic.svg</file>
+    <file>icons/map-symbolic.svg</file>
+    <file>icons/send-symbolic.svg</file>
+    <file>icons/up-symbolic.svg</file>
+    <file>icons/down-symbolic.svg</file>
 
     <file>icons/bike_black_48dp.svg</file>
     <file>icons/drive_car_black_48dp.svg</file>

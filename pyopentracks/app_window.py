@@ -39,6 +39,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
     _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
     _preferences_menu_btn: Gtk.Button = Gtk.Template.Child()
     _analytic_menu_btn: Gtk.Button = Gtk.Template.Child()
+    _segments_menu_btn: Gtk.Button = Gtk.Template.Child()
     _back_btn: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
@@ -77,6 +78,10 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._analytic_menu_btn.connect(
             "clicked",
             lambda button: self._app.analytic_button_clicked(button)
+        )
+        self._segments_menu_btn.connect(
+            "clicked",
+            lambda button: self._app.segments_button_clicked(button)
         )
         self._primary_menu_btn.set_menu_model(menu)
 
@@ -154,15 +159,18 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._preferences_menu_btn.show()
         if tracks and len(tracks) > 0:
             self._analytic_menu_btn.show()
+            self._segments_menu_btn.show()
             self.show_layout(TracksLayout(self, tracks))
         else:
             self._analytic_menu_btn.hide()
+            self._segments_menu_btn.hide()
             self.show_layout(GreeterLayout())
 
-    def load_analytics(self, layout):
-        self.show_layout(layout)
+    def load_app(self, app):
+        self.show_layout(app.get_layout())
         self._back_btn.show()
         self._analytic_menu_btn.hide()
+        self._segments_menu_btn.hide()
         self._preferences_menu_btn.hide()
         self._edit_btn.hide()
         self._del_btn.hide()

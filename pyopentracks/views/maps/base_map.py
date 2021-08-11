@@ -17,26 +17,18 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pyopentracks.views.layouts.analytic_layout import (
-    AnalyticLayout, AggregatedStatsYear, AggregatedStats
-)
-from pyopentracks.app_external import AppExternal
+from gi.repository import GtkClutter
+GtkClutter.init([])  # Must be initialized before importing those:
+from gi.repository import GtkChamplain
 
 
-class AppAnalytic(AppExternal):
-    """Handler of Analytics App.
-
-    This is the controller of the analytic's views.
-    """
-
+class BaseMap:
     def __init__(self):
-        self._layout = AnalyticLayout()
+        self._widget = GtkChamplain.Embed()
+        self._view = self._widget.get_view()
+        self._view.set_property('kinetic-mode', True)
+        self._view.set_property('zoom-level', 5)
+        self._view.set_reactive(True)
 
-        self._layout.append(AggregatedStats(), _("Aggregated Stats"))
-
-        aggregated_year = AggregatedStatsYear()
-        self._layout.append(aggregated_year, _("Stats by year"))
-        aggregated_year.show_today()
-
-    def get_layout(self):
-        return self._layout
+    def get_widget(self):
+        return self._widget

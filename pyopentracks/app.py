@@ -36,6 +36,7 @@ from pyopentracks.views.dialogs import (
     PreferencesDialog
 )
 from pyopentracks.app_analytic import AppAnalytic
+from pyopentracks.app_segments import AppSegments
 
 
 class Application(Gtk.Application):
@@ -115,7 +116,11 @@ class Application(Gtk.Application):
 
     def analytic_button_clicked(self, btn):
         app_analytic = AppAnalytic()
-        self._window.load_analytics(app_analytic.get_layout())
+        self._window.load_app(app_analytic)
+
+    def segments_button_clicked(self, btn):
+        app_segments = AppSegments()
+        self._window.load_app(app_segments)
 
     def get_pref(self, pref):
         return self._preferences.get_pref(pref)

@@ -54,3 +54,7 @@ class AutoImport(Model):
         Maintain the database table autoimport order of the fields.
         """
         return (self._id, self._trackfile, self._result)
+
+    @property
+    def bulk_insert_fields(self, fk_value):
+        pass
