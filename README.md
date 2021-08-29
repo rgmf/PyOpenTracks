@@ -15,6 +15,7 @@ Currently, the features are:
 - Auto-import: you can set a folder where PyOpenTracks will see for new files to import every time it's opened.
 - List of all GPX files imported with stats.
 - Aggregated stats from all times and yearly/monthly stats.
+- Segments information: create segments from your tracks and analyze the results of these segments in all tracks.
 
 # Develop, test, use, check it out...
 If you want to check PyOpenTracks out, participate in the development... you can read [DEVELOPMENT.md](DEVELOPMENT.md) to has PyOpenTracks ready to execute and use.
