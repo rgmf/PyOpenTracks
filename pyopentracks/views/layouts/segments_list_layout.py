@@ -47,7 +47,7 @@ class SegmentsListLayout(Gtk.Box):
         object = SegmentsListLayout()
         segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(trackid)
         if not segmentracks:
-            return
+            return object
 
         object._grid.attach(object._build_header_label(_("Segment Information")), 0, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("Time")), 1, 0, 1, 1)
