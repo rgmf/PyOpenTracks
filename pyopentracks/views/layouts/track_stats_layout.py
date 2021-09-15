@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import threading
-
 from gi.repository import Gtk, GLib, GObject
 
 from pyopentracks.views.layouts.layout import Layout
@@ -26,10 +24,10 @@ from pyopentracks.views.maps.track_map import TrackMap
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.views.graphs import LinePlot
 from pyopentracks.utils.utils import TrackPointUtils, DistanceUtils, ElevationUtils
-from pyopentracks.models.database import Database
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
+from pyopentracks.views.layouts.process_view import ProcessView
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
@@ -86,9 +84,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._main_widget.attach(Gtk.Label(_("Loading Graph...")), 0, 7, 4, 24)
 
         # Get track points to build map and plots
-        db = Database()
-        track_points = db.get_track_points(track.id)
-        self._on_track_points_end(track_points)
+        ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (track.id,)).start()
 
         # Load segments.
         segments_list_layout = SegmentsListLayout.from_trackid(track.id)
@@ -191,16 +187,11 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._main_widget.attach(vbox, left, top, width, height)
 
     def _on_track_points_end(self, track_points):
-        def build(track_points):
-            self._map.add_polyline(track_points)
-            self._plot.add_values(TrackPointUtils.extract_dict_values(track_points, 10))
-            self._plot.draw_and_show()
-            self._plot.connect(LinePlot.EVENT_X_CURSOR_POS, self._on_position_in_plot)
-            GLib.idle_add(self._on_prepare_data_done)
-        self._thread = threading.Thread(target=build, args=(track_points,), daemon=True)
-        self._thread.start()
-
-    def _on_prepare_data_done(self):
+        """This method is executed when track_points are ready to load map and plot."""
+        self._map.add_polyline(track_points)
+        self._plot.add_values(TrackPointUtils.extract_dict_values(track_points, 10))
+        self._plot.draw_and_show()
+        self._plot.connect(LinePlot.EVENT_X_CURSOR_POS, self._on_position_in_plot)
         self._load_map()
         self._load_plot()
 
