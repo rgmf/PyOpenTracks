@@ -31,6 +31,11 @@ class DatabaseHelper:
         return db.get_track_by_id(id)
 
     @staticmethod
+    def get_track_points(trackid):
+        db = Database()
+        return db.get_track_points(trackid)
+
+    @staticmethod
     def create_segment(name: str, distance: float, gain: int, loss: int, points: list):
         """Creates a segment.
 
