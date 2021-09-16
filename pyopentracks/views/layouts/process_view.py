@@ -48,7 +48,10 @@ class ProcessView:
         GObject.io_add_watch(self._parent_conn.fileno(), GObject.IO_IN, self._read_data)
 
     def _run(self, conn, args):
-        result = self._func(*args)
+        if args:
+            result = self._func(*args)
+        else:
+            result = self._func()
         conn.send(result)
 
     def _read_data(self, source, condition):

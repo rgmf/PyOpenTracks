@@ -36,6 +36,16 @@ class DatabaseHelper:
         return db.get_track_points(trackid)
 
     @staticmethod
+    def get_aggregated_stats(date_from=None, date_to=None):
+        db = Database()
+        return db.get_aggregated_stats(date_from, date_to)
+
+    @staticmethod
+    def get_years():
+        db = Database()
+        return db.get_years()
+
+    @staticmethod
     def create_segment(name: str, distance: float, gain: int, loss: int, points: list):
         """Creates a segment.
 

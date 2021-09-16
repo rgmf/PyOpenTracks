@@ -31,12 +31,8 @@ class AppAnalytic(AppExternal):
 
     def __init__(self):
         self._layout = AnalyticLayout()
-
         self._layout.append(AggregatedStats(), _("Aggregated Stats"))
-
-        aggregated_year = AggregatedStatsYear()
-        self._layout.append(aggregated_year, _("Stats by year"))
-        aggregated_year.show_today()
+        self._layout.append(AggregatedStatsYear(), _("Stats by year"))
 
     def get_layout(self):
         return self._layout

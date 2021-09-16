@@ -2,60 +2,48 @@
 <!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkListStore" id="_year_list_store">
+    <columns>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name icon -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <template class="AggregatedStatsYear" parent="GtkBox">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="halign">center</property>
-    <property name="valign">start</property>
+    <property name="margin_left">10</property>
+    <property name="margin_right">10</property>
+    <property name="margin_top">10</property>
+    <property name="margin_bottom">10</property>
+    <property name="orientation">vertical</property>
+    <property name="spacing">10</property>
     <child>
-      <object class="GtkBox">
+      <object class="GtkComboBox" id="_combo_years">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <property name="baseline_position">top</property>
+        <property name="halign">start</property>
+        <property name="model">_year_list_store</property>
         <child>
-          <object class="GtkComboBox" id="_combo_years">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="model">_year_list_store</property>
-            <child>
-              <object class="GtkCellRendererText" id="renderer"/>
-              <attributes>
-                <attribute name="text">0</attribute>
-              </attributes>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="padding">10</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkStackSwitcher" id="_stack_switcher">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="orientation">vertical</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
+          <object class="GtkCellRendererText" id="renderer"/>
+          <attributes>
+            <attribute name="text">0</attribute>
+          </attributes>
         </child>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="fill">True</property>
+        <property name="fill">False</property>
         <property name="padding">10</property>
         <property name="position">0</property>
       </packing>
     </child>
     <child>
-      <object class="GtkStack" id="_stack">
+      <object class="GtkBox" id="_box">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
         <child>
           <placeholder/>
         </child>
@@ -67,12 +55,4 @@
       </packing>
     </child>
   </template>
-  <object class="GtkListStore" id="_year_list_store">
-    <columns>
-      <!-- column-name name -->
-      <column type="gchararray"/>
-      <!-- column-name icon -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
 </interface>
