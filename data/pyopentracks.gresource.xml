@@ -10,6 +10,7 @@
     <file>ui/analytic_layout.ui</file>
     <file>ui/analytic_summary_sport_layout.ui</file>
     <file>ui/analytic_year_layout.ui</file>
+    <file>ui/analytic_year_stack_layout.ui</file>
 
     <file>ui/segments_layout.ui</file>
     <file>ui/segments_list_layout.ui</file>

@@ -28,13 +28,18 @@ from pyopentracks.utils.utils import DistanceUtils as du
 
 class AggregatedStatsChart:
     def __init__(self, aggregated_lists):
-        categories = [a.category for a in aggregated_lists]
-        distances = [a.total_distance_float for a in aggregated_lists]
-
+        self.aggregated_lists = aggregated_lists
         self.figure = Figure()
         self.figure.subplots()
         self.axes = self.figure.axes[0]
         self.figure.canvas = FigureCanvas(self.figure)
+        self.figure.canvas.set_size_request(300, 200)
+        self.figure.canvas.set_has_window(False)
+
+    def _draw(self):
+        categories = [a.category for a in self.aggregated_lists]
+        distances = [a.total_distance_float for a in self.aggregated_lists]
+
         self.axes.spines["left"].set_visible(False)
         self.axes.spines["right"].set_visible(False)
         self.axes.spines["bottom"].set_visible(False)
@@ -80,13 +85,11 @@ class AggregatedStatsChart:
             )
             #rect_labels.append(label)
 
-        self.figure.canvas.set_size_request(300, 200)
-        self.figure.canvas.set_has_window(False)
-
     def get_canvas(self):
         return self.figure.canvas
 
     def draw_and_show(self):
+        self._draw()
         self.figure.canvas.draw()
         self.figure.canvas.show()
 

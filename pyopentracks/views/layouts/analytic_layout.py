@@ -22,8 +22,9 @@ from gi.repository import Gtk
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.utils.utils import DateUtils as du
 from pyopentracks.utils.utils import DateTimeUtils as dtu
-from pyopentracks.models.database import Database
+from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.graphs import AggregatedStatsChart
+from pyopentracks.views.layouts.process_view import ProcessView
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_layout.ui")
@@ -113,15 +114,13 @@ class AggregatedStats(Gtk.VBox):
     def __init__(self):
         super().__init__()
         self._setup_ui()
-        self._fill_data()
+        ProcessView(self._aggregated_stats_ready, DatabaseHelper.get_aggregated_stats, None).start()
 
     def _setup_ui(self):
         self.set_spacing(10)
         self.get_style_context().add_class("pyot-bg")
 
-    def _fill_data(self):
-        db = Database()
-        aggregated_stats = db.get_aggregated_stats()
+    def _aggregated_stats_ready(self, aggregated_stats):
         if not aggregated_stats:
             lbl = Gtk.Label(label=_("There are not any aggregated statistics"))
             lbl.set_yalign(0.0)
@@ -139,68 +138,93 @@ class AggregatedStatsYear(Gtk.Box):
     __gtype_name__ = "AggregatedStatsYear"
 
     _combo_years: Gtk.ComboBox = Gtk.Template.Child()
-    _stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
-    _stack: Gtk.Stack = Gtk.Template.Child()
     _year_list_store: Gtk.ListStore = Gtk.Template.Child()
+    _box: Gtk.Box = Gtk.Template.Child()
 
     def __init__(self):
         super().__init__()
-        db = Database()
-        self._setup_ui(db.get_years())
+        self._setup_ui(DatabaseHelper.get_years())
 
     def _setup_ui(self, years):
         for y in years:
             self._year_list_store.append([y, y])
         self._combo_years.set_active(0)
         self._combo_years.connect("changed", self._on_year_changed)
-
-        self._stack_switcher.set_stack(self._stack)
-        self._set_stack(years[0])
-
-    def _set_stack(self, year):
-        self._clean_stack()
-        db = Database()
-        month = 1
-        for month_name in du.get_months():
-            date_from = dtu.first_day_ms(int(year), month)
-            date_to = dtu.last_day_ms(int(year), month)
-            aggregated_list = db.get_aggregated_stats(
-                date_from=date_from, date_to=date_to
-            )
-            if aggregated_list:
-                box = Gtk.Box(
-                    spacing=10, orientation=Gtk.Orientation.VERTICAL
-                )
-                box.get_style_context().add_class("pyot-bg")
-                chart = AggregatedStatsChart(aggregated_list)
-                box.pack_start(chart.get_canvas(), False, False, 0)
-                chart.draw_and_show()
-                for a in aggregated_list:
-                    box.pack_start(SummarySport(a), False, False, 0)
-                self._stack.add_titled(box, year + str(month), month_name)
-            else:
-                label = Gtk.Label(_("There are not stats for this date"))
-                label.set_yalign(0.0)
-                label.get_style_context().add_class("pyot-h1")
-                self._stack.add_titled(
-                    label,
-                    year + str(month),
-                    month_name
-                )
-            month = month + 1
-        self.show_all()
-
-    def _clean_stack(self):
-        for child in self._stack.get_children():
-            self._stack.remove(child)
+        self._year_stack = AnalyticYearStack(years[0])
+        self._box.pack_start(self._year_stack, False, False, 0)
 
     def _on_year_changed(self, combo):
         iter_item = combo.get_active_iter()
         if iter_item is not None:
+            for child in self._box.get_children():
+                self._box.remove(child)
             year = self._year_list_store[iter_item][1]
-            self._set_stack(year)
+            self._year_stack = AnalyticYearStack(year)
+            self._box.pack_start(self._year_stack, False, False, 0)
 
-    def show_today(self):
-        """Show the stack's child """
-        year, month, _ = du.get_today()
-        self._stack.set_visible_child_name(str(year) + str(month))
+
+@Gtk.Template(
+    resource_path="/es/rgmf/pyopentracks/ui/analytic_year_stack_layout.ui"
+)
+class AnalyticYearStack(Gtk.Box):
+    __gtype_name__ = "AnalyticYearStack"
+
+    _stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
+    _stack: Gtk.Stack = Gtk.Template.Child()
+
+    def __init__(self, year):
+        super().__init__()
+        self._year = year
+        self._data_list = []
+        self._stack.connect("notify::visible-child", self._visible_child_changed)
+        self._stack_switcher.set_stack(self._stack)
+        ProcessView(self._on_stack_data_ready, self._data_loading, (year,)).start()
+
+    def _data_loading(self, year):
+        data_list = {}
+        month = 1
+        for month_name in du.get_months():
+            date_from = dtu.first_day_ms(int(year), month)
+            date_to = dtu.last_day_ms(int(year), month)
+            data_list[str(year) + str(month)] = {
+                "aggregated_list": DatabaseHelper.get_aggregated_stats(
+                    date_from=date_from, date_to=date_to
+                ),
+                "month": month,
+                "month_name": month_name
+            }
+            month = month + 1
+        return data_list
+
+    def _on_stack_data_ready(self, data_list):
+        self._data_list = data_list
+        for idx in self._data_list:
+            data = self._data_list[idx]
+            month = data["month"]
+            month_name = data["month_name"]
+            box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
+            box.get_style_context().add_class("pyot-bg")
+            self._stack.add_titled(box, self._year + str(month), month_name)
+        self.show_all()
+
+    def _visible_child_changed(self, stack, gparamstring):
+        box = self._stack.get_visible_child()
+        child_name = self._stack.get_visible_child_name()
+        if box and len(box.get_children()) > 0:
+            return
+        if not child_name or not child_name in self._data_list:
+            return
+
+        data = self._data_list[child_name]
+        aggregated_list = data["aggregated_list"]
+        if aggregated_list:
+            chart = AggregatedStatsChart(aggregated_list)
+            box.pack_start(chart.get_canvas(), False, False, 0)
+            chart.draw_and_show()
+            for a in aggregated_list:
+                box.pack_start(SummarySport(a), False, False, 0)
+        else:
+            label = Gtk.Label(_("There are not stats for this date"))
+            label.set_yalign(0.0)
+            label.get_style_context().add_class("pyot-h1")
+            box.pack_start(label, False, False, 0)
