@@ -172,6 +172,12 @@ class AnalyticYearStack(Gtk.Box):
     _stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
     _stack: Gtk.Stack = Gtk.Template.Child()
 
+    class Data:
+        def __init__(self, al, m, mn):
+            self.aggregated_list = al
+            self.month = m
+            self.month_name = mn
+
     def __init__(self, year):
         super().__init__()
         self._year = year
@@ -186,13 +192,11 @@ class AnalyticYearStack(Gtk.Box):
         for month_name in du.get_months():
             date_from = dtu.first_day_ms(int(year), month)
             date_to = dtu.last_day_ms(int(year), month)
-            data_list[str(year) + str(month)] = {
-                "aggregated_list": DatabaseHelper.get_aggregated_stats(
-                    date_from=date_from, date_to=date_to
-                ),
-                "month": month,
-                "month_name": month_name
-            }
+            data_list[str(year) + str(month)] = AnalyticYearStack.Data(
+                DatabaseHelper.get_aggregated_stats(date_from=date_from, date_to=date_to),
+                month,
+                month_name
+            )
             month = month + 1
         return data_list
 
@@ -200,8 +204,8 @@ class AnalyticYearStack(Gtk.Box):
         self._data_list = data_list
         for idx in self._data_list:
             data = self._data_list[idx]
-            month = data["month"]
-            month_name = data["month_name"]
+            month = data.month
+            month_name = data.month_name
             box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
             box.get_style_context().add_class("pyot-bg")
             self._stack.add_titled(box, self._year + str(month), month_name)
@@ -216,7 +220,7 @@ class AnalyticYearStack(Gtk.Box):
             return
 
         data = self._data_list[child_name]
-        aggregated_list = data["aggregated_list"]
+        aggregated_list = data.aggregated_list
         if aggregated_list:
             chart = AggregatedStatsChart(aggregated_list)
             box.pack_start(chart.get_canvas(), False, False, 0)
