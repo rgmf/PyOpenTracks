@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk
-
 from pyopentracks.views.layouts.segments_layout import SegmentsLayout
 from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
 from pyopentracks.app_external import AppExternal
@@ -32,12 +30,7 @@ class AppSegments(AppExternal):
 
     def __init__(self):
         self._layout = SegmentsLayout()
-        segments_list_layout = SegmentsListLayout.from_segments()
-        if segments_list_layout.get_number_rows() > 0:
-            self._layout.append(segments_list_layout, _("Segment's List"))
-        else:
-            self._layout.append(Gtk.Label(_("There are not segments.")), _("Segment's List"))
-        #self._layout.append(Gtk.Label("Lista de segmentos"), _("Segment's Map"))
+        self._layout.append(SegmentsListLayout.from_segments(), _("Segment's List"))
 
     def get_layout(self):
         return self._layout

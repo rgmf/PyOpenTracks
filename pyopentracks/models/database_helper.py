@@ -128,7 +128,6 @@ class DatabaseHelper:
         db = Database()
         for segment in db.get_segments():
             obj = {
-                "track": None,
                 "segment": segment,
                 "segmentracks": []
             }

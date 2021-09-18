@@ -20,6 +20,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk
 
 from pyopentracks.models.database_helper import DatabaseHelper
+from pyopentracks.views.layouts.process_view import ProcessView
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segments_list_layout.ui")
@@ -28,6 +29,16 @@ class SegmentsListLayout(Gtk.Box):
 
     _title_label: Gtk.Label = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
+
+    class Data:
+        def __init__(self, segment, segmentracks):
+            self.segment = segment
+            self.segment_tracks = []
+            for st in segmentracks:
+                self.segment_tracks.append({
+                    "segmentrack_object": st,
+                    "track_object": DatabaseHelper.get_track_by_id(st.trackid)
+                })
 
     def __init__(self):
         super().__init__()
@@ -70,52 +81,63 @@ class SegmentsListLayout(Gtk.Box):
     @staticmethod
     def from_segments():
         object = SegmentsListLayout()
-        segments_list = DatabaseHelper.get_segment_tracks()
-        top = 0
-        for value in segments_list:
-            segment = value["segment"]
+        object._title_label.set_text(_("Loading segments..."))
+        ProcessView(object._on_data_ready, object._data_loading, None).start()
+        return object
 
-            object._grid.attach(
-                object._build_header_label(segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+    def _data_loading(self):
+        segments_list = DatabaseHelper.get_segment_tracks()
+        data_list = []
+        for value in segments_list:
+            data = SegmentsListLayout.Data(value["segment"], value["segmentracks"])
+            data_list.append(data)
+        return data_list
+
+    def _on_data_ready(self, data_list):
+        top = 0
+        for value in data_list:
+            self._grid.attach(
+                self._build_header_label(value.segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
                 0, top, 4, 1
             )
-            object._grid.attach(
-                object._build_header_label(segment.distance, xalign=0.0, margin_top=20, margin_bottom=10),
+            self._grid.attach(
+                self._build_header_label(value.segment.distance, xalign=0.0, margin_top=20, margin_bottom=10),
                 4, top, 1, 1
             )
-            object._grid.attach(
-                object._build_header_label(segment.gain, xalign=0.0, margin_top=20, margin_bottom=10),
+            self._grid.attach(
+                self._build_header_label(value.segment.gain, xalign=0.0, margin_top=20, margin_bottom=10),
                 5, top, 1, 1
             )
-            object._grid.attach(
-                object._build_header_label(segment.slope, xalign=0.0, margin_top=20, margin_bottom=10),
+            self._grid.attach(
+                self._build_header_label(value.segment.slope, xalign=0.0, margin_top=20, margin_bottom=10),
                 6, top, 1, 1
             )
 
             top = top + 1
 
-            object._grid.attach(Gtk.Label(_("Time")), 0, top, 1, 1)
-            object._grid.attach(Gtk.Label(_("Avg. Speed")), 1, top, 1, 1)
-            object._grid.attach(Gtk.Label(_("Max. Speed")), 2, top, 1, 1)
-            object._grid.attach(Gtk.Label(_("Avg. Heart Rate")), 3, top, 1, 1)
-            object._grid.attach(Gtk.Label(_("Max. Heart Rate")), 4, top, 1, 1)
-            object._grid.attach(Gtk.Label(_("Avg. Cadence")), 5, top, 1, 1)
-            object._grid.attach(Gtk.Label(_("Max. Cadence")), 6, top, 1, 1)
-            object._grid.attach(Gtk.Label(_("Activity Information")), 7, top, 1, 1)
-            for st in value["segmentracks"]:
+            self._grid.attach(Gtk.Label(_("Time")), 0, top, 1, 1)
+            self._grid.attach(Gtk.Label(_("Avg. Speed")), 1, top, 1, 1)
+            self._grid.attach(Gtk.Label(_("Max. Speed")), 2, top, 1, 1)
+            self._grid.attach(Gtk.Label(_("Avg. Heart Rate")), 3, top, 1, 1)
+            self._grid.attach(Gtk.Label(_("Max. Heart Rate")), 4, top, 1, 1)
+            self._grid.attach(Gtk.Label(_("Avg. Cadence")), 5, top, 1, 1)
+            self._grid.attach(Gtk.Label(_("Max. Cadence")), 6, top, 1, 1)
+            self._grid.attach(Gtk.Label(_("Activity Information")), 7, top, 1, 1)
+            for i in value.segment_tracks:
                 top = top + 1
-                object._grid.attach(object._build_box(st.time), 0, top, 1, 1)
-                object._grid.attach(object._build_box(st.avgspeed), 1, top, 1, 1)
-                object._grid.attach(object._build_box(st.maxspeed), 2, top, 1, 1)
-                object._grid.attach(object._build_box(st.avghr), 3, top, 1, 1)
-                object._grid.attach(object._build_box(st.maxhr), 4, top, 1, 1)
-                object._grid.attach(object._build_box(st.avgcadence), 5, top, 1, 1)
-                object._grid.attach(object._build_box(st.maxcadence), 6, top, 1, 1)
-                object._grid.attach(object._build_track_box(DatabaseHelper.get_track_by_id(st.trackid)), 7, top, 1, 1)
-                object._data_rows = object._data_rows + 1
+                st = i["segmentrack_object"]
+                self._grid.attach(self._build_box(st.time), 0, top, 1, 1)
+                self._grid.attach(self._build_box(st.avgspeed), 1, top, 1, 1)
+                self._grid.attach(self._build_box(st.maxspeed), 2, top, 1, 1)
+                self._grid.attach(self._build_box(st.avghr), 3, top, 1, 1)
+                self._grid.attach(self._build_box(st.maxhr), 4, top, 1, 1)
+                self._grid.attach(self._build_box(st.avgcadence), 5, top, 1, 1)
+                self._grid.attach(self._build_box(st.maxcadence), 6, top, 1, 1)
+                self._grid.attach(self._build_track_box(i["track_object"]), 7, top, 1, 1)
+                self._data_rows = self._data_rows + 1
             top = top + 1
-
-        return object
+        self._title_label.set_text(_("Segments"))
+        self.show_all()
 
     def get_number_rows(self):
         return self._data_rows
