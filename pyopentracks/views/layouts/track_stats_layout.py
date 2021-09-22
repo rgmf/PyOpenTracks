@@ -28,6 +28,7 @@ from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
 from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
@@ -38,56 +39,54 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
     _main_widget: Gtk.Grid = Gtk.Template.Child()
     _bottom_widget: Gtk.Box = Gtk.Template.Child()
 
-    def __init__(self):
+    def __init__(self, track):
         super().__init__()
         self._map = TrackMap()
         self._plot = LinePlot()
+        self._track = track
 
     def get_top_widget(self):
         return self._top_widget
 
-    def load_data(self, track):
+    def load_data(self):
         """Load track_stats object into the _main_widget.
-
-        Arguments:
-        track -- Track object with stats and all information.
         """
         self._main_widget.foreach(
             lambda child: self._main_widget.remove(child)
         )
 
         # Track's icon, name, description, dates and total time
-        self._add_info_track(track, 0, 0, 2, 1)
+        self._add_info_track(self._track, 0, 0, 2, 1)
         # Total distance
-        self._add_item(track.total_distance_label, track.total_distance, 0, 2, 1, 1)
+        self._add_item(self._track.total_distance_label, self._track.total_distance, 0, 2, 1, 1)
         # Total moving time
-        self._add_item(track.moving_time_label, track.moving_time, 1, 2, 1, 1)
+        self._add_item(self._track.moving_time_label, self._track.moving_time, 1, 2, 1, 1)
         # Avg. moving speed
-        self._add_item(track.avg_moving_speed_label, track.avg_moving_speed, 0, 3, 1, 1)
+        self._add_item(self._track.avg_moving_speed_label, self._track.avg_moving_speed, 0, 3, 1, 1)
         # Max. speed
-        self._add_item(track.max_speed_label, track.max_speed, 1, 3, 1, 1)
+        self._add_item(self._track.max_speed_label, self._track.max_speed, 1, 3, 1, 1)
         # Max. elevation
-        self._add_item(track.max_elevation_label, track.max_elevation, 0, 4, 1, 1)
+        self._add_item(self._track.max_elevation_label, self._track.max_elevation, 0, 4, 1, 1)
         # Min. elevation
-        self._add_item(track.min_elevation_label, track.min_elevation, 1, 4, 1, 1)
+        self._add_item(self._track.min_elevation_label, self._track.min_elevation, 1, 4, 1, 1)
         # Gain. elevation
-        self._add_item(track.gain_elevation_label, track.gain_elevation, 0, 5, 1, 1)
+        self._add_item(self._track.gain_elevation_label, self._track.gain_elevation, 0, 5, 1, 1)
         # Loss elevation
-        self._add_item(track.loss_elevation_label, track.loss_elevation, 1, 5, 1, 1)
+        self._add_item(self._track.loss_elevation_label, self._track.loss_elevation, 1, 5, 1, 1)
         # Max. heart rate
-        self._add_item(track.max_hr_label, track.max_hr, 0, 6, 1, 1)
+        self._add_item(self._track.max_hr_label, self._track.max_hr, 0, 6, 1, 1)
         # Avg. heart rate
-        self._add_item(track.avg_hr_label, track.avg_hr, 1, 6, 1, 1)
+        self._add_item(self._track.avg_hr_label, self._track.avg_hr, 1, 6, 1, 1)
 
         # Loads boxes where map and plot will be
         self._main_widget.attach(Gtk.Label(_("Loading Map...")), 2, 1, 2, 6)
         self._main_widget.attach(Gtk.Label(_("Loading Graph...")), 0, 7, 4, 24)
 
         # Get track points to build map and plots
-        ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (track.id,)).start()
+        ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (self._track.id,)).start()
 
         # Load segments.
-        segments_list_layout = SegmentsListLayout.from_trackid(track.id)
+        segments_list_layout = SegmentsListLayout.from_trackid(self._track.id)
         if segments_list_layout.get_number_rows() > 0:
             self._main_widget.attach(segments_list_layout, 0, 32, 4, 1)
 
@@ -148,9 +147,33 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
         vbox.pack_start(hbox_date, False, True, 0)
 
+        # Altitude correction button
+        altitude_btn = Gtk.Button(_("Altitude Correction"))
+        altitude_btn.connect("clicked", self._on_altitude_correction)
+
+        vbox.pack_start(altitude_btn, False, False, 0)
+
         hbox.pack_start(vbox, False, True, 0)
 
         self._main_widget.attach(hbox, left, top, width, height)
+
+    def _on_altitude_correction(self, btn):
+        altitude_correction = AltitudeCorrection(self._track.id)
+        ProcessView(self._on_altitude_correction_end, altitude_correction.run, None).start()
+
+    def _on_altitude_correction_end(self, track):
+        # Max. elevation
+        value = self._main_widget.get_child_at(0, 4).get_children()[0]
+        value.set_text(track.max_elevation)
+        # Min. elevation
+        value = self._main_widget.get_child_at(1, 4).get_children()[0]
+        value.set_text(track.min_elevation)
+        # Gain. elevation
+        value = self._main_widget.get_child_at(0, 5).get_children()[0]
+        value.set_text(track.gain_elevation)
+        # Loss elevation
+        value = self._main_widget.get_child_at(1, 5).get_children()[0]
+        value.set_text(track.loss_elevation)
 
     def _add_item(
             self, label_text, value, left, top, width, height,

@@ -95,13 +95,23 @@ class Track(Model):
     def update_query(self):
         """Return the query for updating a Track by id."""
         return """
-        UPDATE tracks SET name=?, description=?, category=?
+        UPDATE tracks 
+        SET name=?, description=?, category=?, minelevation=?, maxelevation=?, elevationgain=?, elevationloss=?
         WHERE _id=?
         """
 
     @property
     def update_data(self):
-        return (self._name, self._description, self._category, self._id)
+        return (
+            self._name,
+            self._description,
+            self._category,
+            self._minelevation_m,
+            self._maxelevation_m,
+            self._elevationgain_m,
+            self._elevationloss_m,
+            self._id
+        )
 
     @property
     def fields(self):
@@ -297,3 +307,15 @@ class Track(Model):
 
     def set_activity_type(self, new_category):
         self._category = new_category
+
+    def set_gain(self, gain):
+        self._elevationgain_m = gain
+
+    def set_loss(self, loss):
+        self._elevationloss_m = loss
+
+    def set_max_altitude(self, altitude):
+        self._maxelevation_m = altitude
+
+    def set_min_altitude(self, altitude):
+        self._minelevation_m = altitude

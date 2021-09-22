@@ -161,9 +161,9 @@ class TracksLayout(Gtk.Box, Layout):
         if not track:
             return
 
-        layout = TrackStatsLayout()
+        layout = TrackStatsLayout(track)
         self._add_widget(layout)
-        layout.load_data(track)
+        layout.load_data()
         self._app_window.disconnect_action_buttons()
         self._app_window.connect_button_del(self.on_remove, treeiter)
         self._app_window.connect_button_edit(self.on_edit, treeiter)

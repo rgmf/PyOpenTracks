@@ -510,6 +510,28 @@ class Database:
                 error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
                 print(error_msg)
 
+    def update_altitude(self, trackid, data_list):
+        """Update all trackpoints altitude from trackid.
+
+        trackid   - track's id where trackpoints has to belong to.
+        data_list - list of data to update. Every item in the list has three keys: "latitude", "longitude", "elevation".
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                cursor = conn.cursor()
+                for data in data_list:
+                    sql = """
+                        update trackpoints
+                        set altitude=?
+                        where trackid=? and latitude=? and longitude=?
+                    """
+                    cursor.execute(sql, (data["elevation"], trackid, data["latitude"], data["longitude"]))
+                conn.commit()
+            except Exception as error:
+                # TODO add this error message to a logger system
+                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
+                print(error_msg)
+
     def get_autoimport_by_trackfile(self, pathfile: str):
         """Return AutoImport object from trackfile.
 

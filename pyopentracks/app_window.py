@@ -141,8 +141,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
                 title=_("Error opening track file")
             ).show()
         else:
-            layout = TrackStatsLayout()
-            layout.load_data(track)
+            layout = TrackStatsLayout(track)
+            layout.load_data()
             self.show_layout(layout)
             self._edit_btn.hide()
             self._del_btn.hide()

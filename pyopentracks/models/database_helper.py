@@ -136,3 +136,24 @@ class DatabaseHelper:
             result_list.append(obj)
 
         return result_list
+
+    @staticmethod
+    def update_altitude(trackid, results):
+        """Update altitude for trackpoints that belong to the track identified by trackid with results dictionary.
+
+        Arguments:
+        trackid - track's id.
+        results - list of dictionaries with keys: "latitude", "longitude" and "elevation".
+        """
+        db = Database()
+        db.update_altitude(trackid, results)
+
+    @staticmethod
+    def update_stats(trackid, min_altitude, max_altitude, gain, loss):
+        db = Database()
+        track = db.get_track_by_id(trackid)
+        track.set_gain(gain)
+        track.set_loss(loss)
+        track.set_max_altitude(max_altitude)
+        track.set_min_altitude(min_altitude)
+        db.update(track)
