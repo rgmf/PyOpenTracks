@@ -88,15 +88,21 @@ class AltitudeCorrection:
         for tp in self._trackpoints:
             if LocationUtils.distance_between(last_valid_tp.latitude, last_valid_tp.longitude, tp.latitude, tp.longitude) >= AltitudeCorrection.DISTANCE_TRHESHOLD:
                 if tp.altitude >= last_valid_altitude + AltitudeCorrection.GAIN_LOSS_THRESHOLD:
-                    self._gain += (tp.altitude - last_valid_tp.altitude)
+                    diff = tp.altitude - last_valid_tp.altitude
+                    self._gain += diff
                     last_valid_tp = tp
                     self._buffer.append(tp.altitude)
                     last_valid_altitude = round(sum(self._buffer) / AltitudeCorrection.CIRCULAR_BUFFER_LEN, 2)
+                    last_valid_tp.set_elevation_gain(diff)
+                    DatabaseHelper.update(last_valid_tp)
                 elif tp.altitude <= last_valid_altitude - AltitudeCorrection.GAIN_LOSS_THRESHOLD:
-                    self._loss += (last_valid_tp.altitude - tp.altitude)
+                    diff = last_valid_tp.altitude - tp.altitude
+                    self._loss += diff
                     last_valid_tp = tp
                     self._buffer.append(tp.altitude)
                     last_valid_altitude = round(sum(self._buffer) / AltitudeCorrection.CIRCULAR_BUFFER_LEN, 2)
+                    last_valid_tp.set_elevation_loss(diff)
+                    DatabaseHelper.update(last_valid_tp)
             if self._min > tp.altitude:
                 self._min = tp.altitude
             if self._max < tp.altitude:

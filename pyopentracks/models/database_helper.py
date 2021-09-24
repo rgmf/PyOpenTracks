@@ -157,3 +157,8 @@ class DatabaseHelper:
         track.set_max_altitude(max_altitude)
         track.set_min_altitude(min_altitude)
         db.update(track)
+
+    @staticmethod
+    def update(model):
+        db = Database()
+        db.update(model)

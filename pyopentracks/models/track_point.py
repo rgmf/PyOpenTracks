@@ -64,7 +64,7 @@ class TrackPoint(Model):
         return (
             self._longitude, self._latitude, self._time_ms, self._speed_mps,
             self._altitude_m, self._elevation_gain_m, self._elevation_loss_m,
-            self._heart_rate_bpm, self._cadence, self._power_w
+            self._heart_rate_bpm, self._cadence, self._power_w, self._id
         )
 
     @property
