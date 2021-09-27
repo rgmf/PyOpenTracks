@@ -28,7 +28,6 @@ from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
 from pyopentracks.views.layouts.process_view import ProcessView
-from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
@@ -147,33 +146,9 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
         vbox.pack_start(hbox_date, False, True, 0)
 
-        # Altitude correction button
-        altitude_btn = Gtk.Button(_("Altitude Correction"))
-        altitude_btn.connect("clicked", self._on_altitude_correction)
-
-        vbox.pack_start(altitude_btn, False, False, 0)
-
         hbox.pack_start(vbox, False, True, 0)
 
         self._main_widget.attach(hbox, left, top, width, height)
-
-    def _on_altitude_correction(self, btn):
-        altitude_correction = AltitudeCorrection(self._track.id)
-        ProcessView(self._on_altitude_correction_end, altitude_correction.run, None).start()
-
-    def _on_altitude_correction_end(self, track):
-        # Max. elevation
-        value = self._main_widget.get_child_at(0, 4).get_children()[0]
-        value.set_text(track.max_elevation)
-        # Min. elevation
-        value = self._main_widget.get_child_at(1, 4).get_children()[0]
-        value.set_text(track.min_elevation)
-        # Gain. elevation
-        value = self._main_widget.get_child_at(0, 5).get_children()[0]
-        value.set_text(track.gain_elevation)
-        # Loss elevation
-        value = self._main_widget.get_child_at(1, 5).get_children()[0]
-        value.set_text(track.loss_elevation)
 
     def _add_item(
             self, label_text, value, left, top, width, height,
