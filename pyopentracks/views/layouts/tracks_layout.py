@@ -23,9 +23,11 @@ from gi.repository import Gtk, GLib, GdkPixbuf, Pango
 
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
-from pyopentracks.models.database import Database
+from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
 from pyopentracks.utils.utils import TypeActivityUtils
+from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
@@ -43,7 +45,6 @@ class TracksLayout(Gtk.Box, Layout):
         super().__init__()
 
         self._app_window = app_window
-        self._db = Database()
         self._treepath_selected = None
 
         self._show_message(_("Select a track to view its stats..."))
@@ -127,22 +128,39 @@ class TracksLayout(Gtk.Box, Layout):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in the Gtk.TreeView through the model.
         """
         trackid = self._list_store.get_value(treeiter, 0)
-        trackname = self._list_store.get_value(treeiter, 1)
 
-        track = self._db.get_track_by_id(trackid)
+        track = DatabaseHelper.get_track_by_id(trackid)
         dialog = TrackEditDialog(parent=self._app_window, track=track)
         response = dialog.run()
         dialog.destroy()
         if response == Gtk.ResponseType.OK:
             track = dialog.get_track()
-            try:
-                self._db.update(track)
-                self._list_store.set_value(treeiter, 1, track.name)
-                self._list_store.set_value(treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32))
+            self._list_store.set_value(treeiter, 1, track.name)
+            self._list_store.set_value(treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32))
+            DatabaseHelper.update(track)
+            if dialog.correct_altitude():
+                self._app_window.show_infobar(
+                    itype=Gtk.MessageType.INFO,
+                    message=_("Correcting altitude and updating the track. When it finishes then the track will be reloaded"),
+                    buttons=[
+                        {
+                            "text": _("Ok"),
+                            "cb": lambda b: self._app_window.clean_top_widget()
+                        }
+                    ]
+                )
+                altitude_correction = AltitudeCorrection(track.id)
+                ProcessView(self._on_altitude_correction_done, altitude_correction.run, None).start()
+            else:
                 self._select_row(self._list_store.get_path(treeiter), force=True)
-            except ValueError:
-                # TODO use logger here.
-                print(f"Error: updating track {trackname}")
+
+    def _on_altitude_correction_done(self, track):
+        self._app_window.clean_top_widget()
+        iter = self._list_store.get_iter_first()
+        while iter and self._list_store.get_value(iter, 0) != track.id:
+            iter = self._list_store.iter_next(iter)
+        if self._treepath_selected == self._list_store.get_path(iter):
+            self._select_row(self._list_store.get_path(iter), force=True)
 
     def _select_row(self, treepath, force=False):
         """It loads treepath item.
@@ -157,7 +175,7 @@ class TracksLayout(Gtk.Box, Layout):
 
         treeiter = self._list_store.get_iter(treepath)
         track_id = self._list_store.get_value(treeiter, 0)
-        track = self._db.get_track_by_id(track_id)
+        track = DatabaseHelper.get_track_by_id(track_id)
         if not track:
             return
 
@@ -194,8 +212,8 @@ class TracksLayout(Gtk.Box, Layout):
         """
         try:
             trackid = self._list_store.get_value(treeiter, 0)
-            track = self._db.get_track_by_id(trackid)
-            self._db.delete(track)
+            track = DatabaseHelper.get_track_by_id(trackid)
+            DatabaseHelper.delete(track)
         except ValueError:
             # TODO use logger here.
             print(f"Error: deleting track {self._list_store.get_value(treeiter, 1)}")

@@ -162,3 +162,8 @@ class DatabaseHelper:
     def update(model):
         db = Database()
         db.update(model)
+
+    @staticmethod
+    def delete(model):
+        db = Database()
+        db.delete(model)

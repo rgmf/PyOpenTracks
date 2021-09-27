@@ -41,8 +41,8 @@ class AltitudeCorrection:
     def __init__(self, trackid):
         super().__init__()
         self._trackid = trackid
-        self._max = 0
-        self._min = 0
+        self._max = None
+        self._min = None
         self._gain = 0
         self._loss = 0
         self._trackpoints = DatabaseHelper.get_track_points(self._trackid)
@@ -89,7 +89,7 @@ class AltitudeCorrection:
             if LocationUtils.distance_between(last_valid_tp.latitude, last_valid_tp.longitude, tp.latitude, tp.longitude) >= AltitudeCorrection.DISTANCE_TRHESHOLD:
                 if tp.altitude >= last_valid_altitude + AltitudeCorrection.GAIN_LOSS_THRESHOLD:
                     diff = tp.altitude - last_valid_tp.altitude
-                    self._gain += diff
+                    self._gain = self._gain + diff
                     last_valid_tp = tp
                     self._buffer.append(tp.altitude)
                     last_valid_altitude = round(sum(self._buffer) / AltitudeCorrection.CIRCULAR_BUFFER_LEN, 2)
@@ -97,15 +97,15 @@ class AltitudeCorrection:
                     DatabaseHelper.update(last_valid_tp)
                 elif tp.altitude <= last_valid_altitude - AltitudeCorrection.GAIN_LOSS_THRESHOLD:
                     diff = last_valid_tp.altitude - tp.altitude
-                    self._loss += diff
+                    self._loss = self._loss + diff
                     last_valid_tp = tp
                     self._buffer.append(tp.altitude)
                     last_valid_altitude = round(sum(self._buffer) / AltitudeCorrection.CIRCULAR_BUFFER_LEN, 2)
                     last_valid_tp.set_elevation_loss(diff)
                     DatabaseHelper.update(last_valid_tp)
-            if self._min > tp.altitude:
+            if not self._min or self._min > tp.altitude:
                 self._min = tp.altitude
-            if self._max < tp.altitude:
+            if not self._max or self._max < tp.altitude:
                 self._max = tp.altitude
 
     def _update_track_stats(self):

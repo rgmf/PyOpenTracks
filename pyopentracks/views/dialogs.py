@@ -237,6 +237,7 @@ class TrackEditDialog(Gtk.Dialog):
     _description: Gtk.Entry = Gtk.Template.Child()
     _activity_type: Gtk.ComboBox = Gtk.Template.Child()
     _type_list_store: Gtk.ListStore = Gtk.Template.Child()
+    _altitude_correction: Gtk.CheckButton = Gtk.Template.Child()
 
     def __init__(self, parent, track):
         Gtk.Dialog.__init__(
@@ -281,3 +282,6 @@ class TrackEditDialog(Gtk.Dialog):
 
     def get_track(self):
         return self._track
+
+    def correct_altitude(self):
+        return self._altitude_correction.get_active()
