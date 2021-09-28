@@ -133,26 +133,28 @@ class TracksLayout(Gtk.Box, Layout):
         dialog = TrackEditDialog(parent=self._app_window, track=track)
         response = dialog.run()
         dialog.destroy()
-        if response == Gtk.ResponseType.OK:
-            track = dialog.get_track()
-            self._list_store.set_value(treeiter, 1, track.name)
-            self._list_store.set_value(treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32))
-            DatabaseHelper.update(track)
-            if dialog.correct_altitude():
-                self._app_window.show_infobar(
-                    itype=Gtk.MessageType.INFO,
-                    message=_("Correcting altitude and updating the track. When it finishes then the track will be reloaded"),
-                    buttons=[
-                        {
-                            "text": _("Ok"),
-                            "cb": lambda b: self._app_window.clean_top_widget()
-                        }
-                    ]
-                )
-                altitude_correction = AltitudeCorrection(track.id)
-                ProcessView(self._on_altitude_correction_done, altitude_correction.run, None).start()
-            else:
-                self._select_row(self._list_store.get_path(treeiter), force=True)
+        if response != Gtk.ResponseType.OK:
+            return
+
+        track = dialog.get_track()
+        self._list_store.set_value(treeiter, 1, track.name)
+        self._list_store.set_value(treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32))
+        DatabaseHelper.update(track)
+        if dialog.correct_altitude():
+            self._app_window.show_infobar(
+                itype=Gtk.MessageType.INFO,
+                message=_("Correcting altitude and updating the track. When it finishes then the track will be reloaded"),
+                buttons=[
+                    {
+                        "text": _("Ok"),
+                        "cb": lambda b: self._app_window.clean_top_widget()
+                    }
+                ]
+            )
+            altitude_correction = AltitudeCorrection(track.id)
+            ProcessView(self._on_altitude_correction_done, altitude_correction.run, None).start()
+        else:
+            self._select_row(self._list_store.get_path(treeiter), force=True)
 
     def _on_altitude_correction_done(self, track):
         self._app_window.clean_top_widget()
