@@ -139,7 +139,7 @@ class AggregatedStatsYear(Gtk.Box):
 
     _combo_years: Gtk.ComboBox = Gtk.Template.Child()
     _year_list_store: Gtk.ListStore = Gtk.Template.Child()
-    _box: Gtk.Box = Gtk.Template.Child()
+    _box_top: Gtk.Box = Gtk.Template.Child()
 
     def __init__(self):
         super().__init__()
@@ -150,17 +150,26 @@ class AggregatedStatsYear(Gtk.Box):
             self._year_list_store.append([y, y])
         self._combo_years.set_active(0)
         self._combo_years.connect("changed", self._on_year_changed)
+
+        self._year_totals = AnalyticTotalsYear(years[0])
+        self._box_top.pack_start(self._year_totals, False, False, 0)
+
         self._year_stack = AnalyticYearStack(years[0])
-        self._box.pack_start(self._year_stack, False, False, 0)
+        self.pack_start(self._year_stack, False, False, 0)
 
     def _on_year_changed(self, combo):
         iter_item = combo.get_active_iter()
         if iter_item is not None:
-            for child in self._box.get_children():
-                self._box.remove(child)
+            self.remove(self._year_stack)
+            self._box_top.remove(self._year_totals)
+
             year = self._year_list_store[iter_item][1]
+
+            self._year_totals = AnalyticTotalsYear(year)
+            self._box_top.pack_start(self._year_totals, False, False, 0)
+
             self._year_stack = AnalyticYearStack(year)
-            self._box.pack_start(self._year_stack, False, False, 0)
+            self.pack_start(self._year_stack, False, False, 0)
 
 
 @Gtk.Template(
@@ -232,3 +241,30 @@ class AnalyticYearStack(Gtk.Box):
             label.set_yalign(0.0)
             label.get_style_context().add_class("pyot-h1")
             box.pack_start(label, False, False, 0)
+
+
+class AnalyticTotalsYear(Gtk.VBox):
+    def __init__(self, year):
+        super().__init__()
+        self.get_style_context().add_class(".pru")
+        ProcessView(
+            self._ready,
+            DatabaseHelper.get_aggregated_stats,
+            (dtu.first_day_ms(int(year), 1), dtu.last_day_ms(int(year), 12))
+        ).start()
+
+    def _ready(self, aggregated_list):
+        if not aggregated_list:
+            lbl = Gtk.Label(label=_("There are not activities this year"))
+            lbl.set_yalign(0.0)
+            lbl.set_xalign(0.0)
+            lbl.get_style_context().add_class("pyot-h3")
+            self.pack_start(lbl, False, False, 0)
+            return
+        for aggregated in aggregated_list:
+            lbl = Gtk.Label(aggregated.category + ": " + aggregated.total_distance)
+            lbl.set_yalign(0.0)
+            lbl.set_xalign(0.0)
+            lbl.get_style_context().add_class("pyot-h3")
+            self.pack_start(lbl, True, True, 10)
+        self.show_all()

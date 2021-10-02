@@ -13,6 +13,8 @@
   <template class="AggregatedStatsYear" parent="GtkBox">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="halign">start</property>
+    <property name="valign">start</property>
     <property name="margin_left">10</property>
     <property name="margin_right">10</property>
     <property name="margin_top">10</property>
@@ -20,39 +22,45 @@
     <property name="orientation">vertical</property>
     <property name="spacing">10</property>
     <child>
-      <object class="GtkComboBox" id="_combo_years">
+      <object class="GtkBox" id="_box_top">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="model">_year_list_store</property>
+        <property name="spacing">10</property>
         <child>
-          <object class="GtkCellRendererText" id="renderer"/>
-          <attributes>
-            <attribute name="text">0</attribute>
-          </attributes>
+          <object class="GtkComboBox" id="_combo_years">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="valign">start</property>
+            <property name="model">_year_list_store</property>
+            <child>
+              <object class="GtkCellRendererText" id="renderer"/>
+              <attributes>
+                <attribute name="text">0</attribute>
+              </attributes>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
         </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">False</property>
-        <property name="padding">10</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkBox" id="_box">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
         <child>
           <placeholder/>
         </child>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">1</property>
+        <property name="fill">False</property>
+        <property name="position">0</property>
       </packing>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </template>
 </interface>
