@@ -165,7 +165,7 @@ class Track(Model):
 
     @property
     def description(self):
-        return self._description
+        return self._description if self._description else ""
 
     @property
     def activity_type(self):

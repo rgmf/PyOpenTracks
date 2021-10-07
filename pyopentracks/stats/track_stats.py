@@ -19,7 +19,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from parser import ParserError
 
-from pyopentracks.utils.utils import LocationUtils
+from pyopentracks.utils.utils import LocationUtils, SpeedUtils
 
 
 class TrackStats:
@@ -180,10 +180,20 @@ class TrackStats:
         """
         if not track_point:
             return
-        if not track_point.location or not track_point.time_ms:
+        if not track_point.latitude or not track_point.longitude or not track_point.time_ms:
             return
-        if not self._is_valid_location(track_point.location):
+        if not self._is_valid_location(track_point.latitude, track_point.longitude):
             return
+        if not track_point.speed_mps:
+            track_point.set_speed(0.0)
+            self._end_time_ms = track_point.time_ms if not self._end_time_ms else self._end_time_ms
+            if self._last_latitude and self._last_longitude:
+                distance = LocationUtils.distance_between(
+                    self._last_latitude, self._last_longitude,
+                    track_point.latitude, track_point.longitude
+                )
+                time = track_point.time_ms - self._end_time_ms
+                track_point.set_speed(SpeedUtils.mps(distance, time))
 
         self._add_track_point(track_point)
         self._add_speed(self._get_float_or_none(track_point.speed))
@@ -197,13 +207,13 @@ class TrackStats:
             self._end_segment_time_ms = None
             self._sensor.reset()
         else:
-            self._add_distance(track_point.location)
+            self._add_distance(track_point.latitude, track_point.longitude)
             self._add_time(track_point.time_ms)
             self._sensor.add_hr(track_point.heart_rate, track_point.time_ms)
 
         self._segment = num_segment
-        self._last_latitude = track_point.location["latitude"]
-        self._last_longitude = track_point.location["longitude"]
+        self._last_latitude = track_point.latitude
+        self._last_longitude = track_point.longitude
 
     def _is_moving(self, speed):
         return speed and float(speed) >= TrackStats.AUTO_PAUSE_SPEED_THRESHOLD
@@ -245,16 +255,11 @@ class TrackStats:
         except ParserError as e:
             print("Date time parsing Error", e)
 
-    def _add_distance(self, location):
+    def _add_distance(self, lat, lon):
         if self._total_distance_m is None:
             self._total_distance_m = 0
         else:
-            to_accum = LocationUtils.distance_between(
-                float(self._last_latitude),
-                float(self._last_longitude),
-                float(location["latitude"]),
-                float(location["longitude"])
-            )
+            to_accum = LocationUtils.distance_between(self._last_latitude, self._last_longitude, lat, lon)
             self._total_distance_m = (self._total_distance_m + to_accum)
 
     def _add_speed(self, speed):
@@ -298,16 +303,11 @@ class TrackStats:
                 else loss
             )
 
-    def _is_valid_location(self, location):
+    def _is_valid_location(self, lat, lon):
         try:
-            if not isinstance(location, dict):
+            if not lat or not lon:
                 return False
-            if "latitude" not in location or "longitude" not in location:
-                return False
-            if not location["latitude"] or not location["longitude"]:
-                return False
-            if (not (abs(float(location["latitude"])) <= 90 and
-                     abs(float(location["longitude"])) <= 180)):
+            if (not (abs(lat) <= 90 and abs(lon) <= 180)):
                 return False
         except Exception as e:
             print("Valid location exception:", e)

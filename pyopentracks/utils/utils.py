@@ -152,6 +152,10 @@ class SpeedUtils:
             seconds = seconds % 60
             return f"{int(minutes):d}:{int(seconds):02d} min/km"
 
+    @staticmethod
+    def mps(distance_m, time_ms):
+        return distance_m / (time_ms / 1000.0)
+
 
 class ElevationUtils:
     @staticmethod

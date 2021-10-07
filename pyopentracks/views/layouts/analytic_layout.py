@@ -262,7 +262,7 @@ class AnalyticTotalsYear(Gtk.VBox):
             self.pack_start(lbl, False, False, 0)
             return
         for aggregated in aggregated_list:
-            lbl = Gtk.Label(aggregated.category + ": " + aggregated.total_distance)
+            lbl = Gtk.Label((aggregated.category if aggregated.category else _("Unknown")) + ": " + aggregated.total_distance)
             lbl.set_yalign(0.0)
             lbl.set_xalign(0.0)
             lbl.get_style_context().add_class("pyot-h3")

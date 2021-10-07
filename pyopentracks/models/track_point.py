@@ -126,10 +126,6 @@ class TrackPoint(Model):
         return 0
 
     @property
-    def location(self):
-        return {"latitude": self._latitude, "longitude": self._longitude}
-
-    @property
     def speed(self):
         if self._speed_mps:
             return float(self._speed_mps)
@@ -162,6 +158,10 @@ class TrackPoint(Model):
     @property
     def time_ms(self):
         return self._time_ms
+
+    @property
+    def speed_mps(self):
+        return self._speed_mps
 
     def set_latitude(self, latitude):
         self._latitude = latitude

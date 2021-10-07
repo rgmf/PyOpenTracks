@@ -49,7 +49,7 @@ class GpxParser:
     def __init__(self, filename_path):
         self._filename_path = filename_path
 
-        self._name = None
+        self._name = _("No name")
         self._desc = None
         self._type = None
         self._uuid = None
@@ -157,7 +157,9 @@ class GpxParserHandler:
                 "message": None
             }
         except Exception as error:
+            import traceback
             message = f"Error parsing the file {filename}: {error}"
+            traceback.print_exc()
             # TODO print to logger system
             print(message)
             return {
