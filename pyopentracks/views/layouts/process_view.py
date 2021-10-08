@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import multiprocessing
+import threading
 
-from gi.repository import GObject
+from gi.repository import GLib
 
 
 class ProcessView:
@@ -42,24 +42,12 @@ class ProcessView:
         self._args = tuple_args
 
     def start(self):
-        self._parent_conn, self._child_conn = multiprocessing.Pipe(duplex=False)
-        multiprocessing.Process(target=self._run, args=(self._child_conn, self._args), daemon=True).start()
-        self._child_conn.close()
-        GObject.io_add_watch(self._parent_conn.fileno(), GObject.IO_IN, self._read_data)
+        thread = threading.Thread(target=self._run)
+        thread.start()
 
-    def _run(self, conn, args):
-        if args:
-            result = self._func(*args)
+    def _run(self):
+        if self._args:
+            result = self._func(*self._args)
         else:
             result = self._func()
-        conn.send(result)
-
-    def _read_data(self, source, condition):
-        assert self._parent_conn.poll()
-        try:
-            result = self._parent_conn.recv()
-        except EOFError:
-            # Stop reading
-            return False
-        self._cb(result)
-        return True
+        GLib.idle_add(self._cb, result)
