@@ -23,6 +23,7 @@ from xml.etree.ElementTree import XMLParser
 from gi.repository import GLib, GObject
 
 from pyopentracks.utils.utils import TimeUtils as tu
+from pyopentracks.utils.utils import TrackPointUtils as tpu
 from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
@@ -59,6 +60,7 @@ class GpxParser:
 
         self._segment = 0
 
+        self._last_track_point = None
         self._new_track_point = None
         self._track = None
         self._track_stats = TrackStats()
@@ -73,6 +75,7 @@ class GpxParser:
             self._tag = tag
         elif tag == GpxParser.TAG_TRKSEG:
             self._segment = self._segment + 1
+            self._last_track_point = None
         elif tag == GpxParser.TAG_TRKPT:
             self._tag = tag
             self._new_track_point = TrackPoint()
@@ -126,9 +129,12 @@ class GpxParser:
         elif tag == GpxParser.TAG_HR:
             self._new_track_point.set_heart_rate(self._data)
         elif tag == GpxParser.TAG_TRKPT:
+            if not self._new_track_point.speed_mps:
+                self._new_track_point.set_speed(tpu.speed(self._last_track_point, self._new_track_point))
             self._track_stats.new_track_point(
                 self._new_track_point, self._segment
             )
+            self._last_track_point = self._new_track_point
             self._new_track_point = None
 
 
