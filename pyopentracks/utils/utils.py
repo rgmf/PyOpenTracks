@@ -250,6 +250,15 @@ class TrackPointUtils:
         return [tp.location_tuple for tp in trackpoints]
 
     @staticmethod
+    def speed(tp1, tp2):
+        """Returns the speed in mps between the two track points if they are not None. Otherwise returns 0."""
+        if not tp1 or not tp2:
+            return 0
+        distance = LocationUtils.distance_between(tp1.latitude, tp1.longitude, tp2.latitude, tp2.longitude)
+        time = tp2.time_ms - tp1.time_ms
+        return SpeedUtils.mps(distance, time)
+
+    @staticmethod
     def extract_dict_values(trackpoints, distance_threshold=5):
         """Returns a list with all information from trackpoints: distances, elevations and locations.
 

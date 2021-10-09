@@ -171,6 +171,8 @@ class TrackStats:
     def new_track_point(self, track_point, num_segment):
         """Compute all stats from new track point.
 
+        It expects track_point to have the following data: latitude, longitude, time, speed.
+
         Arguments:
         track_point -- TrackPoint object with, at least, location
                        (with latitude and longitude) and time.
@@ -180,20 +182,10 @@ class TrackStats:
         """
         if not track_point:
             return
-        if not track_point.latitude or not track_point.longitude or not track_point.time_ms:
+        if not track_point.latitude or not track_point.longitude or not track_point.time_ms or not track_point.speed_mps:
             return
         if not self._is_valid_location(track_point.latitude, track_point.longitude):
             return
-        if not track_point.speed_mps:
-            track_point.set_speed(0.0)
-            self._end_time_ms = track_point.time_ms if not self._end_time_ms else self._end_time_ms
-            if self._last_latitude and self._last_longitude:
-                distance = LocationUtils.distance_between(
-                    self._last_latitude, self._last_longitude,
-                    track_point.latitude, track_point.longitude
-                )
-                time = track_point.time_ms - self._end_time_ms
-                track_point.set_speed(SpeedUtils.mps(distance, time))
 
         self._add_track_point(track_point)
         self._add_speed(self._get_float_or_none(track_point.speed))
