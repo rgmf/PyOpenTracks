@@ -194,13 +194,14 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
 
     __gsignals__ = {
         "total-files-to-import": (GObject.SIGNAL_RUN_FIRST, None, (int,)),
-        "end-import-file": (GObject.SIGNAL_RUN_FIRST, None, (int,)),
     }
 
     def __init__(self):
         super().__init__()
         GObject.GObject.__init__(self)
+        self._files_name = []
         self._callback = None
+        self._thread = None
         self._result = {
             "folder": "",
             "total": 0,
@@ -208,22 +209,28 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
             "errors": []
         }
 
+    def stop(self):
+        if self._thread:
+            self._thread.do_run = False
+
     def import_folder(self, path: str, cb):
         self._result["folder"] = path
+        p = Path(self._result["folder"])
+        self._files_name = [f for f in p.glob("*.gpx")]
+        self._result["total"] = len(self._files_name)
+        self.emit("total-files-to-import", int(self._result["total"]))
         self._callback = cb
-        thread = threading.Thread(target=self._import_in_thread)
-        thread.daemon = True
-        thread.start()
+
+        self._thread = threading.Thread(target=self._import_in_thread, daemon=True)
+        self._thread.start()
 
     def _import_in_thread(self):
-        p = Path(self._result["folder"])
-        files_name = [f for f in p.glob("*.gpx")]
-        self._result["total"] = len(files_name)
-        self.emit("total-files-to-import", int(self._result["total"]))
         parser = GpxParserHandler()
-        for f in files_name:
+        for f in self._files_name:
             result = parser.parse(f)
             self._import_track(result)
+            if not getattr(self._thread, "do_run", True):
+                break
 
     def _import_finished(self, result: dict):
         if result["import"] == ImportHandler.OK:
@@ -232,13 +239,7 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
             self._result["errors"].append(
                 _(f"Error importing the file {result['file']}: {result['message']}")
             )
-
-        total_imported = (
-            self._result["imported"] + len(self._result["errors"])
-        )
-        self.emit("end-import-file", total_imported)
-        if self._result["total"] == total_imported:
-            GLib.idle_add(self._callback, self._result)
+        GLib.idle_add(self._callback, self._result)
 
 
 class AutoImportHandler(ImportHandler):

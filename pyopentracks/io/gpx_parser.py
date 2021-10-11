@@ -163,11 +163,9 @@ class GpxParserHandler:
                 "message": None
             }
         except Exception as error:
-            import traceback
             message = f"Error parsing the file {filename}: {error}"
-            traceback.print_exc()
-            # TODO print to logger system
-            print(message)
+            # TODO print to logger system. Be careful because if I print messages in a separate thread I get a segmentation fault
+            # print(message)
             return {
                 "file": filename,
                 "track": None,

@@ -75,7 +75,9 @@ class ImportResultDialog(Gtk.Dialog):
             transient_for=parent,
             flags=0
         )
+        self._handler = None
         self._total = 0
+        self._imported = 0
         self._folder = folder
         self._box = self.get_content_area()
         self._progress = Gtk.ProgressBar()
@@ -83,6 +85,11 @@ class ImportResultDialog(Gtk.Dialog):
         self._list_box = None
         self._setup_ui()
         self._start_importing()
+        self.connect("delete-event", self._on_destroy)
+
+    def _on_destroy(self, widget, data):
+        if self._handler:
+            self._handler.stop()
 
     def _setup_ui(self):
         self._label = Gtk.Label(
@@ -108,20 +115,22 @@ class ImportResultDialog(Gtk.Dialog):
 
     def _start_importing(self):
         self._progress.set_fraction(0)
-        handler = ImportFolderHandler()
-        handler.connect("total-files-to-import", self._total_files_cb)
-        handler.connect("end-import-file", self._end_import_file_cb)
-        handler.import_folder(self._folder, self._import_ended_cb)
+        self._handler = ImportFolderHandler()
+        self._handler.connect("total-files-to-import", self._total_files_cb)
+        self._handler.import_folder(self._folder, self._import_ended_cb)
 
     def _total_files_cb(self, handler: ImportFolderHandler, total_files):
         self._total = total_files
-        self._label.set_text(f"0 / {self._total}")
-
-    def _end_import_file_cb(self, handler: ImportFolderHandler, num):
-        self._progress.set_fraction(num / self._total)
-        self._label.set_text(f"{num} / {self._total}")
+        self._label.set_text(f"{self._imported} / {self._total}")
 
     def _import_ended_cb(self, result: dict):
+        total_imported = result["imported"] + len(result["errors"])
+        if not total_imported == self._total:
+            self._imported = self._imported + 1
+            self._progress.set_fraction(self._imported / self._total)
+            self._label.set_text(f"{self._imported} / {self._total}")
+            return
+
         self._label.set_text(_(f"Total imported: {result['imported']}"))
         if len(result["errors"]) > 0:
             self._label.set_text(
