@@ -261,10 +261,40 @@ class AnalyticTotalsYear(Gtk.VBox):
             lbl.get_style_context().add_class("pyot-h3")
             self.pack_start(lbl, False, False, 0)
             return
-        for aggregated in aggregated_list:
-            lbl = Gtk.Label((aggregated.category if aggregated.category else _("Unknown")) + ": " + aggregated.total_distance)
-            lbl.set_yalign(0.0)
-            lbl.set_xalign(0.0)
-            lbl.get_style_context().add_class("pyot-h3")
-            self.pack_start(lbl, True, True, 10)
+        grid = Gtk.Grid()
+        grid.set_column_homogeneous(True)
+        grid.set_row_spacing(10)
+        grid.set_column_spacing(10)
+        grid.set_margin_left(50)
+        for i, aggregated in enumerate(aggregated_list):
+            box_icon = self._build_icon_box(aggregated.category)
+            box_activities = self._build_info_box(aggregated.total_activities)
+            box_distance = self._build_info_box(aggregated.total_distance)
+            box_time = self._build_info_box(aggregated.total_moving_time)
+
+            grid.attach(box_icon, 0, i, 1, 1)
+            grid.attach(box_activities, 1, i, 1, 1)
+            grid.attach(box_distance, 2, i, 1, 1)
+            grid.attach(box_time, 3, i, 1, 1)
+        self.pack_start(grid, True, True, 10)
         self.show_all()
+
+    def _build_icon_box(self, category):
+        box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
+        box.get_style_context().add_class("pyot-bg")
+        box.set_homogeneous(False)
+        icon = Gtk.Image()
+        icon.set_from_pixbuf(tau.get_icon_pixbuf(category))
+        lbl = Gtk.Label((category if category else _("Unknown")))
+        box.pack_start(icon, False, False, 0)
+        box.pack_start(lbl, False, False, 0)
+        return box
+
+    def _build_info_box(self, value):
+        box = Gtk.Box(spacing=20, orientation=Gtk.Orientation.VERTICAL)
+        box.get_style_context().add_class("pyot-bg")
+        box.set_homogeneous(False)
+        lbl = Gtk.Label(label=value, xalign=0.0, yalign=0.5)
+        lbl.get_style_context().add_class("pyot-h3")
+        box.pack_start(lbl, True, True, 0)
+        return box
