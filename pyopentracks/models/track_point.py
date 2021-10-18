@@ -33,7 +33,7 @@ class TrackPoint(Model):
         self._elevation_gain_m = args[7] if args else None
         self._elevation_loss_m = args[8] if args else None
         self._heart_rate_bpm = args[9] if args else None
-        self._cadence = args[10] if args else None
+        self._cadence_rpm = args[10] if args else None
         self._power_w = args[11] if args else None
 
     @property
@@ -64,7 +64,7 @@ class TrackPoint(Model):
         return (
             self._longitude, self._latitude, self._time_ms, self._speed_mps,
             self._altitude_m, self._elevation_gain_m, self._elevation_loss_m,
-            self._heart_rate_bpm, self._cadence, self._power_w, self._id
+            self._heart_rate_bpm, self._cadence_rpm, self._power_w, self._id
         )
 
     @property
@@ -82,7 +82,7 @@ class TrackPoint(Model):
             self._elevation_gain_m,
             self._elevation_loss_m,
             self._heart_rate_bpm,
-            self._cadence,
+            self._cadence_rpm,
             self._power_w
         )
 
@@ -100,7 +100,7 @@ class TrackPoint(Model):
             self._elevation_gain_m,
             self._elevation_loss_m,
             self._heart_rate_bpm,
-            self._cadence,
+            self._cadence_rpm,
             self._power_w
         )
 
@@ -156,6 +156,12 @@ class TrackPoint(Model):
         return 0
 
     @property
+    def cadence(self):
+        if self._cadence_rpm:
+            return float(self._cadence_rpm)
+        return 0
+
+    @property
     def time_ms(self):
         return self._time_ms
 
@@ -189,3 +195,6 @@ class TrackPoint(Model):
 
     def set_heart_rate(self, hr):
         self._heart_rate_bpm = hr
+
+    def set_cadence(self, cadence):
+        self._cadence_rpm = cadence

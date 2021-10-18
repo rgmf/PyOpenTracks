@@ -122,8 +122,10 @@ class SegmentTrackSearch(SegmentSearchAbstract):
 class SegmentSearch(SegmentSearchAbstract):
     """This Process subclass look for the segment in all tracks.
 
-    Also, builds the stats and add the informacion into segmentracks table.
+    Also, builds the stats and add the information into segmentracks table.
     """
+
+    SEARCH_RADIO = 10.0
 
     def __init__(self, segment, points):
         """
@@ -136,10 +138,10 @@ class SegmentSearch(SegmentSearchAbstract):
         self._points = points
 
     def run(self):
-        bbox = Location(self._points[0].latitude, self._points[0].longitude).bounding_box(1.1 * 5.0)
+        bbox = Location(self._points[0].latitude, self._points[0].longitude).bounding_box(1.1 * SegmentSearch.SEARCH_RADIO)
         start_points = self._get_tracks_with_near_point_start(bbox)
         for start_p in start_points:
-            bbox = Location(self._points[-1].latitude, self._points[-1].longitude).bounding_box(1.1 * 5.0)
+            bbox = Location(self._points[-1].latitude, self._points[-1].longitude).bounding_box(1.1 * SegmentSearch.SEARCH_RADIO)
             end_p = self._get_tracks_with_near_point_end(bbox, start_p.trackid, start_p.trackpointid)
             if end_p:
                 track_points = self._get_track_points_between(start_p.trackpointid, end_p.trackpointid)

@@ -335,7 +335,15 @@ class SensorUtils:
         )
 
     @staticmethod
-    def cadence_to_str(avg_cadence) -> str:
+    def cadence_to_str(cadence_rpm) -> str:
+        """From float representation cadence to cadence string.
+
+        Arguments:
+        cadence_rpm -- cadence in rpm.
+
+        Returns:
+        An string representing the cadence.
+        """
         return (
-            str(int(avg_cadence)) + " rpm" if avg_cadence is not None else "-"
+            str(int(cadence_rpm)) + " rpm" if cadence_rpm is not None else "-"
         )

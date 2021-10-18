@@ -80,8 +80,8 @@ class SegmentTrack(Model):
         segment_track._avgspeed = stats.avg_speed
         segment_track._maxhr = stats.max_hr
         segment_track._avghr = stats.avg_hr
-        #segment_track._maxcadence = stats.max_cadence
-        #segment_track._avgcadence = stats.avg_cadence
+        segment_track._maxcadence = stats.max_cadence
+        segment_track._avgcadence = stats.avg_cadence
         #segment_track._avgpower = stats.avg_power
 
         return segment_track
