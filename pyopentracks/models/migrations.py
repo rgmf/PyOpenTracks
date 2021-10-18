@@ -62,7 +62,9 @@ class Migration:
                 elevationgain FLOAT,
                 elevationloss FLOAT,
                 maxhr FLOAT,
-                avghr FLOAT
+                avghr FLOAT,
+                maxcadence FLOAT,
+                avgcadence FLOAT
             );
         """
         self._db.execute(query)

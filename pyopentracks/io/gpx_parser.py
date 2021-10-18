@@ -46,6 +46,7 @@ class GpxParser:
     TAG_GAIN = "gain"
     TAG_LOSS = "loss"
     TAG_HR = "hr"
+    TAG_CADENCE = "cad"
 
     def __init__(self, filename_path):
         self._filename_path = filename_path
@@ -99,7 +100,7 @@ class GpxParser:
             self._name, self._desc, self._type,
             None, None, None, None, None, None,
             None, None, None, None, None, None,
-            None, None
+            None, None, None, None
         )
         self._track.add_track_stats(self._track_stats)
 
@@ -128,6 +129,8 @@ class GpxParser:
             self._new_track_point.set_speed(self._data)
         elif tag == GpxParser.TAG_HR:
             self._new_track_point.set_heart_rate(self._data)
+        elif tag == GpxParser.TAG_CADENCE:
+            self._new_track_point.set_cadence(self._data)
         elif tag == GpxParser.TAG_TRKPT:
             if not self._new_track_point.speed_mps:
                 self._new_track_point.set_speed(tpu.speed(self._last_track_point, self._new_track_point))

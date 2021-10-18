@@ -52,6 +52,8 @@ class Track(Model):
         self._elevationloss_m = args[17]
         self._maxhr_bpm = args[18]
         self._avghr_bpm = args[19]
+        self._maxcadence_rpm = args[20]
+        self._avgcadence_rpm = args[21]
 
         self._track_points = None
 
@@ -76,13 +78,15 @@ class Track(Model):
         self._elevationloss_m = ts.loss_elevation
         self._maxhr_bpm = ts.max_hr
         self._avghr_bpm = ts.avg_hr
+        self._avgcadence_rpm = ts.avg_cadence
+        self._maxcadence_rpm = ts.max_cadence
 
     @property
     def insert_query(self):
         """Returns the query for inserting a Track register."""
         return """
         INSERT INTO tracks VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -139,6 +143,8 @@ class Track(Model):
             self._elevationloss_m,
             self._maxhr_bpm,
             self._avghr_bpm,
+            self._maxcadence_rpm,
+            self._avgcadence_rpm
         )
 
     def bulk_insert_fields(self, fk_value):
@@ -298,6 +304,22 @@ class Track(Model):
     @property
     def avg_hr_label(self):
         return _("Avg. Heart Rate")
+
+    @property
+    def max_cadence(self):
+        return se.cadence_to_str(self._maxcadence_rpm)
+
+    @property
+    def max_cadence_label(self):
+        return _("Max. Cadence")
+
+    @property
+    def avg_cadence(self):
+        return se.cadence_to_str(self._avgcadence_rpm)
+
+    @property
+    def avg_cadence_label(self):
+        return _("Avg. Cadence")
 
     def set_name(self, new_name):
         self._name = new_name

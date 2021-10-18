@@ -29,28 +29,28 @@ class TrackStats:
 
     class SensorNormalization:
         def __init__(self):
-            self._max_hr = None
-            self._prev_hr = None
+            self._max = None
+            self._prev = None
             self._prev_time_ms = None
             self._total_time_s = 0
-            self._total_hr = 0
+            self._total = 0
 
-        def add_hr(self, hr_bpm: str, time_ms: float):
-            if hr_bpm is None:
+        def add(self, value: str, time_ms: float):
+            if value is None:
                 self.reset()
                 return
-            hr_bpm = float(hr_bpm)
+            value = float(value)
 
-            self._max_hr = self._compute_max_hr(hr_bpm)
+            self._max = self._compute_max(value)
 
             if self._prev_time_ms is None:
                 self._prev_time_ms = time_ms
-                self._prev_hr = hr_bpm
+                self._prev = value
                 return
 
             elapsed_time_s = (time_ms - self._prev_time_ms) / 1000
             self._total_time_s = self._total_time_s + elapsed_time_s
-            self._total_hr = self._total_hr + (hr_bpm * elapsed_time_s)
+            self._total = self._total + (value * elapsed_time_s)
 
             self._prev_time_ms = time_ms
 
@@ -58,30 +58,28 @@ class TrackStats:
             self._prev_time_ms = None
 
         @property
-        def avg_hr(self):
-            if self._total_hr == 0 and self._total_time_s == 0:
+        def avg(self):
+            if self._total == 0 and self._total_time_s == 0:
                 return None
-            return round(self._total_hr / self._total_time_s)
+            return round(self._total / self._total_time_s)
 
         @property
-        def max_hr(self):
-            if self._max_hr:
-                return round(self._max_hr)
+        def max(self):
+            if self._max:
+                return round(self._max)
             return None
 
-        def _compute_max_hr(self, new_hr):
-            if new_hr is None:
-                return self._max_hr
-            if self._max_hr is None:
-                return new_hr
-            if new_hr > self._max_hr:
-                return new_hr
+        def _compute_max(self, new_value):
+            if new_value is None:
+                return self._max
+            if self._max is None:
+                return new_value
+            if new_value > self._max:
+                return new_value
             else:
-                return self._max_hr
+                return self._max
 
     def __init__(self):
-        self._sensor = TrackStats.SensorNormalization()
-
         self._segment = None
 
         self._start_time_ms = None
@@ -103,8 +101,8 @@ class TrackStats:
         self._gain_elevation_m = None
         self._loss_elevation_m = None
 
-        self._max_hr = None
-        self._avg_hr = None
+        self._hr = TrackStats.SensorNormalization()
+        self._cadence = TrackStats.SensorNormalization()
 
         self._track_points = []
 
@@ -162,11 +160,19 @@ class TrackStats:
 
     @property
     def max_hr(self):
-        return self._sensor.max_hr
+        return self._hr.max
 
     @property
     def avg_hr(self):
-        return self._sensor.avg_hr
+        return self._hr.avg
+
+    @property
+    def max_cadence(self):
+        return self._cadence.max
+
+    @property
+    def avg_cadence(self):
+        return self._cadence.avg
 
     def new_track_point(self, track_point, num_segment):
         """Compute all stats from new track point.
@@ -197,11 +203,13 @@ class TrackStats:
 
         if not self._is_moving(track_point.speed) or num_segment != self._segment:
             self._end_segment_time_ms = None
-            self._sensor.reset()
+            self._hr.reset()
+            self._cadence.reset()
         else:
             self._add_distance(track_point.latitude, track_point.longitude)
             self._add_time(track_point.time_ms)
-            self._sensor.add_hr(track_point.heart_rate, track_point.time_ms)
+            self._hr.add(track_point.heart_rate, track_point.time_ms)
+            self._cadence.add(track_point.cadence, track_point.time_ms)
 
         self._segment = num_segment
         self._last_latitude = track_point.latitude

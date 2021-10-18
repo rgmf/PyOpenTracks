@@ -76,10 +76,14 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._add_item(self._track.max_hr_label, self._track.max_hr, 0, 6, 1, 1)
         # Avg. heart rate
         self._add_item(self._track.avg_hr_label, self._track.avg_hr, 1, 6, 1, 1)
+        # Max. cadence
+        self._add_item(self._track.max_cadence_label, self._track.max_cadence, 0, 7, 1, 1)
+        # Avg. cadence
+        self._add_item(self._track.avg_cadence_label, self._track.avg_cadence, 1, 7, 1, 1)
 
         # Loads boxes where map and plot will be
-        self._main_widget.attach(Gtk.Label(_("Loading Map...")), 2, 1, 2, 6)
-        self._main_widget.attach(Gtk.Label(_("Loading Graph...")), 0, 7, 4, 24)
+        self._main_widget.attach(Gtk.Label(_("Loading Map...")), 2, 1, 2, 7)
+        self._main_widget.attach(Gtk.Label(_("Loading Graph...")), 0, 8, 4, 24)
 
         # Get track points to build map and plots
         ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (self._track.id,)).start()
@@ -195,7 +199,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def _load_map(self):
         """Load the map with."""
-        self._main_widget.attach(self._map.get_widget(), 2, 1, 2, 6)
+        self._main_widget.attach(self._map.get_widget(), 2, 1, 2, 7)
         self._map.get_widget().show_all()
         self._map.get_segment().connect("segment-ready", self._segment_ready_cb)
 
@@ -217,7 +221,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         track_stats_segment.set_stats(stats)
 
     def _load_plot(self):
-        self._main_widget.attach(self._plot.get_canvas(), 0, 7, 4, 24)
+        self._main_widget.attach(self._plot.get_canvas(), 0, 8, 4, 24)
         self._plot.draw_and_show()
 
     def _on_position_in_plot(self, distance, location):
