@@ -185,15 +185,17 @@ class TrackStats:
         num_segment -- a GPX file consist in a number of segments.
                        This argument contains the number of segment the
                        track point belongs.
+
+        Return:
+        The number of segment it goes for.
         """
         if not track_point:
-            return
+            return num_segment
         if not track_point.latitude or not track_point.longitude or not track_point.time_ms or not track_point.speed_mps:
-            return
+            return num_segment
         if not self._is_valid_location(track_point.latitude, track_point.longitude):
-            return
+            return num_segment
 
-        self._add_track_point(track_point)
         self._add_speed(self._get_float_or_none(track_point.speed))
         self._add_elevation(
             self._get_float_or_none(track_point.altitude),
@@ -201,7 +203,9 @@ class TrackStats:
             self._get_float_or_none(track_point.elevation_loss)
         )
 
-        if not self._is_moving(track_point.speed) or num_segment != self._segment:
+        num_segment = num_segment + 1 if not self._is_moving(track_point.speed) else num_segment
+        if num_segment != self._segment:
+            self._segment = num_segment
             self._end_segment_time_ms = None
             self._hr.reset()
             self._cadence.reset()
@@ -214,6 +218,11 @@ class TrackStats:
         self._segment = num_segment
         self._last_latitude = track_point.latitude
         self._last_longitude = track_point.longitude
+
+        track_point.set_num_segment(num_segment)
+        self._add_track_point(track_point)
+
+        return num_segment
 
     def _is_moving(self, speed):
         return speed and float(speed) >= TrackStats.AUTO_PAUSE_SPEED_THRESHOLD

@@ -31,6 +31,11 @@ class DatabaseHelper:
         return db.get_track_by_id(id)
 
     @staticmethod
+    def get_tracks():
+        db = Database()
+        return db.get_tracks()
+
+    @staticmethod
     def get_track_points(trackid):
         db = Database()
         return db.get_track_points(trackid)

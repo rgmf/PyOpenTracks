@@ -30,13 +30,10 @@ from pyopentracks.models.database import Database
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.auto_import import AutoImport
 from pyopentracks.settings import imported_tracks_folder
+from pyopentracks.io.result import Result
 
 
 class ImportHandler():
-    OK = 1
-    ERROR = 2
-    EXISTS = 3
-
     def __init__(self):
         self._callback = None
 
@@ -50,19 +47,12 @@ class ImportHandler():
         if track exists for importing it or not.
 
         Arguments:
-        import_result -- a dictionary with the following keys:
-                         - file: path's file.
-                         - track: Track object or None if any error.
-                         - error: message's error or None.
+        import_result -- Result object.
         """
-        if not import_result["track"]:
-            result = {
-                "file": import_result["file"],
-                "import": ImportHandler.ERROR,
-                "message": import_result["message"]
-            }
+        if not import_result.is_ok or not import_result.track:
+            result = Result(code=Result.ERROR, filename=import_result.filename, message=import_result.message)
         else:
-            track = import_result["track"]
+            track = import_result.track
             try:
                 db = Database()
                 tracks = db.get_existed_tracks(
@@ -70,21 +60,18 @@ class ImportHandler():
                 )
                 if tracks:
                     # Track exists
-                    result = {
-                        "file": track.trackfile_path,
-                        "import": ImportHandler.EXISTS,
-                        "message": _("Track already exists")
-                    }
+                    result = Result(
+                        code=Result.EXISTS,
+                        track=track,
+                        filename=track.trackfile_path,
+                        message=_("Track already exists")
+                    )
                 else:
                     # Track doesn't exists -> make importing.
                     result = self._import(track)
 
             except Exception as error:
-                result = {
-                    "file": track.trackfile_path,
-                    "import": ImportHandler.ERROR,
-                    "message": str(error)
-                }
+                result = Result(code=Result.ERROR, filename=track.trackfile_path, message=str(error))
 
         self._import_finished(result)
 
@@ -135,9 +122,9 @@ class ImportHandler():
         track -- Track object to be inserted in the database.
 
         Return:
-        A dictionary with import, message and tracks to None.
+        Result object.
         """
-        import_res = ImportHandler.ERROR
+        code = Result.ERROR
         message = _(f"File {track.trackfile_path} couldn't be copied to internal storage"),
 
         dst_path = self._copy_file(track.trackfile_path)
@@ -149,34 +136,28 @@ class ImportHandler():
             else:
                 DatabaseHelper.bulk_insert(track.track_points, trackid)
 
-            import_res = ImportHandler.OK if trackid else ImportHandler.ERROR
+            code = Result.OK if trackid else Result.ERROR
             message = _("Track imported") if trackid else _(f"Error importing the file {track.trackfile_path}.\nIt couldn't be inserted in the database")
 
-        return {
-            "file": track.trackfile_path,
-            "import": import_res,
-            "message": message
-        }
+        return Result(code=code, track=track, filename=track.trackfile_path, message=message)
 
 
 class ImportFileHandler(ImportHandler):
 
-    def __init__(self):
-        super().__init__()
-        self._filename = None
-
-    def import_file(self, path: str, cb):
-        """Parse the filename and import it if needed.
-
+    def __init__(self, path, cb):
+        """
         Arguments:
-        path -- the filename to be parsed.
+        path     -- the filename to be parsed.
         callback -- a function that accept Track object to be
                     called when parsing and importing is finished.
                     It's a function used to get the result of the
                     parsing and importing process.
         """
+        super().__init__()
         self._filename = path
         self._callback = cb
+
+    def run(self):
         thread = threading.Thread(target=self._import_in_thread)
         thread.daemon = True
         thread.start()
@@ -186,7 +167,7 @@ class ImportFileHandler(ImportHandler):
         result = parser.parse(self._filename)
         self._import_track(result)
 
-    def _import_finished(self, result: dict):
+    def _import_finished(self, result):
         GLib.idle_add(self._callback, result)
 
 
@@ -232,12 +213,12 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
             if not getattr(self._thread, "do_run", True):
                 break
 
-    def _import_finished(self, result: dict):
-        if result["import"] == ImportHandler.OK:
+    def _import_finished(self, result: Result):
+        if result.is_ok:
             self._result["imported"] = self._result["imported"] + 1
         else:
             self._result["errors"].append(
-                _(f"Error importing the file {result['file']}: {result['message']}")
+                _(f"Error importing the file {result.filename}: {result.message}")
             )
         GLib.idle_add(self._callback, self._result)
 
@@ -277,29 +258,29 @@ class AutoImportHandler(ImportHandler):
             result = parser.parse(f)
             self._import_track(result)
 
-    def _import_finished(self, result: dict):
-        if result["import"] == ImportHandler.OK:
+    def _import_finished(self, result: Result):
+        if result.is_ok:
             self._imported = self._imported + 1
         else:
             self._not_imported = self._not_imported + 1
 
-        self._insert_autoimport_info(result["file"], result["import"])
+        self._insert_autoimport_info(result.filename, result.code)
 
         total = self._imported + self._not_imported
         if total == self._total_to_import and self._imported > 0:
             GLib.idle_add(self._callback)
 
-    def _insert_autoimport_info(self, pathfile, result):
+    def _insert_autoimport_info(self, pathfile, code):
         """Add information about imported file into database.
 
         Arguments:
         pathfile -- the origial track file that was tried to import.
-        result -- the result of the importing (see ImportHandler for values).
+        code -- the Result.code value.
         """
         db = Database()
         auto_import = AutoImport(
             None,
             path.join(self._folder, Path(pathfile).name),
-            result
+            code
         )
         db.insert(auto_import)

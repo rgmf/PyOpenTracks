@@ -27,6 +27,7 @@ from pyopentracks.utils.utils import TrackPointUtils as tpu
 from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
+from pyopentracks.io.result import Result
 
 
 class GpxParser:
@@ -134,7 +135,7 @@ class GpxParser:
         elif tag == GpxParser.TAG_TRKPT:
             if not self._new_track_point.speed_mps:
                 self._new_track_point.set_speed(tpu.speed(self._last_track_point, self._new_track_point))
-            self._track_stats.new_track_point(
+            self._segment = self._track_stats.new_track_point(
                 self._new_track_point, self._segment
             )
             self._last_track_point = self._new_track_point
@@ -160,20 +161,12 @@ class GpxParserHandler:
             if not tp or len(tp) == 0:
                 raise Exception("empty track")
 
-            return {
-                "file": filename,
-                "track": gpx_parser._track,
-                "message": None
-            }
+            return Result(code=Result.OK, track=gpx_parser._track, filename=filename)
         except Exception as error:
             message = f"Error parsing the file {filename}: {error}"
             # TODO print to logger system. Be careful because if I print messages in a separate thread I get a segmentation fault
             # print(message)
-            return {
-                "file": filename,
-                "track": None,
-                "message": message
-                }
+            return Result(code=Result.ERROR, filename=filename, message=message)
 
 
 class GpxParserHandlerInThread(GObject.GObject):
@@ -222,17 +215,9 @@ class GpxParserHandlerInThread(GObject.GObject):
             if not tp or len(tp) == 0:
                 raise Exception("empty track")
 
-            GLib.idle_add(self._callback, {
-                "file": self._filename,
-                "track": gpx_parser._track,
-                "message": None
-            })
+            GLib.idle_add(self._callback, Result(code=Result.OK, filename=self._filename, track=gpx_parser._track))
         except Exception as error:
             message = f"Error parsing the file {self._filename}: {error}"
             # TODO print to logger system
-            print(message)
-            GLib.idle_add(self._callback, {
-                "file": self._filename,
-                "track": None,
-                "message": message
-            })
+            #print(message)
+            GLib.idle_add(self._callback, Result(code=Result.ERROR, filename=self._filename, message=message))

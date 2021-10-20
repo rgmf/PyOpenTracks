@@ -20,6 +20,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk
 
 from pyopentracks.io.import_handler import ImportFolderHandler
+from pyopentracks.io.export_handler import ExportAllHandler
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.utils.utils import TypeActivityUtils as TAU
 
@@ -66,25 +67,23 @@ class MessageDialogError(Gtk.MessageDialog):
         self.destroy()
 
 
-class ImportResultDialog(Gtk.Dialog):
-
-    def __init__(self, parent, folder):
+class ImportExportResultDialog(Gtk.Dialog):
+    def __init__(self, parent, folder, title, text_label):
         Gtk.Dialog.__init__(
             self,
-            title=_("Importing..."),
+            title=title,
             transient_for=parent,
             flags=0
         )
         self._handler = None
-        self._total = 0
-        self._imported = 0
         self._folder = folder
         self._box = self.get_content_area()
         self._progress = Gtk.ProgressBar()
         self._label = None
+        self._text_label = text_label
         self._list_box = None
         self._setup_ui()
-        self._start_importing()
+        self._start()
         self.connect("delete-event", self._on_destroy)
 
     def _on_destroy(self, widget, data):
@@ -93,7 +92,7 @@ class ImportResultDialog(Gtk.Dialog):
 
     def _setup_ui(self):
         self._label = Gtk.Label(
-            label=_(f"Importing files from folder:\n{self._folder}")
+            label=f"{self._text_label}\n{self._folder}"
         )
         self._label.get_style_context().add_class("pyot-p-medium")
 
@@ -113,7 +112,18 @@ class ImportResultDialog(Gtk.Dialog):
         self.show_all()
         self._list_box.hide()
 
-    def _start_importing(self):
+    def _start(self):
+        raise NotImplementedError("ImportExportResultDialgo._start not implemented")
+
+
+class ImportResultDialog(ImportExportResultDialog):
+
+    def __init__(self, parent, folder):
+        self._total = 0
+        self._imported = 0
+        super().__init__(parent, folder, _("Importing..."), _("Importing files from folder:"))
+
+    def _start(self):
         self._progress.set_fraction(0)
         self._handler = ImportFolderHandler()
         self._handler.connect("total-files-to-import", self._total_files_cb)
@@ -125,9 +135,9 @@ class ImportResultDialog(Gtk.Dialog):
 
     def _import_ended_cb(self, result: dict):
         total_imported = result["imported"] + len(result["errors"])
+        self._imported = self._imported + 1
+        self._progress.set_fraction(self._imported / self._total)
         if not total_imported == self._total:
-            self._imported = self._imported + 1
-            self._progress.set_fraction(self._imported / self._total)
             self._label.set_text(f"{self._imported} / {self._total}")
             return
 
@@ -144,6 +154,52 @@ class ImportResultDialog(Gtk.Dialog):
                 self._list_box.add(row)
             self._list_box.show_all()
 
+        self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+
+
+class ExportResultDialog(ImportExportResultDialog):
+    def __init__(self, parent, folder):
+        self._total = 0
+        self._exported = 0
+        self._errors = []
+        super().__init__(parent, folder, _("Exporting..."), _("Exporting files to folder:"))
+
+    def _start(self):
+        handler = ExportAllHandler(self._folder, self._export_all_ended)
+        handler.run()
+        handler.connect("total-tracks-to-export", self._total_tracks_cb)
+
+    def _total_tracks_cb(self, handler: ExportAllHandler, total_tracks):
+        self._total = total_tracks
+        self._label.set_text(f"{self._exported} / {self._total}")
+
+    def _export_all_ended(self, result):
+        if not result.is_ok:
+            self._errors.append({
+                "trackname": result.filename,
+                "message": result.message
+            })
+
+        self._exported = self._exported + 1
+        self._progress.set_fraction(self._exported / self._total)
+        if not self._exported == self._total:
+            self._label.set_text(f"{self._exported} / {self._total}")
+            return
+
+        self._label.set_text(_(f"Total exported: {self._exported}"))
+        if len(self._errors) > 0:
+            self._label.set_text(
+                self._label.get_text() + ".\n" +
+                _("Finished with errors") + ":"
+            )
+            for e in self._errors:
+                row = Gtk.ListBoxRow()
+                trackname = e["trackname"]
+                message = e["message"]
+                label = Gtk.Label(label=f"{trackname}: {message}", xalign=0.0)
+                row.add(label)
+                self._list_box.add(row)
+            self._list_box.show_all()
         self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 
 
