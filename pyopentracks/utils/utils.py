@@ -105,6 +105,18 @@ class TimeUtils:
             date_time.replace("Z", "+00:00")
         ).timestamp() * 1000
 
+    @staticmethod
+    def ms_to_iso(millis: int) -> str:
+        """From milliseconds to ISO 8601 string date time.
+
+        Arguments:
+        millis -- date time in milliseconds.
+
+        Returns:
+        datetime string in ISO 8601 format.
+        """
+        return datetime.fromtimestamp(millis / 1000.0).isoformat(timespec="milliseconds") + "Z"
+
 
 class DistanceUtils:
     @staticmethod

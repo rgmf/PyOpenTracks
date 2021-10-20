@@ -76,6 +76,7 @@ class Migration:
         query = """
             CREATE TABLE trackpoints (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
+                numsegment INTEGER NOT NULL,
                 trackid INTEGER NOT NULL,
                 longitude INTEGER NOT NULL,
                 latitude INTEGER NOT NULL,

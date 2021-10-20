@@ -24,24 +24,25 @@ class TrackPoint(Model):
 
     def __init__(self, *args):
         self._id = args[0] if args else None
-        self._trackid = args[1] if args else None
-        self._longitude = args[2] if args else None
-        self._latitude = args[3] if args else None
-        self._time_ms = args[4] if args else None
-        self._speed_mps = args[5] if args else None
-        self._altitude_m = args[6] if args else None
-        self._elevation_gain_m = args[7] if args else None
-        self._elevation_loss_m = args[8] if args else None
-        self._heart_rate_bpm = args[9] if args else None
-        self._cadence_rpm = args[10] if args else None
-        self._power_w = args[11] if args else None
+        self._numsegment = args[1] if args else None
+        self._trackid = args[2] if args else None
+        self._longitude = args[3] if args else None
+        self._latitude = args[4] if args else None
+        self._time_ms = args[5] if args else None
+        self._speed_mps = args[6] if args else None
+        self._altitude_m = args[7] if args else None
+        self._elevation_gain_m = args[8] if args else None
+        self._elevation_loss_m = args[9] if args else None
+        self._heart_rate_bpm = args[10] if args else None
+        self._cadence_rpm = args[11] if args else None
+        self._power_w = args[12] if args else None
 
     @property
     def insert_query(self):
         """Returns the query for inserting a TrackPoint register."""
         return """
         INSERT INTO trackpoints VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -73,6 +74,7 @@ class TrackPoint(Model):
         Maintain the database table trackpoints order of the fields."""
         return (
             self._id,
+            self._numsegment,
             self._trackid,
             self._longitude,
             self._latitude,
@@ -91,6 +93,7 @@ class TrackPoint(Model):
         the trackid's value is in fk_value argument."""
         return (
             self._id,
+            self._numsegment,
             fk_value,
             self._longitude,
             self._latitude,
@@ -107,6 +110,10 @@ class TrackPoint(Model):
     @property
     def id(self):
         return self._id
+
+    @property
+    def segment(self):
+        return self._numsegment
 
     @property
     def location_tuple(self):
@@ -168,6 +175,9 @@ class TrackPoint(Model):
     @property
     def speed_mps(self):
         return self._speed_mps
+
+    def set_num_segment(self, num_segment):
+        self._numsegment = num_segment
 
     def set_latitude(self, latitude):
         self._latitude = latitude

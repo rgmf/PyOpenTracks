@@ -28,11 +28,12 @@ from pyopentracks.views.file_chooser import (
 from pyopentracks.models.migrations import Migration
 from pyopentracks.models.database import Database
 from pyopentracks.io.import_handler import (
-    ImportHandler, ImportFileHandler, AutoImportHandler
+    ImportFileHandler, AutoImportHandler
 )
 from pyopentracks.views.dialogs import (
     MessageDialogError,
     ImportResultDialog,
+    ExportResultDialog,
     PreferencesDialog
 )
 from pyopentracks.app_analytic import AppAnalytic
@@ -139,6 +140,10 @@ class Application(Gtk.Application):
         action.connect("activate", self._on_import_file)
         self.add_action(action)
 
+        action = Gio.SimpleAction.new("export_all", None)
+        action.connect("activate", self._on_export_all)
+        self.add_action(action)
+
         action = Gio.SimpleAction.new("open_file", None)
         action.connect("activate", self.on_open_file)
         self.add_action(action)
@@ -205,7 +210,7 @@ class Application(Gtk.Application):
                 parent=self._window,
                 folder=folder
             )
-            response = import_dialog.run()
+            import_dialog.run()
             import_dialog.destroy()
             self._load_tracks()
         else:
@@ -216,28 +221,36 @@ class Application(Gtk.Application):
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
             self._window.loading(0.5)
-            handler = ImportFileHandler()
-            handler.import_file(dialog.get_filename(), self._import_ended)
+            ImportFileHandler(dialog.get_filename(), self._import_ended).run()
         dialog.destroy()
 
-    def _import_ended(self, result: dict):
+    def _import_ended(self, result):
         """Called when file importing is finished.
 
         Arguments:
-        result -- a dict with the following keys:
-                  - file: file's path.
-                  - import: the result.
-                  - message: the message.
+        result -- pyopentracks.io.result.Result object.
         """
         self._window.loading(1.0)
-        if result["import"] == ImportHandler.OK:
+        if result.is_ok:
             self._load_tracks()
         else:
             MessageDialogError(
                 transient_for=self._window,
                 text=(
-                    _(f"Error importing the file {result['file']}") +
-                    ": \n" + result["message"]
+                    _(f"Error importing the file {result.filename}") +
+                    ": \n" + result.message
                 ),
                 title=_("Error importing track file")
             ).show()
+
+    def _on_export_all(self, action, param):
+        dialog = FolderChooserWindow(parent=self._window)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            folder = dialog.get_filename()
+            dialog.destroy()
+            export_dialog = ExportResultDialog(parent=self._window, folder=folder)
+            export_dialog.run()
+            export_dialog.destroy()
+        else:
+            dialog.destroy()
