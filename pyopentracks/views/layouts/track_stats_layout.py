@@ -86,7 +86,10 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._main_widget.attach(Gtk.Label(_("Loading Graph...")), 0, 8, 4, 24)
 
         # Get track points to build map and plots
-        ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (self._track.id,)).start()
+        if not self._track.track_points:
+            ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (self._track.id,)).start()
+        else:
+            self._on_track_points_end(self._track.track_points)
 
         # Load segments.
         segments_list_layout = SegmentsListLayout.from_trackid(self._track.id)

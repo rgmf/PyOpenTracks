@@ -82,6 +82,8 @@ class TrackMap(BaseMap):
         return True
 
     def add_polyline(self, track_points):
+        if not track_points:
+            return
         self._track_points = track_points
 
         for tp in track_points:

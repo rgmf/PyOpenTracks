@@ -121,22 +121,19 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             dict_item["widget"].hide()
         self._action_buttons_handlers = []
 
-    def load_track_stats(self, result: dict):
+    def load_track_stats(self, result):
         """Load track stats layout with new track.
 
         Arguments:
-        result -- dictionary with the following keys:
-                  - file: path's file.
-                  - track: Track object or None if any error.
-                  - error: message's error or None.
+        result -- pyopentracks.io.result.Result object.
         """
-        track = result["track"]
+        track = result.track
         if not track:
             MessageDialogError(
                 transient_for=self,
                 text=(
-                    _(f"Error opening the file {result['file']}") +
-                    ": \n" + result["message"]
+                    _(f"Error opening the file {result.filename}") +
+                    ": \n" + result.message
                 ),
                 title=_("Error opening track file")
             ).show()
