@@ -98,6 +98,10 @@ class Segment(Model):
         return self._loss_m
 
     @property
+    def loss(self):
+        return ElevationUtils.elevation_to_str(self._loss_m)
+
+    @property
     def slope(self):
         if self._distance_m and self._gain_m:
             return ElevationUtils.slope_to_str(self._gain_m * 100 / self._distance_m)

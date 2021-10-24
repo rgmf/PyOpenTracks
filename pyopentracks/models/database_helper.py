@@ -101,6 +101,11 @@ class DatabaseHelper:
         return num_trackpoints
 
     @staticmethod
+    def get_segments():
+        db = Database()
+        return db.get_segments()
+
+    @staticmethod
     def get_segment_by_id(id):
         db = Database()
         return db.get_segment_by_id(id)
@@ -109,6 +114,11 @@ class DatabaseHelper:
     def get_segment_tracks_by_trackid(trackid):
         db = Database()
         return db.get_segment_tracks_by_trackid(trackid)
+
+    @staticmethod
+    def get_segment_tracks_by_segmentid(segmentid):
+        db = Database()
+        return db.get_segment_tracks_by_segmentid(segmentid)
 
     @staticmethod
     def get_segment_tracks():
@@ -141,6 +151,11 @@ class DatabaseHelper:
             result_list.append(obj)
 
         return result_list
+
+    @staticmethod
+    def get_segment_points(segmentid):
+        db = Database()
+        return db.get_segment_points(segmentid)
 
     @staticmethod
     def update_altitude(trackid, results):

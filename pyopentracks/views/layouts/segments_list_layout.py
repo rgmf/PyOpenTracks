@@ -21,6 +21,7 @@ from gi.repository import Gtk
 
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.views.maps.base_map import BaseMap
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segments_list_layout.ui")
@@ -28,6 +29,9 @@ class SegmentsListLayout(Gtk.Box):
     __gtype_name__ = "SegmentsListLayout"
 
     _title_label: Gtk.Label = Gtk.Template.Child()
+    _combobox_segments: Gtk.ComboBox = Gtk.Template.Child()
+    _segments_list_store: Gtk.ListStore = Gtk.Template.Child()
+    _grid_segment_detail: Gtk.Grid = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
 
     class Data:
@@ -51,11 +55,15 @@ class SegmentsListLayout(Gtk.Box):
         self._title_label.set_margin_left(20)
         self._title_label.get_style_context().add_class("pyot-h2")
 
+        self._grid_segment_detail.get_style_context().add_class("pyot-stats-bg-color")
+
         self.get_style_context().add_class("pyot-bg")
 
     @staticmethod
     def from_trackid(trackid):
         object = SegmentsListLayout()
+        object._combobox_segments.hide()
+        object.remove(object._grid_segment_detail)
         segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(trackid)
         if not segmentracks:
             return object
@@ -85,57 +93,117 @@ class SegmentsListLayout(Gtk.Box):
         ProcessView(object._on_data_ready, object._data_loading, None).start()
         return object
 
+    def _on_segment_changed(self, combo):
+        iter_item = combo.get_active_iter()
+        if iter_item is not None:
+            segmentid = self._segments_list_store[iter_item][0]
+            self._title_label.set_text(_("Loading segments..."))
+            ProcessView(self._on_data_ready, self._data_changing, (segmentid,)).start()
+
     def _data_loading(self):
-        segments_list = DatabaseHelper.get_segment_tracks()
-        data_list = []
-        for value in segments_list:
-            data = SegmentsListLayout.Data(value["segment"], value["segmentracks"])
-            data_list.append(data)
-        return data_list
+        segments = DatabaseHelper.get_segments()
+        if not segments:
+            return None
 
-    def _on_data_ready(self, data_list):
+        self._combobox_segments.set_wrap_width(2 if len(segments) > 10 else 1)
+        for segment in segments:
+            self._segments_list_store.append([segment.id, segment.name])
+        self._combobox_segments.set_active(0)
+        self._combobox_segments.connect("changed", self._on_segment_changed)
+
+        return SegmentsListLayout.Data(segments[0], DatabaseHelper.get_segment_tracks_by_segmentid(segments[0].id))
+
+    def _data_changing(self, segmentid):
+        segment = DatabaseHelper.get_segment_by_id(segmentid)
+        return SegmentsListLayout.Data(segment, DatabaseHelper.get_segment_tracks_by_segmentid(segment.id))
+
+    def _on_data_ready(self, data: Data):
+        for w in self._grid.get_children():
+            self._grid.remove(w)
+        for w in self._grid_segment_detail.get_children():
+            self._grid_segment_detail.remove(w)
+
+        if not data:
+            label = Gtk.Label(_("There are not anything to show"))
+            label.get_style_context().add_class("pyot-h2")
+            self._grid.attach(label, 0, 0, 1, 1)
+            self._title_label.set_text(_("Segments"))
+            self.show_all()
+            return
+
+        segment = data.segment
+        segment_tracks = data.segment_tracks
+
+        self._grid_segment_detail.attach(
+            self._build_header_label(_("Name:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            0, 0, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            1, 0, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(_("Distance:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            0, 1, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(segment.distance, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            1, 1, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(_("Elevation Gain:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            0, 2, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(segment.gain, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            1, 2, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(_("Elevation Loss:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            0, 3, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(segment.loss, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            1, 3, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(_("Slope:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            0, 4, 1, 1
+        )
+        self._grid_segment_detail.attach(
+            self._build_header_label(segment.slope, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            1, 4, 1, 1
+        )
+
+        map = BaseMap()
+        map.add_polyline([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment.id)])
+        self._grid_segment_detail.attach(map.get_widget(), 2, 0, 4, 5)
+        #map = ReferenceMap([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment.id)])
+        #self._grid_segment_detail.attach(map.get_vbox(), 2, 0, 4, 5)
+
         top = 0
-        for value in data_list:
-            self._grid.attach(
-                self._build_header_label(value.segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
-                0, top, 4, 1
-            )
-            self._grid.attach(
-                self._build_header_label(value.segment.distance, xalign=0.0, margin_top=20, margin_bottom=10),
-                4, top, 1, 1
-            )
-            self._grid.attach(
-                self._build_header_label(value.segment.gain, xalign=0.0, margin_top=20, margin_bottom=10),
-                5, top, 1, 1
-            )
-            self._grid.attach(
-                self._build_header_label(value.segment.slope, xalign=0.0, margin_top=20, margin_bottom=10),
-                6, top, 1, 1
-            )
 
+        self._grid.attach(Gtk.Label(_("Time")), 0, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Avg. Speed")), 1, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Max. Speed")), 2, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Avg. Heart Rate")), 3, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Max. Heart Rate")), 4, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Avg. Cadence")), 5, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Max. Cadence")), 6, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Activity Information")), 7, top, 1, 1)
+        for i in segment_tracks:
+            st = i["segmentrack_object"]
             top = top + 1
+            self._grid.attach(self._build_box(st.time), 0, top, 1, 1)
+            self._grid.attach(self._build_box(st.avgspeed), 1, top, 1, 1)
+            self._grid.attach(self._build_box(st.maxspeed), 2, top, 1, 1)
+            self._grid.attach(self._build_box(st.avghr), 3, top, 1, 1)
+            self._grid.attach(self._build_box(st.maxhr), 4, top, 1, 1)
+            self._grid.attach(self._build_box(st.avgcadence), 5, top, 1, 1)
+            self._grid.attach(self._build_box(st.maxcadence), 6, top, 1, 1)
+            self._grid.attach(self._build_track_box(i["track_object"]), 7, top, 1, 1)
+            self._data_rows = self._data_rows + 1
 
-            self._grid.attach(Gtk.Label(_("Time")), 0, top, 1, 1)
-            self._grid.attach(Gtk.Label(_("Avg. Speed")), 1, top, 1, 1)
-            self._grid.attach(Gtk.Label(_("Max. Speed")), 2, top, 1, 1)
-            self._grid.attach(Gtk.Label(_("Avg. Heart Rate")), 3, top, 1, 1)
-            self._grid.attach(Gtk.Label(_("Max. Heart Rate")), 4, top, 1, 1)
-            self._grid.attach(Gtk.Label(_("Avg. Cadence")), 5, top, 1, 1)
-            self._grid.attach(Gtk.Label(_("Max. Cadence")), 6, top, 1, 1)
-            self._grid.attach(Gtk.Label(_("Activity Information")), 7, top, 1, 1)
-            for i in value.segment_tracks:
-                top = top + 1
-                st = i["segmentrack_object"]
-                self._grid.attach(self._build_box(st.time), 0, top, 1, 1)
-                self._grid.attach(self._build_box(st.avgspeed), 1, top, 1, 1)
-                self._grid.attach(self._build_box(st.maxspeed), 2, top, 1, 1)
-                self._grid.attach(self._build_box(st.avghr), 3, top, 1, 1)
-                self._grid.attach(self._build_box(st.maxhr), 4, top, 1, 1)
-                self._grid.attach(self._build_box(st.avgcadence), 5, top, 1, 1)
-                self._grid.attach(self._build_box(st.maxcadence), 6, top, 1, 1)
-                self._grid.attach(self._build_track_box(i["track_object"]), 7, top, 1, 1)
-                self._data_rows = self._data_rows + 1
-            top = top + 1
         self._title_label.set_text(_("Segments"))
         self.show_all()
 

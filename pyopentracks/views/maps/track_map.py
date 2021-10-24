@@ -41,16 +41,11 @@ class TrackMap(BaseMap):
         self._view.add_layer(self._segment)
 
         self._view.connect("button-release-event", self._mouse_click_cb, self._view)
-        self._layer_polyline = Champlain.PathLayer()
         self._layer_marker = None
         self._marker = None
         self._init_location_marker()
 
         self._track_points = []
-
-    def _append_point(self, lat, lon):
-        coord = Champlain.Coordinate.new_full(lat, lon)
-        self._layer_polyline.add_node(coord)
 
     def _init_location_marker(self):
         orange = Clutter.Color.new(0xf3, 0x94, 0x07, 0xbb)
