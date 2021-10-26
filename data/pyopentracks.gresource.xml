@@ -16,6 +16,7 @@
     <file>ui/segments_list_layout.ui</file>
 
     <file>ui/track_edit_dialog.ui</file>
+    <file>ui/segment_edit_dialog.ui</file>
 
     <file>ui/menu.ui</file>
 

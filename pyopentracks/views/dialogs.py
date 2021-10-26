@@ -350,3 +350,40 @@ class TrackEditDialog(Gtk.Dialog):
 
     def correct_altitude(self):
         return self._altitude_correction.get_active()
+
+
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segment_edit_dialog.ui")
+class SegmentEditDialog(Gtk.Dialog):
+    """Segment's dialog editor.
+
+    It offers a method (get_segment) to get the segment's changes.
+    """
+
+    __gtype_name__ = "SegmentEditDialog"
+
+    _name: Gtk.Entry = Gtk.Template.Child()
+
+    def __init__(self, parent, segment):
+        Gtk.Dialog.__init__(
+            self,
+            title=_("Edit Segment"),
+            transient_for=parent,
+            flags=0
+        )
+        self._segment = segment
+        self._set_data()
+        self.add_buttons(
+            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OK, Gtk.ResponseType.OK
+        )
+        self.show_all()
+
+    def _set_data(self):
+        self._name.set_text(self._segment.name)
+        self._name.connect("changed", self._on_name_changed)
+
+    def _on_name_changed(self, entry):
+        self._segment.name = entry.get_text()
+
+    def get_segment(self):
+        return self._segment

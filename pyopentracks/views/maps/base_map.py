@@ -27,6 +27,10 @@ from gi.repository import GtkChamplain, Champlain, Pango, Gtk
 
 
 class BaseMap:
+    """
+    Map with libchamplain library with controls to: zoom in/out and change map's source.
+    It offers the possility of draw a path line.
+    """
 
     def __init__(self):
         self._vbox = Gtk.VBox(False, 10)

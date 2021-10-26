@@ -19,6 +19,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
+from pyopentracks.views.dialogs import QuestionDialog, MessageDialogError, SegmentEditDialog
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.maps.base_map import BaseMap
@@ -28,8 +29,11 @@ from pyopentracks.views.maps.base_map import BaseMap
 class SegmentsListLayout(Gtk.Box):
     __gtype_name__ = "SegmentsListLayout"
 
+    _box_header: Gtk.Box = Gtk.Template.Child()
     _title_label: Gtk.Label = Gtk.Template.Child()
     _combobox_segments: Gtk.ComboBox = Gtk.Template.Child()
+    _button_delete: Gtk.Button = Gtk.Template.Child()
+    _button_edit: Gtk.Button = Gtk.Template.Child()
     _segments_list_store: Gtk.ListStore = Gtk.Template.Child()
     _grid_segment_detail: Gtk.Grid = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
@@ -49,6 +53,14 @@ class SegmentsListLayout(Gtk.Box):
 
         self._data_rows = 0
 
+        self._button_delete.connect("clicked", self._button_delete_clicked_cb)
+        self._button_edit.connect("clicked", self._button_edit_clicked_cb)
+
+        self._button_delete.set_sensitive(False)
+        self._button_edit.set_sensitive(False)
+
+        self._label_segment_name = None
+
         self._title_label.set_text(_("Segments"))
         self._title_label.set_line_wrap(True)
         self._title_label.set_margin_top(20)
@@ -64,6 +76,8 @@ class SegmentsListLayout(Gtk.Box):
         object = SegmentsListLayout()
         object._combobox_segments.hide()
         object.remove(object._grid_segment_detail)
+        object._box_header.remove(object._button_edit)
+        object._box_header.remove(object._button_delete)
         segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(trackid)
         if not segmentracks:
             return object
@@ -128,8 +142,13 @@ class SegmentsListLayout(Gtk.Box):
             label.get_style_context().add_class("pyot-h2")
             self._grid.attach(label, 0, 0, 1, 1)
             self._title_label.set_text(_("Segments"))
+            self.remove(self._box_header)
+            self.remove(self._grid_segment_detail)
             self.show_all()
             return
+
+        self._button_delete.set_sensitive(True)
+        self._button_edit.set_sensitive(True)
 
         segment = data.segment
         segment_tracks = data.segment_tracks
@@ -138,10 +157,10 @@ class SegmentsListLayout(Gtk.Box):
             self._build_header_label(_("Name:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 0, 1, 1
         )
-        self._grid_segment_detail.attach(
-            self._build_header_label(segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
-            1, 0, 1, 1
+        self._label_segment_name = self._build_header_label(
+            segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20
         )
+        self._grid_segment_detail.attach(self._label_segment_name, 1, 0, 1, 1)
         self._grid_segment_detail.attach(
             self._build_header_label(_("Distance:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 1, 1, 1
@@ -178,8 +197,6 @@ class SegmentsListLayout(Gtk.Box):
         map = BaseMap()
         map.add_polyline([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment.id)])
         self._grid_segment_detail.attach(map.get_widget(), 2, 0, 4, 5)
-        #map = ReferenceMap([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment.id)])
-        #self._grid_segment_detail.attach(map.get_vbox(), 2, 0, 4, 5)
 
         top = 0
 
@@ -254,3 +271,45 @@ class SegmentsListLayout(Gtk.Box):
         box.set_homogeneous(False)
         box.pack_start(Gtk.Label(label=value, xalign=0.0, yalign=0.0), True, True, 0)
         return box
+
+    def _button_delete_clicked_cb(self, btn):
+        iter_item = self._combobox_segments.get_active_iter()
+        if iter_item is None:
+            MessageDialogError(
+                transient_for=self.get_toplevel(),
+                text=_("There are not any segment selected"),
+                title=_("Error deleting a segment")
+            ).show()
+            return
+
+        dialog = QuestionDialog(
+            parent=self.get_toplevel(),
+            title=_("Remove Segment"),
+            question=_(f"Do you really want to remove the segment? This will remove all data about this segment.")
+        )
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.CANCEL:
+            return
+
+        segmentid = self._segments_list_store[iter_item][0]
+        DatabaseHelper.delete(DatabaseHelper.get_segment_by_id(segmentid))
+        self._title_label.set_text(_("Loading segments..."))
+        self._segments_list_store.clear()
+        ProcessView(self._on_data_ready, self._data_loading, None).start()
+
+    def _button_edit_clicked_cb(self, btn):
+        iter_item = self._combobox_segments.get_active_iter()
+        if iter_item is not None:
+            segmentid = self._segments_list_store[iter_item][0]
+            dialog = SegmentEditDialog(parent=self.get_toplevel(), segment=DatabaseHelper.get_segment_by_id(segmentid))
+            response = dialog.run()
+            dialog.destroy()
+            if response != Gtk.ResponseType.OK:
+                return
+
+            segment = dialog.get_segment()
+            self._segments_list_store.set_value(iter_item, 1, segment.name)
+            if self._label_segment_name:
+                self._label_segment_name.set_label(segment.name)
+            DatabaseHelper.update(segment)

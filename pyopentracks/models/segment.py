@@ -51,7 +51,8 @@ class Segment(Model):
             self._name,
             self._distance_m,
             self._gain_m,
-            self._loss_m
+            self._loss_m,
+            self._id
         )
 
     @property
@@ -111,3 +112,7 @@ class Segment(Model):
     @id.setter
     def id(self, id):
         self._id = id
+
+    @name.setter
+    def name(self, name):
+        self._name = name
