@@ -86,7 +86,7 @@ class TrackStats:
         self._end_time_ms = None
         self._total_time_ms = None
         self._moving_time_ms = None
-        self._end_segment_time_ms = None
+        self._last_segment_time_ms = None
 
         self._last_latitude = None
         self._last_longitude = None
@@ -196,20 +196,18 @@ class TrackStats:
         if not self._is_valid_location(track_point.latitude, track_point.longitude):
             return num_segment
 
-        self._add_speed(self._get_float_or_none(track_point.speed))
-        self._add_elevation(
-            self._get_float_or_none(track_point.altitude),
-            self._get_float_or_none(track_point.elevation_gain),
-            self._get_float_or_none(track_point.elevation_loss)
-        )
-
         num_segment = num_segment + 1 if not self._is_moving(track_point.speed) else num_segment
         if num_segment != self._segment:
-            self._segment = num_segment
-            self._end_segment_time_ms = None
+            self._last_segment_time_ms = None
             self._hr.reset()
             self._cadence.reset()
         else:
+            self._add_speed(self._get_float_or_none(track_point.speed))
+            self._add_elevation(
+                self._get_float_or_none(track_point.altitude),
+                self._get_float_or_none(track_point.elevation_gain),
+                self._get_float_or_none(track_point.elevation_loss)
+            )
             self._add_distance(track_point.latitude, track_point.longitude)
             self._add_time(track_point.time_ms)
             self._hr.add(track_point.heart_rate, track_point.time_ms)
@@ -247,11 +245,11 @@ class TrackStats:
                     else timestamp_ms - self._end_time_ms
                 )
 
-            if self._end_segment_time_ms is not None:
+            if self._last_segment_time_ms is not None:
                 self._moving_time_ms = (
-                    self._moving_time_ms + (timestamp_ms - self._end_segment_time_ms)
+                    self._moving_time_ms + (timestamp_ms - self._last_segment_time_ms)
                     if self._moving_time_ms is not None
-                    else timestamp_ms - self._end_segment_time_ms
+                    else timestamp_ms - self._last_segment_time_ms
                 )
 
             self._start_time_ms = (
@@ -259,7 +257,7 @@ class TrackStats:
                 else self._start_time_ms
             )
             self._end_time_ms = timestamp_ms
-            self._end_segment_time_ms = timestamp_ms
+            self._last_segment_time_ms = timestamp_ms
 
         except ParserError as e:
             print("Date time parsing Error", e)

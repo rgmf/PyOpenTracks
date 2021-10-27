@@ -122,17 +122,17 @@ class ExportTrack():
     def _trkpt(self, tp):
         result = f"<trkpt lat=\"{tp.latitude}\" lon=\"{tp.longitude}\">\n"
         result = result + f"<time>{TimeUtils.ms_to_iso(tp.time_ms)}</time>\n"
-        if tp.speed_mps:
+        if tp.speed_mps is not None:
             result = result + f"<gpxtpx:speed>{tp.speed_mps}</gpxtpx:speed>\n"
-        if tp.altitude:
+        if tp.altitude is not None:
             result = result + f"<ele>{tp.altitude}</ele>\n"
-        if tp.elevation_gain:
+        if tp.elevation_gain is not None:
             result = result + f"<gpxtpx:gain>{tp.elevation_gain}</gpxtpx:gain>\n"
-        if tp.elevation_loss:
+        if tp.elevation_loss is not None:
             result = result + f"<gpxtpx:loss>{tp.elevation_loss}</gpxtpx:loss>\n"
-        if tp.heart_rate:
+        if tp.heart_rate is not None:
             result = result + f"<gpxtpx:hr>{tp.heart_rate}</gpxtpx:hr>\n"
-        if tp.cadence:
+        if tp.cadence is not None:
             result = result + f"<gpxtpx:cad>{tp.cadence}</gpxtpx:cad>\n"
         result = result + "</trkpt>\n"
         return result
