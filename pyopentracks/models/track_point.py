@@ -160,13 +160,13 @@ class TrackPoint(Model):
     def heart_rate(self):
         if self._heart_rate_bpm:
             return float(self._heart_rate_bpm)
-        return 0
+        return None
 
     @property
     def cadence(self):
         if self._cadence_rpm:
             return float(self._cadence_rpm)
-        return 0
+        return None
 
     @property
     def time_ms(self):
