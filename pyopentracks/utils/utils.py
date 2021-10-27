@@ -17,11 +17,13 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import time
+
 from gi.repository import GdkPixbuf
 
 from math import radians, sin, cos, asin, sqrt
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from calendar import monthrange
 from locale import setlocale, LC_ALL
 
@@ -74,6 +76,20 @@ class DateUtils:
 
 class TimeUtils:
     @staticmethod
+    def utc_offset_str() -> str:
+        """Return and string with the offset of the local timezone from the computer.
+
+        Examples:
+            +02:00
+            -04:00
+        """
+        ts = time.time()
+        utc_offset = (datetime.fromtimestamp(ts) - datetime.utcfromtimestamp(ts)).total_seconds()
+        hours = (int) (utc_offset / 3600)
+        minutes = (int) ((utc_offset % 3600) / 60)
+        return f"{hours:03d}:{minutes:02d}" if hours < 0 else f"+{hours:02d}:{minutes:02d}"
+
+    @staticmethod
     def ms_to_str(time_ms: float) -> str:
         """From time millis to human readable string.
 
@@ -115,7 +131,7 @@ class TimeUtils:
         Returns:
         datetime string in ISO 8601 format.
         """
-        return datetime.fromtimestamp(millis / 1000.0).isoformat(timespec="milliseconds") + "Z"
+        return datetime.fromtimestamp(millis / 1000.0, tz=datetime.now(timezone.utc).astimezone().tzinfo).isoformat(timespec="milliseconds")
 
 
 class DistanceUtils:
