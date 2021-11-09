@@ -3,7 +3,7 @@ PyOpenTracks is a GTK/GNOME libre-software analytic project for activities (like
 
 In fact, this project is created with the goal of analyse the tracks I record with [OpenTracks](https://github.com/OpenTracksApp/OpenTracks), exported to GPX and synchronized through [NextCloud](https://nextcloud.com/).
 
-At this moment it's in an active development status and it shouldn't be used for real purpose.
+It's a hobby project and at this moment it's in an active development status, so it shouldn't be used for real purpose.
 
 # Current features
 This project is in an early stage so the current features are growing little by little.
