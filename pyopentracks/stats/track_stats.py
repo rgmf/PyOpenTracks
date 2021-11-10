@@ -19,13 +19,10 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from parser import ParserError
 
-from pyopentracks.utils.utils import LocationUtils, SpeedUtils
+from pyopentracks.utils.utils import LocationUtils
 
 
 class TrackStats:
-    # Speed threshold for considering that there is not movement (in mps).
-    # TODO This should be a setting's option ¿?
-    AUTO_PAUSE_SPEED_THRESHOLD = 0.1
 
     class SensorNormalization:
         def __init__(self):
@@ -104,8 +101,6 @@ class TrackStats:
         self._hr = TrackStats.SensorNormalization()
         self._cadence = TrackStats.SensorNormalization()
 
-        self._track_points = []
-
     @property
     def start_time(self):
         return self._start_time_ms
@@ -155,10 +150,6 @@ class TrackStats:
         return self._loss_elevation_m
 
     @property
-    def track_points(self):
-        return self._track_points
-
-    @property
     def max_hr(self):
         return self._hr.max
 
@@ -174,30 +165,26 @@ class TrackStats:
     def avg_cadence(self):
         return self._cadence.avg
 
-    def new_track_point(self, track_point, num_segment):
+    def compute(self, track_points):
+        """Compute stats from track_points
+
+        It expects all track points are valid ones: correct location (lat, lon), time and speed.
+
+        Arguments:
+        track_points -- all TrackPoint's objects to compute that will be use to compute stats.
+        """
+        for tp in track_points:
+            self._new_track_point(tp)
+
+    def _new_track_point(self, track_point):
         """Compute all stats from new track point.
 
         It expects track_point to have the following data: latitude, longitude, time, speed.
 
         Arguments:
-        track_point -- TrackPoint object with, at least, location
-                       (with latitude and longitude) and time.
-        num_segment -- a GPX file consist in a number of segments.
-                       This argument contains the number of segment the
-                       track point belongs.
-
-        Return:
-        The number of segment it goes for.
+        track_point -- TrackPoint object with, at least, location (with latitude and longitude), time and speed.
         """
-        if not track_point:
-            return num_segment
-        if not track_point.latitude or not track_point.longitude or not track_point.time_ms or not track_point.speed_mps:
-            return num_segment
-        if not self._is_valid_location(track_point.latitude, track_point.longitude):
-            return num_segment
-
-        num_segment = num_segment + 1 if not self._is_moving(track_point.speed) else num_segment
-        if num_segment != self._segment:
+        if track_point.segment != self._segment:
             self._last_segment_time_ms = None
             self._hr.reset()
             self._cadence.reset()
@@ -213,23 +200,12 @@ class TrackStats:
             self._hr.add(track_point.heart_rate, track_point.time_ms)
             self._cadence.add(track_point.cadence, track_point.time_ms)
 
-        self._segment = num_segment
+        self._segment = track_point.segment
         self._last_latitude = track_point.latitude
         self._last_longitude = track_point.longitude
 
-        track_point.set_num_segment(num_segment)
-        self._add_track_point(track_point)
-
-        return num_segment
-
-    def _is_moving(self, speed):
-        return speed and float(speed) >= TrackStats.AUTO_PAUSE_SPEED_THRESHOLD
-
     def _get_float_or_none(self, data):
         return None if not data else float(data)
-
-    def _add_track_point(self, track_point):
-        self._track_points.append(track_point)
 
     def _add_time(self, timestamp_ms):
         """Add the time to the stats.
@@ -309,14 +285,3 @@ class TrackStats:
                 if self._loss_elevation_m is not None
                 else loss
             )
-
-    def _is_valid_location(self, lat, lon):
-        try:
-            if not lat or not lon:
-                return False
-            if (not (abs(lat) <= 90 and abs(lon) <= 180)):
-                return False
-        except Exception as e:
-            print("Valid location exception:", e)
-            return False
-        return True

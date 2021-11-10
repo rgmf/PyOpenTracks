@@ -122,49 +122,49 @@ class TrackPoint(Model):
 
     @property
     def longitude(self):
-        if self._longitude:
+        if self._longitude is not None:
             return float(self._longitude)
         return 0
 
     @property
     def latitude(self):
-        if self._latitude:
+        if self._latitude is not None:
             return float(self._latitude)
         return 0
 
     @property
     def speed(self):
-        if self._speed_mps:
+        if self._speed_mps is not None:
             return float(self._speed_mps)
         return 0
 
     @property
     def altitude(self):
-        if self._altitude_m:
+        if self._altitude_m is not None:
             return float(self._altitude_m)
         return 0
 
     @property
     def elevation_gain(self):
-        if self._elevation_gain_m:
+        if self._elevation_gain_m is not None:
             return float(self._elevation_gain_m)
         return 0
 
     @property
     def elevation_loss(self):
-        if self._elevation_loss_m:
+        if self._elevation_loss_m is not None:
             return float(self._elevation_loss_m)
         return 0
 
     @property
     def heart_rate(self):
-        if self._heart_rate_bpm:
+        if self._heart_rate_bpm is not None:
             return float(self._heart_rate_bpm)
         return None
 
     @property
     def cadence(self):
-        if self._cadence_rpm:
+        if self._cadence_rpm is not None:
             return float(self._cadence_rpm)
         return None
 

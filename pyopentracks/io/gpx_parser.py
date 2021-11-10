@@ -28,9 +28,10 @@ from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.io.result import Result
+from pyopentracks.io.parser import Parser
 
 
-class GpxParser:
+class GpxParser(Parser):
     TAG_METADATA = "metadata"
     TAG_TRK = "trk"
     TAG_NAME = "name"
@@ -50,6 +51,7 @@ class GpxParser:
     TAG_CADENCE = "cad"
 
     def __init__(self, filename_path):
+        super().__init__()
         self._filename_path = filename_path
 
         self._name = _("No name")
@@ -60,12 +62,8 @@ class GpxParser:
         self._tag = None
         self._data = ""
 
-        self._segment = 0
-
         self._last_track_point = None
         self._new_track_point = None
-        self._track = None
-        self._track_stats = TrackStats()
 
     def start(self, tag, attr):
         _, _, tag = tag.rpartition("}")
@@ -76,7 +74,7 @@ class GpxParser:
         elif tag == GpxParser.TAG_TRK:
             self._tag = tag
         elif tag == GpxParser.TAG_TRKSEG:
-            self._segment = self._segment + 1
+            self._new_segment = True
             self._last_track_point = None
         elif tag == GpxParser.TAG_TRKPT:
             self._tag = tag
@@ -96,6 +94,7 @@ class GpxParser:
         self._data = self._data + d
 
     def close(self):
+        super().close()
         self._track = Track(
             None, self._filename_path, self._uuid,
             self._name, self._desc, self._type,
@@ -103,7 +102,10 @@ class GpxParser:
             None, None, None, None, None, None,
             None, None, None, None
         )
-        self._track.add_track_stats(self._track_stats)
+        self._track.set_track_points(self._track_points)
+        track_stats = TrackStats()
+        track_stats.compute(self._track_points)
+        self._track.add_track_stats(track_stats)
 
     def _end_tag_inside_metadata_trk(self, tag):
         """Compute the tag tag that is inside metadata or trk tag."""
@@ -135,9 +137,7 @@ class GpxParser:
         elif tag == GpxParser.TAG_TRKPT:
             if not self._new_track_point.speed_mps:
                 self._new_track_point.set_speed(tpu.speed(self._last_track_point, self._new_track_point))
-            self._segment = self._track_stats.new_track_point(
-                self._new_track_point, self._segment
-            )
+            self._add_track_point(self._new_track_point)
             self._last_track_point = self._new_track_point
             self._new_track_point = None
 
@@ -166,6 +166,8 @@ class GpxParserHandler:
             message = f"Error parsing the file {filename}: {error}"
             # TODO print to logger system. Be careful because if I print messages in a separate thread I get a segmentation fault
             # print(message)
+            #import traceback
+            #traceback.print_exc()
             return Result(code=Result.ERROR, filename=filename, message=message)
 
 
