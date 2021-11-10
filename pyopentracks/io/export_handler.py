@@ -53,11 +53,10 @@ class ExportTrack():
                 for tp in trackpoints:
                     if self._segment != tp.segment:
                         self._segment = tp.segment
-                        if len(segment_buffer) > 1:
-                            gpx.write("<trkseg>\n")
-                            for i in segment_buffer:
-                                gpx.write(self._trkpt(i))
-                            gpx.write("</trkseg>\n")
+                        gpx.write("<trkseg>\n")
+                        for i in segment_buffer:
+                            gpx.write(self._trkpt(i))
+                        gpx.write("</trkseg>\n")
                         segment_buffer = []
                     segment_buffer.append(tp)
                 if len(segment_buffer) > 1:

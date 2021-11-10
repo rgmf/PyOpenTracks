@@ -63,7 +63,6 @@ class Track(Model):
         Arguments:
         ts -- TrackStats object.
         """
-        self._track_points = ts.track_points
         self._starttime_ms = ts.start_time
         self._stoptime_ms = ts.end_time
         self._totaldistance_m = ts.total_distance
@@ -341,3 +340,6 @@ class Track(Model):
 
     def set_min_altitude(self, altitude):
         self._minelevation_m = altitude
+
+    def set_track_points(self, track_points):
+        self._track_points = track_points
