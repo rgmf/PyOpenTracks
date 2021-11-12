@@ -208,8 +208,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def _segment_ready_cb(self, segment, trackpoint_begin_id, trackpoint_end_id):
         stats = TrackStats()
-        for tp in segment._track_points:
-            stats.new_track_point(tp, 1)
+        stats.compute(segment._track_points)
 
         track_stats_segment = self._main_widget.get_child_at(2, 0)
         if not track_stats_segment:

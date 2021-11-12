@@ -111,8 +111,7 @@ class SegmentTrackSearch(SegmentSearchAbstract):
                     )
 
                     stats = TrackStats()
-                    for tp in track_points:
-                        stats.new_track_point(tp, 1)
+                    stats.compute(track_points)
 
                     threshold = segment.distance_m + (segment.distance_m * 0.0075)
                     if segment.distance_m + threshold >= stats.total_distance >= segment.distance_m - threshold and frechet < segment.distance_m * 0.03:
@@ -152,8 +151,7 @@ class SegmentSearch(SegmentSearchAbstract):
                 )
 
                 stats = TrackStats()
-                for tp in track_points:
-                    stats.new_track_point(tp, 1)
+                stats.compute(track_points)
 
                 threshold = self._segment.distance_m + (self._segment.distance_m * 0.0075)
                 if self._segment.distance_m + threshold >= stats.total_distance >= self._segment.distance_m - threshold and frechet < self._segment.distance_m * 0.03:
