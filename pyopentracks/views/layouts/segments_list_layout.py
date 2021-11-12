@@ -138,13 +138,7 @@ class SegmentsListLayout(Gtk.Box):
             self._grid_segment_detail.remove(w)
 
         if not data:
-            label = Gtk.Label(_("There are not anything to show"))
-            label.get_style_context().add_class("pyot-h2")
-            self._grid.attach(label, 0, 0, 1, 1)
-            self._title_label.set_text(_("Segments"))
-            self.remove(self._box_header)
-            self.remove(self._grid_segment_detail)
-            self.show_all()
+            self._show_info_no_data()
             return
 
         self._button_delete.set_sensitive(True)
@@ -226,6 +220,22 @@ class SegmentsListLayout(Gtk.Box):
 
     def get_number_rows(self):
         return self._data_rows
+
+    def _show_info_no_data(self):
+        box = Gtk.VBox(margin=20)
+        label1 = Gtk.Label(_("There are not anything to show"), xalign=0.0)
+        label2 = Gtk.Label(_(
+            "Go to track list, select one of them and create the segment you want clicking on the track you can "
+            "see on the map. You have to add two points on the map: start and end segment."
+        ))
+        label1.get_style_context().add_class("pyot-h2")
+        box.pack_start(label1, True, True, 10)
+        box.pack_start(label2, True, True, 10)
+        self._grid.attach(box, 0, 0, 1, 1)
+        self._title_label.set_text(_("Segments"))
+        self.remove(self._box_header)
+        self.remove(self._grid_segment_detail)
+        self.show_all()
 
     def _build_header_label(self, value, xalign=0.5, yalign=0.5, margin_top=0, margin_right=0, margin_bottom=0, margin_left=0):
         lbl = Gtk.Label(value)
