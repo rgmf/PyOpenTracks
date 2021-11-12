@@ -5,6 +5,10 @@ sudo apt install libcairo2-dev
 
 sudo apt install libgirepository1.0-dev
 
+sudo apt install meson ninja-build
+
+sudo apt install appstream-util
+
 # Virtual Environment
 pipenv --three
 
