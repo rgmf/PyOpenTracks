@@ -1,13 +1,25 @@
 # Install Dependencies
 In Debian:
 
+sudo apt install libgtk-3-dev
+
+sudo apt install libchamplain-gtk-0.12-dev
+
+sudo apt install libchamplain-0.12-dev
+
 sudo apt install libcairo2-dev
 
 sudo apt install libgirepository1.0-dev
 
+sudo apt install python3-numpy
+
+sudo apt install python3-matplotlib
+
 sudo apt install meson ninja-build
 
 sudo apt install appstream-util
+
+sudo apt install gettext
 
 # Virtual Environment
 pipenv --three
