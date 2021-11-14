@@ -241,6 +241,7 @@ class PreferencesDialog(Gtk.Dialog):
 
         switch = Gtk.Switch()
         switch.set_active(pref_value)
+        switch.set_valign(Gtk.Align.CENTER)
         switch.connect("notify::active", self._on_folder_pref_activated)
 
         self._auto_import_folder = Gtk.FileChooserButton(_("Select a folder"))

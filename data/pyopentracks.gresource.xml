@@ -22,6 +22,7 @@
 
     <file>ui/gtk_style.css</file>
 
+    <file>icons/open-menu-pyot.svg</file>
     <file>icons/trash-symbolic.svg</file>
     <file>icons/edit-symbolic.svg</file>
     <file>icons/settings-symbolic.svg</file>
