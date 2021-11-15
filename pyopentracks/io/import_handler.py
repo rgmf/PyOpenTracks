@@ -223,10 +223,15 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
         GLib.idle_add(self._callback, self._result)
 
 
-class AutoImportHandler(ImportHandler):
+class AutoImportHandler(ImportHandler, GObject.GObject):
+
+    __gsignals__ = {
+        "total-files-to-autoimport": (GObject.SIGNAL_RUN_FIRST, None, (int,)),
+    }
 
     def __init__(self):
         super().__init__()
+        GObject.GObject.__init__(self)
         self._folder = None
         self._callback = None
         self._imported = 0
@@ -254,6 +259,7 @@ class AutoImportHandler(ImportHandler):
                 files_to_import.append(f)
 
         self._total_to_import = len(files_to_import)
+        self.emit("total-files-to-autoimport", int(self._total_to_import))
         for f in files_to_import:
             result = parser.parse(f)
             self._import_track(result)
