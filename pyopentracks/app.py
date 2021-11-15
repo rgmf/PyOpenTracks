@@ -52,17 +52,11 @@ class Application(Gtk.Application):
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
-        self._setup_menu()
-        self._setup_settings()
-        self._setup_database()
-        self._auto_import()
 
     def do_activate(self):
         stylecontext = Gtk.StyleContext()
         provider = Gtk.CssProvider()
-        provider.load_from_resource(
-            "/es/rgmf/pyopentracks/ui/gtk_style.css"
-        )
+        provider.load_from_resource("/es/rgmf/pyopentracks/ui/gtk_style.css")
         stylecontext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             provider,
@@ -71,18 +65,20 @@ class Application(Gtk.Application):
         win = self.props.active_window
         if not win:
             win = PyopentracksWindow(application=self)
-            self._window = win
-            win.set_menu(self._menu)
-            self._load_tracks()
+        self._window = win
+        self._setup_menu()
+        self._setup_settings()
+        self._setup_database()
+        self._load_tracks()
+        self._auto_import()
         win.present()
+        win.set_menu(self._menu)
 
     def on_open_file(self, action, param):
         dialog = FileChooserWindow(parent=self._window)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            self.load_file(
-                dialog.get_filename(), self._window.load_track_stats
-            )
+            self.load_file(dialog.get_filename(), self._window.load_track_stats)
         dialog.destroy()
 
     def on_quit(self, action, param):
@@ -171,9 +167,21 @@ class Application(Gtk.Application):
         folder = self._preferences.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
         if not folder:
             return
-        AutoImportHandler().import_folder(folder, self._auto_import_new_tracks)
+        handler = AutoImportHandler()
+        handler.connect("total-files-to-autoimport", self._auto_import_importing)
+        handler.import_folder(folder, self._auto_import_new_tracks)
+
+    def _auto_import_importing(self, handler: AutoImportHandler, total_files):
+        if total_files == 0:
+            return
+        self._window.show_infobar(
+            itype=Gtk.MessageType.INFO,
+            message=_(f"{total_files} new tracks. Importing them..."),
+            buttons=[]
+        )
 
     def _auto_import_new_tracks(self):
+        self._window.clean_top_widget()
         self._window.show_infobar(
             itype=Gtk.MessageType.QUESTION,
             message=_(

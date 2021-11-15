@@ -63,6 +63,9 @@ class TrackMap(BaseMap):
         self._layer_marker.hide()
 
     def _mouse_click_cb(self, actor, event, view):
+        # Only segments if there are track points and they are in the database (they're all have id).
+        if not self._track_points or not list(filter(lambda tp: tp.id is not None, self._track_points)):
+            return False
         x, y = event.x, event.y
         lon, lat = view.x_to_longitude(x), view.y_to_latitude(y)
 
