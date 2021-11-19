@@ -90,14 +90,16 @@ class TimeUtils:
         return f"{hours:03d}:{minutes:02d}" if hours < 0 else f"+{hours:02d}:{minutes:02d}"
 
     @staticmethod
-    def ms_to_str(time_ms: float) -> str:
+    def ms_to_str(time_ms: float, shorten=False) -> str:
         """From time millis to human readable string.
 
         Arguments:
         time_ms -- time in millis.
+        shorten -- (optional) full (False) or shorten (True) version.
 
         Returns:
-        An string representing the time in HH:MM:SS format.
+        An string representing the time in HH:MM:SS format when shorten is False.
+        An string representing the time in HHh \n MMm format when shorte is True.
         """
         if not time_ms:
             return "-"
@@ -105,7 +107,10 @@ class TimeUtils:
         hours = seconds // 3600
         minutes = (seconds % 3600) // 60
         seconds = (seconds % 3600) % 60
-        return f"{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}"
+        if not shorten:
+            return f"{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}"
+        else:
+            return f"{int(hours):d}h\n{int(minutes)}m"
 
     @staticmethod
     def iso_to_ms(date_time: str) -> float:

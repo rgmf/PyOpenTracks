@@ -266,18 +266,34 @@ class AnalyticTotalsYear(Gtk.VBox):
         grid.set_row_spacing(10)
         grid.set_column_spacing(10)
         grid.set_margin_left(50)
+        self._build_headers(grid, _("Sport"), _("Activities"), _("Distance"), _("Time"), _("Elevation Gain"))
         for i, aggregated in enumerate(aggregated_list):
             box_icon = self._build_icon_box(aggregated.category)
             box_activities = self._build_info_box(aggregated.total_activities)
             box_distance = self._build_info_box(aggregated.total_distance)
-            box_time = self._build_info_box(aggregated.total_moving_time)
+            box_time = self._build_info_box(aggregated.total_short_moving_time)
+            box_gain = self._build_info_box(aggregated.total_elevation_gain)
 
-            grid.attach(box_icon, 0, i, 1, 1)
-            grid.attach(box_activities, 1, i, 1, 1)
-            grid.attach(box_distance, 2, i, 1, 1)
-            grid.attach(box_time, 3, i, 1, 1)
+            grid.attach(box_icon, 0, i + 1, 1, 1)
+            grid.attach(box_activities, 1, i + 1, 1, 1)
+            grid.attach(box_distance, 2, i + 1, 1, 1)
+            grid.attach(box_time, 3, i + 1, 1, 1)
+            grid.attach(box_gain, 4, i + 1, 1, 1)
         self.pack_start(grid, True, True, 10)
         self.show_all()
+
+    def _build_headers(self, grid, *header_labels):
+        i = 0
+        for i, label in enumerate(header_labels):
+            grid.attach(self._build_header_box(label), i, 0, 1, 1)
+
+    def _build_header_box(self, value):
+        box = Gtk.Box(spacing=20, orientation=Gtk.Orientation.VERTICAL)
+        box.get_style_context().add_class("pyot-bg")
+        box.set_homogeneous(False)
+        lbl = Gtk.Label(label=value, xalign=0.5, yalign=0.5)
+        box.pack_start(lbl, True, True, 10)
+        return box
 
     def _build_icon_box(self, category):
         box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
