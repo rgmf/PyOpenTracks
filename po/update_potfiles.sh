@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SRCDIR="src"
+SRCDIR="pyopentracks"
 DATADIR="data"
 APPNAME="es.rgmf.pyopentracks"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: es.rgmf.pyopentracks 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-10 15:02+0200\n"
+"POT-Creation-Date: 2021-11-20 11:47+0100\n"
 "PO-Revision-Date: 2021-02-17 13:40+0100\n"
 "Last-Translator: roman <rgmf@riseup.net>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
@@ -17,125 +17,188 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../src/app_window.py:126
-msgid "Error opening the file {result['file']}"
-msgstr "No se ha podido abrir el fichero {result['file']}"
+#: ../pyopentracks/app_window.py:135
+#, python-brace-format
+msgid "Error opening the file {result.filename}"
+msgstr "Error al abrir el fichero {result.filename}"
 
-#: ../src/app_window.py:129
+#: ../pyopentracks/app_window.py:138
 msgid "Error opening track file"
 msgstr "Error al abrir el fichero"
 
-#: ../src/app_analytic.py:34
-msgid "Aggregated Stats"
-msgstr "Estadísticas agregadas"
+#: ../pyopentracks/app_analytic.py:34
+msgid "All Aggregated Stats"
+msgstr "Estadísticas Totales"
 
-#: ../src/app_analytic.py:37
-msgid "Stats by year"
-msgstr "Estadísticas por año"
+#: ../pyopentracks/app_analytic.py:35
+msgid "Yearly Aggregated Stats"
+msgstr "Estadísticas Anuales"
 
-#: ../src/models/track.py:175
+#: ../pyopentracks/app_analytic.py:36
+msgid "Monthly Aggregated Stats"
+msgstr "Estadísticas Mensuales"
+
+#: ../pyopentracks/models/track.py:197
+#: ../pyopentracks/views/maps/reference_map.py:134
+#: ../pyopentracks/views/maps/map_segment.py:51
 msgid "Start"
 msgstr "Comienzo"
 
-#: ../src/models/track.py:187
+#: ../pyopentracks/models/track.py:209
+#: ../pyopentracks/views/maps/map_segment.py:57
 msgid "End"
 msgstr "Final"
 
-#: ../src/models/track.py:195
+#: ../pyopentracks/models/track.py:217
 msgid "Total Time"
 msgstr "Tiempo total"
 
-#: ../src/models/track.py:203 ../src/models/aggregated_stats.py:135
+#: ../pyopentracks/models/track.py:225
+#: ../pyopentracks/models/aggregated_stats.py:140
 msgid "Moving Time"
 msgstr "Tiempo en movimiento"
 
-#: ../src/models/track.py:211 ../src/models/aggregated_stats.py:139
+#: ../pyopentracks/models/track.py:233
+#: ../pyopentracks/models/aggregated_stats.py:144
+#: ../pyopentracks/views/layouts/analytic_layout.py:295
 msgid "Distance"
 msgstr "Distancia"
 
-#: ../src/models/track.py:219
+#: ../pyopentracks/models/track.py:241
+#: ../pyopentracks/views/layouts/segments_list_layout.py:198
 msgid "Avg. Speed"
 msgstr "Velocidad media"
 
-#: ../src/models/track.py:219
+#: ../pyopentracks/models/track.py:241
 msgid "Avg. Pace"
 msgstr "Ritmo medio"
 
-#: ../src/models/track.py:227
+#: ../pyopentracks/models/track.py:249
+#: ../pyopentracks/views/layouts/segments_list_layout.py:199
 msgid "Max. Speed"
 msgstr "Velocidad máxima"
 
-#: ../src/models/track.py:227
+#: ../pyopentracks/models/track.py:249
 msgid "Max. Pace"
 msgstr "Ritmo máximo"
 
-#: ../src/models/track.py:235
+#: ../pyopentracks/models/track.py:257
 msgid "Avg. Moving Speed"
 msgstr "Velocidad media en movimiento"
 
-#: ../src/models/track.py:235
+#: ../pyopentracks/models/track.py:257
 msgid "Avg. Moving Pace"
 msgstr "Ritmo medio en movimiento"
 
-#: ../src/models/track.py:243
+#: ../pyopentracks/models/track.py:265
 msgid "Max. Altitude"
 msgstr "Altitud máxima"
 
-#: ../src/models/track.py:251
+#: ../pyopentracks/models/track.py:273
 msgid "Min. Altitude"
 msgstr "Altitud mínima"
 
-#: ../src/models/track.py:259 ../src/models/aggregated_stats.py:143
+#: ../pyopentracks/models/track.py:281
+#: ../pyopentracks/models/aggregated_stats.py:148
+#: ../pyopentracks/views/layouts/analytic_layout.py:295
 msgid "Elevation Gain"
 msgstr "Ganancia de altitud"
 
-#: ../src/models/track.py:267
+#: ../pyopentracks/models/track.py:289
 msgid "Elevation Loss"
 msgstr "Pérdida de altitud"
 
-#: ../src/models/track.py:275
+#: ../pyopentracks/models/track.py:297
+#: ../pyopentracks/views/layouts/segments_list_layout.py:201
 msgid "Max. Heart Rate"
 msgstr "Ritmo cardíaco máximo"
 
-#: ../src/models/track.py:283
+#: ../pyopentracks/models/track.py:305
+#: ../pyopentracks/views/layouts/segments_list_layout.py:200
 msgid "Avg. Heart Rate"
 msgstr "Ritmo cardíaco medio"
 
-#: ../src/models/aggregated_stats.py:127
+#: ../pyopentracks/models/track.py:313
+#: ../pyopentracks/views/layouts/segments_list_layout.py:203
+msgid "Max. Cadence"
+msgstr "Cadencia Máxima"
+
+#: ../pyopentracks/models/track.py:321
+#: ../pyopentracks/views/layouts/segments_list_layout.py:202
+msgid "Avg. Cadence"
+msgstr "Cadencia Media"
+
+#: ../pyopentracks/models/aggregated_stats.py:132
+#: ../pyopentracks/views/layouts/analytic_layout.py:295
 msgid "Activities"
 msgstr "Actividades"
 
-#: ../src/models/aggregated_stats.py:131
+#: ../pyopentracks/models/aggregated_stats.py:136
+#: ../pyopentracks/views/layouts/segments_list_layout.py:86
+#: ../pyopentracks/views/layouts/segments_list_layout.py:197
+#: ../pyopentracks/views/layouts/analytic_layout.py:295
 msgid "Time"
 msgstr "Tiempo"
 
-#: ../src/models/aggregated_stats.py:147
+#: ../pyopentracks/models/aggregated_stats.py:152
+#: ../pyopentracks/views/layouts/segments_list_layout.py:87
 msgid "Speed"
 msgstr "Velocidad"
 
-#: ../src/models/aggregated_stats.py:147
+#: ../pyopentracks/models/aggregated_stats.py:152
 msgid "Pace"
 msgstr "Ritmo"
 
-#: ../src/models/aggregated_stats.py:151
+#: ../pyopentracks/models/aggregated_stats.py:156
+#: ../pyopentracks/views/layouts/segments_list_layout.py:88
 msgid "Heart Rate"
 msgstr "Ritmo cardíaco"
 
-#: ../src/io/import_handler.py:75
+#: ../pyopentracks/app_segments.py:33
+msgid "Segment's List"
+msgstr "Segmentos"
+
+#: ../pyopentracks/io/export_handler.py:39
+#, python-brace-format
+msgid "Error: there are not tracks identified by {self._trackid}"
+msgstr "Error: no hay ninguna actividad identificada por {self._trackid}"
+
+#: ../pyopentracks/io/export_handler.py:42
+#, python-brace-format
+msgid ""
+"Error: there are not track points into track identified by {self._trackid}"
+msgstr ""
+"Error: no hay puntos en la actividad identificada por {self._trackid}"
+
+#: ../pyopentracks/io/export_handler.py:71
+#, python-brace-format
+msgid "Error exporting the track {self._track.name}: {e}"
+msgstr "Error al exportar la actividad {self._track.name}: {e}"
+
+#: ../pyopentracks/io/export_handler.py:72
+#, python-brace-format
+msgid "Track {self._track.name} exported correctly"
+msgstr "Actividad {self._track.name} exportada correctamente"
+
+#: ../pyopentracks/io/gpx_parser.py:57
+msgid "No name"
+msgstr "Sin nombre"
+
+#: ../pyopentracks/io/import_handler.py:67
 msgid "Track already exists"
 msgstr "La actividad ya existe"
 
-#: ../src/io/import_handler.py:138
+#: ../pyopentracks/io/import_handler.py:128
 #, python-brace-format
 msgid "File {track.trackfile_path} couldn't be copied to internal storage"
 msgstr ""
 "El fichero {track.trackfile_path} no se pudo copiar al almacenamiento interno"
 
-#: ../src/io/import_handler.py:149
+#: ../pyopentracks/io/import_handler.py:140
 msgid "Track imported"
 msgstr "Actividad importada"
 
-#: ../src/io/import_handler.py:149
+#: ../pyopentracks/io/import_handler.py:140
 #, python-brace-format
 msgid ""
 "Error importing the file {track.trackfile_path}.\n"
@@ -144,40 +207,53 @@ msgstr ""
 "Error al importar el fichero {track.trackfile_path}.\n"
 "No se pudo insertar en la base de datos"
 
-#: ../src/io/import_handler.py:229
-msgid "Error importing the file {result['file']}: {result['message']}"
-msgstr "Error al importar el fichero {result['file']}: {result['message']}"
+#: ../pyopentracks/io/import_handler.py:221
+#, python-brace-format
+msgid "Error importing the file {result.filename}: {result.message}"
+msgstr "Error al importar el fichero {result.filename}: {result.message}"
 
-#: ../src/views/dialogs.py:74
+#: ../pyopentracks/io/result.py:43
+msgid "file name unknown"
+msgstr "nombre del fichero desconocido"
+
+#: ../pyopentracks/views/dialogs.py:124
 msgid "Importing..."
 msgstr "Importando..."
 
-#: ../src/views/dialogs.py:89
-#, python-brace-format
-msgid ""
-"Importing files from folder:\n"
-"{self._folder}"
-msgstr ""
-"Importando ficheros desde la carpeta:\n"
-"{self._folder}"
+#: ../pyopentracks/views/dialogs.py:124
+msgid "Importing files from folder:"
+msgstr "Importando ficheros de la carpeta:"
 
-#: ../src/views/dialogs.py:125
+#: ../pyopentracks/views/dialogs.py:144
 msgid "Total imported: {result['imported']}"
 msgstr "Total importados: {result['imported']}"
 
-#: ../src/views/dialogs.py:129
+#: ../pyopentracks/views/dialogs.py:148 ../pyopentracks/views/dialogs.py:193
 msgid "Finished with errors"
 msgstr "Finalizó con errores"
 
-#: ../src/views/dialogs.py:146 ../src/views/dialogs.py:158
+#: ../pyopentracks/views/dialogs.py:165
+msgid "Exporting..."
+msgstr "Exportando..."
+
+#: ../pyopentracks/views/dialogs.py:165
+msgid "Exporting files to folder:"
+msgstr "Exportando fichero a la carpeta:"
+
+#: ../pyopentracks/views/dialogs.py:189
+#, python-brace-format
+msgid "Total exported: {self._exported}"
+msgstr "Total de ficheros exportados: {self._exported}"
+
+#: ../pyopentracks/views/dialogs.py:211 ../pyopentracks/views/dialogs.py:223
 msgid "Preferences"
 msgstr "Preferencias"
 
-#: ../src/views/dialogs.py:167
+#: ../pyopentracks/views/dialogs.py:232
 msgid "Auto-import folder"
 msgstr "Carpeta de importación automática"
 
-#: ../src/views/dialogs.py:169
+#: ../pyopentracks/views/dialogs.py:234
 msgid ""
 "Select a folder to import automatically new track files. PyOpenTracks will "
 "check it for new files every time it opens."
@@ -186,23 +262,159 @@ msgstr ""
 "actividad. PyOpenTracks buscará nuevos ficheros de actividad cada vez que se "
 "abra."
 
-#: ../src/views/dialogs.py:181 ../src/views/file_chooser.py:60
+#: ../pyopentracks/views/dialogs.py:247
+#: ../pyopentracks/views/file_chooser.py:60
 msgid "Select a folder"
 msgstr "Selecciona una carpeta"
 
-#: ../src/views/dialogs.py:244
+#: ../pyopentracks/views/dialogs.py:311
 msgid "Edit Track"
 msgstr "Editar track"
 
-#: ../src/views/analytic.py:127
+#: ../pyopentracks/views/dialogs.py:370
+msgid "Edit Segment"
+msgstr "Editar Segmento"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:64
+#: ../pyopentracks/views/layouts/segments_list_layout.py:218
+#: ../pyopentracks/views/layouts/segments_list_layout.py:235
+msgid "Segments"
+msgstr "Segmentos"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:85
+msgid "Segment Information"
+msgstr "Información del Segmento"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:89
+msgid "Cadence"
+msgstr "Cadencia"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:106
+#: ../pyopentracks/views/layouts/segments_list_layout.py:114
+#: ../pyopentracks/views/layouts/segments_list_layout.py:307
+msgid "Loading segments..."
+msgstr "Cargando segmentos..."
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:151
+msgid "Name:"
+msgstr "Nombre:"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:159
+msgid "Distance:"
+msgstr "Distancia:"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:167
+msgid "Elevation Gain:"
+msgstr "Ganancia de Altitud"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:175
+msgid "Elevation Loss:"
+msgstr "Pérdida de Altitud"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:183
+msgid "Slope:"
+msgstr "Pendiente:"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:204
+msgid "Activity Information"
+msgstr "Información de la Actividad"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:226
+msgid "There are not anything to show"
+msgstr "No hay nada que mostrar"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:228
+msgid ""
+"Go to track list, select one of them and create the segment you want "
+"clicking on the track you can see on the map. You have to add two points on "
+"the map: start and end segment."
+msgstr ""
+"Ves a la lista de actividades, selecciona una y crea el segmento que quieras "
+"haciendo clic sobre el track que puedes ver dibujado sobre el mapa. Tienes que añadir "
+"dos puntos que son: el comienzo y el final del segmento."
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:290
+msgid "There are not any segment selected"
+msgstr "No hay ningún segmento seleccionado"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:291
+msgid "Error deleting a segment"
+msgstr "Error al eliminar el segmento"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:297
+msgid "Remove Segment"
+msgstr "Eliminar Segmento"
+
+#: ../pyopentracks/views/layouts/segments_list_layout.py:298
+msgid ""
+"Do you really want to remove the segment? This will remove all data about "
+"this segment."
+msgstr ""
+"Quieres eliminar el segmento? Esta acción eliminará todos los datos relativos "
+"a este segmento."
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:85
+msgid "Loading Map..."
+msgstr "Cargando el mapa..."
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:86
+msgid "Loading Graph..."
+msgstr "Cargando el gráfico"
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:141
+#, python-brace-format
+msgid "Start: {track.start_time}"
+msgstr "Comienzo: {track.start_time}"
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:144
+#, python-brace-format
+msgid "End: {track.end_time}"
+msgstr "Fin: {track.end_time}"
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:147
+#, python-brace-format
+msgid "Total time: {track.total_time}"
+msgstr "Tiempo total: {track.total_time}"
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:262
+msgid "Create New Segment"
+msgstr "Crear Nuevo Segmento"
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:264
+msgid "Type Segment's Name"
+msgstr "Escribe el nombre del segmento"
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:271
+#: ../pyopentracks/app.py:194
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: ../pyopentracks/views/layouts/track_stats_layout.py:274
+msgid "Create"
+msgstr "Crear"
+
+#: ../pyopentracks/views/layouts/analytic_layout.py:90
+#: ../pyopentracks/views/layouts/analytic_layout.py:330
+msgid "Unknown"
+msgstr "Desconocido"
+
+#: ../pyopentracks/views/layouts/analytic_layout.py:125
 msgid "There are not any aggregated statistics"
 msgstr "No hay estadísticas agregadas"
 
-#: ../src/views/analytic.py:183
+#: ../pyopentracks/views/layouts/analytic_layout.py:232
 msgid "There are not stats for this date"
 msgstr "No hay estadísticas para esta fecha"
 
-#: ../src/views/layout.py:54
+#: ../pyopentracks/views/layouts/analytic_layout.py:284
+msgid "There are not activities this year"
+msgstr "No hay actividades este año"
+
+#: ../pyopentracks/views/layouts/analytic_layout.py:295
+msgid "Sport"
+msgstr "Deporte"
+
+#: ../pyopentracks/views/layouts/greeter_layout.py:40
 msgid ""
 "You can:\n"
 "1.- Import a folder with tracks.\n"
@@ -214,72 +426,89 @@ msgstr ""
 "2.- Importar un fichero de actividad.\n"
 "3.- Configurar una carpeta para sincronizar todos sus ficheros de actividad."
 
-#: ../src/views/layout.py:61
+#: ../pyopentracks/views/layouts/greeter_layout.py:47
 msgid "Welcome to PyOpenTracks"
 msgstr "Bienvenid@ a PyOpenTracks"
 
-#: ../src/views/layout.py:125
-msgid "Track Stats"
-msgstr "Estadísticas de la actividad"
-
-#: ../src/views/layout.py:310 ../src/views/layout.py:335
-#: ../src/views/layout.py:402
+#: ../pyopentracks/views/layouts/tracks_layout.py:50
 msgid "Select a track to view its stats..."
 msgstr "Selecciona una actividad para ver sus estadísticas..."
 
-#: ../src/views/layout.py:324
+#: ../pyopentracks/views/layouts/tracks_layout.py:58
+msgid "Tracks"
+msgstr "Actividades"
+
+#: ../pyopentracks/views/layouts/tracks_layout.py:76
+msgid "Remove Tracks"
+msgstr "Eliminar Actividades"
+
+#: ../pyopentracks/views/layouts/tracks_layout.py:77
+msgid "Do you really want to remove all selected tracks"
+msgstr "¿Quieres eliminar todas las actividades seleccionadas?"
+
+#: ../pyopentracks/views/layouts/tracks_layout.py:111
 msgid "Remove Track"
 msgstr "Eliminar track"
 
-#: ../src/views/layout.py:325
+#: ../pyopentracks/views/layouts/tracks_layout.py:112
 #, python-brace-format
-msgid "Do you really want to remove track {row.track.name}"
-msgstr "¿Quieres eliminar el track {row.track.name}"
+msgid "Do you really want to remove track {trackname}"
+msgstr "¿Quieres eliminar la actividad {trackname}?"
 
-#: ../src/views/layout.py:367
-msgid "There was an error and the track cannot be showed"
-msgstr "Se produjo un error y la actividad no se puede mostrar"
+#: ../pyopentracks/views/layouts/tracks_layout.py:146
+msgid ""
+"Correcting altitude and updating the track. When it finishes then the track "
+"will be reloaded"
+msgstr ""
+"Corregir altitud y actualizar la actividad. Cuando finalice, la actividad "
+"será recargada"
 
-#: ../src/views/file_chooser.py:26
+#: ../pyopentracks/views/layouts/tracks_layout.py:149
+msgid "Ok"
+msgstr "Ok"
+
+#: ../pyopentracks/views/file_chooser.py:26
 msgid "Select a track file"
 msgstr "Selecciona un fichero"
 
-#: ../src/views/file_chooser.py:37
+#: ../pyopentracks/views/file_chooser.py:37
 msgid "GPX files"
 msgstr "Ficheros GPX"
 
-#: ../src/views/file_chooser.py:42
+#: ../pyopentracks/views/file_chooser.py:42
 msgid "KML files"
 msgstr "Ficheros KML"
 
-#: ../src/views/file_chooser.py:47
+#: ../pyopentracks/views/file_chooser.py:47
 msgid "KMZ files"
 msgstr "Ficheros KMZ"
 
-#: ../src/views/file_chooser.py:52
+#: ../pyopentracks/views/file_chooser.py:52
 msgid "Any files"
 msgstr "Cualquier fichero"
 
-#: ../src/app.py:169
+#: ../pyopentracks/app.py:179
+#, python-brace-format
+msgid "{total_files} new tracks. Importing them..."
+msgstr "{total_files} nuevas actividades. Importándolas..."
+
+#: ../pyopentracks/app.py:188
 msgid ""
 "There are new tracks imported. Do you want to re-load all tracks to see the "
 "new ones?"
 msgstr ""
 "Hay nuevas actividades importadas. ¿Quieres recargar todas las actividades?"
 
-#: ../src/app.py:175
-msgid "Cancel"
-msgstr "Cancelar"
-
-#: ../src/app.py:179
+#: ../pyopentracks/app.py:198
 msgid "Re-load"
 msgstr "Recargar"
 
-#: ../src/app.py:232
-msgid "Error importing the file {result['file']}"
-msgstr "Error al importar el fichero {result['file']}"
+#: ../pyopentracks/app.py:248
+#, python-brace-format
+msgid "Error importing the file {result.filename}"
+msgstr "Error al importar el fichero {result.filename}"
 
-#: ../src/app.py:235
+#: ../pyopentracks/app.py:251
 msgid "Error importing track file"
 msgstr "Error al importar fichero de actividad"
 
@@ -292,10 +521,14 @@ msgid "_Import file..."
 msgstr "_Importar un fichero..."
 
 #: ../data/ui/menu.ui:18
+msgid "_Export all..."
+msgstr "_Exportar todo..."
+
+#: ../data/ui/menu.ui:24
 msgid "_Open file..."
 msgstr "_Abrir fichero..."
 
-#: ../data/ui/menu.ui:24
+#: ../data/ui/menu.ui:30
 msgid "_Quit"
 msgstr "_Salir"
 
@@ -324,8 +557,11 @@ msgstr "Totales"
 #: ../data/ui/analytic_summary_sport_layout.ui:647
 #: ../data/ui/analytic_summary_sport_layout.ui:679
 #: ../data/ui/analytic_summary_sport_layout.ui:711
+#: ../data/ui/track_stats_segment_layout.ui:61
+#: ../data/ui/track_stats_segment_layout.ui:97
+#: ../data/ui/track_stats_segment_layout.ui:133
 msgid "label"
-msgstr ""
+msgstr "etiqueta"
 
 #: ../data/ui/analytic_summary_sport_layout.ui:275
 msgid "Averages"
@@ -335,17 +571,73 @@ msgstr "Medias"
 msgid "Maximums"
 msgstr "Máximos"
 
-#: ../data/ui/track_edit_dialog.ui:48
+#: ../data/ui/track_stats_segment_layout.ui:14
+msgid "Title"
+msgstr "Título"
+
+#: ../data/ui/track_stats_segment_layout.ui:163
+#: ../data/ui/track_stats_segment_layout.ui:176
+msgid "button"
+msgstr "botón"
+
+#: ../data/ui/segment_edit_dialog.ui:42 ../data/ui/track_edit_dialog.ui:50
 msgid "Name"
 msgstr "Nombre"
 
-#: ../data/ui/track_edit_dialog.ui:86
+#: ../data/ui/track_edit_dialog.ui:90
 msgid "Description"
 msgstr "Descripción"
 
-#: ../data/ui/track_edit_dialog.ui:123
+#: ../data/ui/track_edit_dialog.ui:129
 msgid "Activity Type"
 msgstr "Tipo de actividad"
+
+#: ../data/ui/track_edit_dialog.ui:175
+msgid "Altitude Correction"
+msgstr "Corrección de Altitud"
+
+#: ../data/ui/track_edit_dialog.ui:186
+msgid ""
+"Check this option to correct maximum, \n"
+"minimum, gain and loss altitude using \n"
+"Open Elevation API service"
+msgstr ""
+"Marca esta opción para corregir el máximo, \n"
+"mínimo, ganancia y pérdida de altitud usando \n"
+"el servicio Open Elevation API"
+
+#~ msgid "Error opening the file {result['file']}"
+#~ msgstr "No se ha podido abrir el fichero {result['file']}"
+
+#~ msgid "Aggregated Stats"
+#~ msgstr "Estadísticas agregadas"
+
+#~ msgid "Stats by year"
+#~ msgstr "Estadísticas por año"
+
+#~ msgid "Error importing the file {result['file']}: {result['message']}"
+#~ msgstr "Error al importar el fichero {result['file']}: {result['message']}"
+
+#, python-brace-format
+#~ msgid ""
+#~ "Importing files from folder:\n"
+#~ "{self._folder}"
+#~ msgstr ""
+#~ "Importando ficheros desde la carpeta:\n"
+#~ "{self._folder}"
+
+#~ msgid "Track Stats"
+#~ msgstr "Estadísticas de la actividad"
+
+#, python-brace-format
+#~ msgid "Do you really want to remove track {row.track.name}"
+#~ msgstr "¿Quieres eliminar el track {row.track.name}"
+
+#~ msgid "There was an error and the track cannot be showed"
+#~ msgstr "Se produjo un error y la actividad no se puede mostrar"
+
+#~ msgid "Error importing the file {result['file']}"
+#~ msgstr "Error al importar el fichero {result['file']}"
 
 #~ msgid "Select a track"
 #~ msgstr "Selecciona un track"
