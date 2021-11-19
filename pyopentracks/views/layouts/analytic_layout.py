@@ -132,14 +132,13 @@ class AggregatedStats(Gtk.VBox):
 
 
 @Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_year_layout.ui"
+    resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui"
 )
-class AggregatedStatsYear(Gtk.Box):
-    __gtype_name__ = "AggregatedStatsYear"
+class AggregatedStatsMonth(Gtk.Box):
+    __gtype_name__ = "AggregatedStatsMonth"
 
     _combo_years: Gtk.ComboBox = Gtk.Template.Child()
     _year_list_store: Gtk.ListStore = Gtk.Template.Child()
-    _box_top: Gtk.Box = Gtk.Template.Child()
 
     def __init__(self):
         super().__init__()
@@ -151,32 +150,25 @@ class AggregatedStatsYear(Gtk.Box):
         self._combo_years.set_active(0)
         self._combo_years.connect("changed", self._on_year_changed)
 
-        self._year_totals = AnalyticTotalsYear(years[0])
-        self._box_top.pack_start(self._year_totals, False, False, 0)
-
-        self._year_stack = AnalyticYearStack(years[0])
-        self.pack_start(self._year_stack, False, False, 0)
+        self._months_stack = AnalyticMonthsStack(years[0])
+        self.pack_start(self._months_stack, False, False, 0)
 
     def _on_year_changed(self, combo):
         iter_item = combo.get_active_iter()
         if iter_item is not None:
-            self.remove(self._year_stack)
-            self._box_top.remove(self._year_totals)
+            self.remove(self._months_stack)
 
             year = self._year_list_store[iter_item][1]
 
-            self._year_totals = AnalyticTotalsYear(year)
-            self._box_top.pack_start(self._year_totals, False, False, 0)
-
-            self._year_stack = AnalyticYearStack(year)
-            self.pack_start(self._year_stack, False, False, 0)
+            self._months_stack = AnalyticMonthsStack(year)
+            self.pack_start(self._months_stack, False, False, 0)
 
 
 @Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_year_stack_layout.ui"
+    resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui"
 )
-class AnalyticYearStack(Gtk.Box):
-    __gtype_name__ = "AnalyticYearStack"
+class AnalyticMonthsStack(Gtk.Box):
+    __gtype_name__ = "AnalyticMonthsStack"
 
     _stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
     _stack: Gtk.Stack = Gtk.Template.Child()
@@ -201,7 +193,7 @@ class AnalyticYearStack(Gtk.Box):
         for month_name in du.get_months():
             date_from = dtu.first_day_ms(int(year), month)
             date_to = dtu.last_day_ms(int(year), month)
-            data_list[str(year) + str(month)] = AnalyticYearStack.Data(
+            data_list[str(year) + str(month)] = AnalyticMonthsStack.Data(
                 DatabaseHelper.get_aggregated_stats(date_from=date_from, date_to=date_to),
                 month,
                 month_name
@@ -239,8 +231,42 @@ class AnalyticYearStack(Gtk.Box):
         else:
             label = Gtk.Label(_("There are not stats for this date"))
             label.set_yalign(0.0)
-            label.get_style_context().add_class("pyot-h1")
+            label.get_style_context().add_class("pyot-h3")
             box.pack_start(label, False, False, 0)
+            box.show_all()
+
+
+@Gtk.Template(
+    resource_path="/es/rgmf/pyopentracks/ui/analytic_year_layout.ui"
+)
+class AggregatedStatsYear(Gtk.Box):
+    __gtype_name__ = "AggregatedStatsYear"
+
+    _combo_years: Gtk.ComboBox = Gtk.Template.Child()
+    _year_list_store: Gtk.ListStore = Gtk.Template.Child()
+
+    def __init__(self):
+        super().__init__()
+        self._setup_ui(DatabaseHelper.get_years())
+
+    def _setup_ui(self, years):
+        for y in years:
+            self._year_list_store.append([y, y])
+        self._combo_years.set_active(0)
+        self._combo_years.connect("changed", self._on_year_changed)
+
+        self._year_totals = AnalyticTotalsYear(years[0])
+        self.pack_start(self._year_totals, False, False, 0)
+
+    def _on_year_changed(self, combo):
+        iter_item = combo.get_active_iter()
+        if iter_item is not None:
+            self.remove(self._year_totals)
+
+            year = self._year_list_store[iter_item][1]
+
+            self._year_totals = AnalyticTotalsYear(year)
+            self.pack_start(self._year_totals, False, False, 0)
 
 
 class AnalyticTotalsYear(Gtk.VBox):
