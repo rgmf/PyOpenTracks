@@ -22,6 +22,7 @@ from gi.repository import Gtk
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.utils.utils import DateUtils as du
 from pyopentracks.utils.utils import DateTimeUtils as dtu
+from pyopentracks.utils.utils import StatsUtils as su
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.graphs import AggregatedStatsChart
 from pyopentracks.views.layouts.process_view import ProcessView
@@ -273,6 +274,7 @@ class AnalyticTotalsYear(Gtk.VBox):
     def __init__(self, year):
         super().__init__()
         self.get_style_context().add_class(".pru")
+        self._year = year
         ProcessView(
             self._ready,
             DatabaseHelper.get_aggregated_stats,
@@ -292,19 +294,35 @@ class AnalyticTotalsYear(Gtk.VBox):
         grid.set_row_spacing(10)
         grid.set_column_spacing(10)
         grid.set_margin_left(50)
-        self._build_headers(grid, _("Sport"), _("Activities"), _("Distance"), _("Time"), _("Elevation Gain"))
+        self._build_headers(
+            grid,
+            _("Sport"),
+            _("Activities"),
+            _("Activities\nper Month"),
+            _("Distance"),
+            _("Time"),
+            _("Elevation\nGain"),
+            _("Heart Rate\nMaximum"),
+            _("Heart Rate\nAverage")
+        )
         for i, aggregated in enumerate(aggregated_list):
             box_icon = self._build_icon_box(aggregated.category)
             box_activities = self._build_info_box(aggregated.total_activities)
+            box_activities_per_month = self._build_info_box(su.avg_per_month(aggregated.total_activities, self._year))
             box_distance = self._build_info_box(aggregated.total_distance)
             box_time = self._build_info_box(aggregated.total_short_moving_time)
             box_gain = self._build_info_box(aggregated.total_elevation_gain)
+            box_hr_max = self._build_info_box(aggregated.max_heart_rate)
+            box_hr_avg = self._build_info_box(aggregated.avg_heart_rate)
 
             grid.attach(box_icon, 0, i + 1, 1, 1)
             grid.attach(box_activities, 1, i + 1, 1, 1)
-            grid.attach(box_distance, 2, i + 1, 1, 1)
-            grid.attach(box_time, 3, i + 1, 1, 1)
-            grid.attach(box_gain, 4, i + 1, 1, 1)
+            grid.attach(box_activities_per_month, 2, i + 1, 1, 1)
+            grid.attach(box_distance, 3, i + 1, 1, 1)
+            grid.attach(box_time, 4, i + 1, 1, 1)
+            grid.attach(box_gain, 5, i + 1, 1, 1)
+            grid.attach(box_hr_max, 6, i + 1, 1, 1)
+            grid.attach(box_hr_avg, 7, i + 1, 1, 1)
         self.pack_start(grid, True, True, 10)
         self.show_all()
 

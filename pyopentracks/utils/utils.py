@@ -380,3 +380,12 @@ class SensorUtils:
         return (
             str(int(cadence_rpm)) + " rpm" if cadence_rpm is not None else "-"
         )
+
+
+class StatsUtils:
+    @staticmethod
+    def avg_per_month(num: int, year: int) -> float:
+        current_year, current_month, _ = DateUtils.get_today()
+        if current_year == year:
+            return round(num / current_month, 2)
+        return round(num / 12, 2)
