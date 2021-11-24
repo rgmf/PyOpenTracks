@@ -35,7 +35,7 @@ class AltitudeCorrection:
     BULK_NUM = 500
     API_BASE_URL = "https://api.open-elevation.com/api/v1/lookup"
     GAIN_LOSS_THRESHOLD = 5
-    DISTANCE_TRHESHOLD = 50
+    DISTANCE_THRESHOLD = 50
     CIRCULAR_BUFFER_LEN = 20
 
     def __init__(self, trackid):
@@ -51,9 +51,12 @@ class AltitudeCorrection:
 
     def run(self):
         if not self._trackpoints:
-            return
+            return None
         self._init_buffer()
-        self._update_track_points()
+        try:
+            self._update_track_points()
+        except Exception as e:
+            return None
         self._compute_gain_and_loss()
         self._update_track_stats()
         return DatabaseHelper.get_track_by_id(self._trackid)
@@ -86,7 +89,7 @@ class AltitudeCorrection:
         last_valid_tp = self._trackpoints[0]
         last_valid_altitude = round(sum(self._buffer) / AltitudeCorrection.CIRCULAR_BUFFER_LEN, 2)
         for tp in self._trackpoints:
-            if LocationUtils.distance_between(last_valid_tp.latitude, last_valid_tp.longitude, tp.latitude, tp.longitude) >= AltitudeCorrection.DISTANCE_TRHESHOLD:
+            if LocationUtils.distance_between(last_valid_tp.latitude, last_valid_tp.longitude, tp.latitude, tp.longitude) >= AltitudeCorrection.DISTANCE_THRESHOLD:
                 if tp.altitude >= last_valid_altitude + AltitudeCorrection.GAIN_LOSS_THRESHOLD:
                     diff = tp.altitude - last_valid_tp.altitude
                     self._gain = self._gain + diff
