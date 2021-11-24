@@ -157,6 +157,19 @@ class TracksLayout(Gtk.Box, Layout):
             self._select_row(self._list_store.get_path(treeiter), force=True)
 
     def _on_altitude_correction_done(self, track):
+        if track is None:
+            self._app_window.clean_top_widget()
+            self._app_window.show_infobar(
+                itype=Gtk.MessageType.ERROR,
+                message=_("Altitude could not be corrected. The service is not working."),
+                buttons=[
+                    {
+                        "text": _("Ok"),
+                        "cb": lambda b: self._app_window.clean_top_widget()
+                    }
+                ]
+            )
+            return
         self._app_window.clean_top_widget()
         iter = self._list_store.get_iter_first()
         while iter and self._list_store.get_value(iter, 0) != track.id:
