@@ -78,6 +78,26 @@ class Database:
                 print(f"Error: [SQL] Couldn't execute the query: {error}")
         return None
 
+    def get_tracks_between(self, begin, end):
+        """Returns all tracks between begin date and end date.
+
+        Arguments:
+        begin -- begin's date in milliseconds.
+        end   -- end's date in milliseconds.
+
+        Returns:
+        List of tracks between begin and end.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = "SELECT * FROM tracks WHERE starttime>=? AND starttime<=?"
+                return [Track(*t) for t in conn.execute(query, (begin, end)).fetchall()]
+            except Exception as error:
+                # TODO add this error message to a logger system
+                print(f"Error: [SQL] Couldn't execute the query: {error}")
+        return []
+
+
     def get_segment_by_id(self, _id):
         """Return Segment object from _id.
 

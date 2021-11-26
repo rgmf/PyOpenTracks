@@ -24,16 +24,22 @@ from matplotlib.backends.backend_gtk3agg import (
     FigureCanvasGTK3Agg as FigureCanvas
 )
 from pyopentracks.utils.utils import DistanceUtils as du
+from pyopentracks.utils.utils import TimeUtils as tu
 
 
 class AggregatedStatsChart:
     def __init__(self, aggregated_lists):
         self.aggregated_lists = aggregated_lists
-        self.figure = Figure()
+        self.figure = Figure(figsize=(1 * len(aggregated_lists), 1 * len(aggregated_lists)), dpi=100)
         self.figure.subplots()
         self.axes = self.figure.axes[0]
+
+        w, h = self.figure.get_size_inches()
+        dpi_res = self.figure.get_dpi()
+        w, h = int(np.ceil(w * dpi_res)), int(np.ceil(h * dpi_res))
+
         self.figure.canvas = FigureCanvas(self.figure)
-        self.figure.canvas.set_size_request(300, 200)
+        self.figure.canvas.set_size_request(w, h)
         self.figure.canvas.set_has_window(False)
 
     def _draw(self):
@@ -90,6 +96,79 @@ class AggregatedStatsChart:
 
     def draw_and_show(self):
         self._draw()
+        self.figure.canvas.draw()
+        self.figure.canvas.show()
+
+
+class AggregatedStatsStackedBarsChart:
+
+    def __init__(self, results, max_width=None, cb_annotate=None):
+        """Creates a set of horizontal bars with the results.
+
+        Arguments:
+        results -- a dictionary with the results to represented like this (array of values to be stacked):
+                   {
+                        "Label 1": [15, 10, 20, 30],
+                        "Label 2": [22, 8, 15, 20],
+                        ...
+                   }
+        max_width -- (optional) if included the horizontal bar maximum width will be used, otherwise it will be calculated.
+        cb_annotate -- (optional) it's a callback to be called for set the annotation on bar chart.
+        """
+
+        self.figure = Figure(figsize=(1, 1), dpi=100)
+        self.figure.subplots()
+        self.axes = self.figure.axes[0]
+
+        self.axes.spines["left"].set_visible(False)
+        self.axes.spines["right"].set_visible(False)
+        self.axes.spines["bottom"].set_visible(False)
+        self.axes.spines["top"].set_visible(False)
+        self.axes.tick_params(left=False)
+        self.axes.tick_params(bottom=False)
+
+        w, h = self.figure.get_size_inches()
+        dpi_res = self.figure.get_dpi()
+        w, h = int(np.ceil(w * dpi_res)), int(np.ceil(h * dpi_res))
+
+        self.figure.canvas = FigureCanvas(self.figure)
+        self.figure.canvas.set_size_request(w, h)
+        self.figure.canvas.set_has_window(False)
+
+        labels = list(results.keys())
+        data = np.array(list(results.values()))
+        data_cum = data.cumsum(axis=1)
+
+        self.axes.invert_yaxis()
+        self.axes.xaxis.set_visible(False)
+        self.axes.set_xlim(0, max_width if max_width else np.sum(data, axis=1).max())
+
+        # Adds stacked bars.
+        for i in range(len(data[0])):
+            widths = data[:, i]
+            starts = data_cum[:, i] - widths
+            rects = self.axes.barh(labels, widths, left=starts, height=0.75)
+
+            # Annotate the stacked bars.
+            for bar in rects:
+                width = bar.get_width()
+                yloc = bar.get_y() + bar.get_height() / 2
+                self.axes.annotate(
+                        cb_annotate(width) if cb_annotate else width,
+                        xy=(bar.get_x(), yloc),
+                        xytext=(5, 0),
+                        textcoords="offset points",
+                        horizontalalignment="left",
+                        verticalalignment="center",
+                        color="black",
+                        weight="bold",
+                        clip_on=True
+                    )
+
+    def get_canvas(self):
+        return self.figure.canvas
+
+    def draw_and_show(self):
         self.figure.canvas.draw()
         self.figure.canvas.show()
 

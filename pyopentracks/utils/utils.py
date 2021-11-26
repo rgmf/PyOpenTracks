@@ -30,6 +30,14 @@ from locale import setlocale, LC_ALL
 
 class DateTimeUtils:
     @staticmethod
+    def begin_of_day(year: int, month: int, day: int):
+        return datetime(year, month, day, 0, 0, 0).timestamp() * 1000
+
+    @staticmethod
+    def end_of_day(year: int, month: int, day: int):
+        return datetime(year, month, day, 23, 59, 59).timestamp() * 1000
+
+    @staticmethod
     def ms_to_str(timestamp_ms: float, short=False) -> str:
         """From datetime millis to human readable string.
 
@@ -108,9 +116,9 @@ class TimeUtils:
         minutes = (seconds % 3600) // 60
         seconds = (seconds % 3600) % 60
         if not shorten:
-            return f"{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}"
+            return f"{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}" if hours > 0 else f"{int(minutes):02d}:{int(seconds):02d}"
         else:
-            return f"{int(hours):d}h\n{int(minutes)}m"
+            return f"{int(hours):d}h\n{int(minutes)}min" if hours > 0 else f"{int(minutes)}min"
 
     @staticmethod
     def iso_to_ms(date_time: str) -> float:
