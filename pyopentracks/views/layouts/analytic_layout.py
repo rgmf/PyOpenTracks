@@ -25,6 +25,7 @@ from pyopentracks.utils.utils import DateTimeUtils as dtu
 from pyopentracks.utils.utils import StatsUtils as su
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.graphs import AggregatedStatsChart
+from pyopentracks.views.layouts.calendar_layout import CalendarLayout
 from pyopentracks.views.layouts.process_view import ProcessView
 
 
@@ -54,9 +55,7 @@ class AnalyticLayout(Gtk.Notebook):
         self.show_all()
 
 
-@Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_summary_sport_layout.ui"
-)
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_summary_sport_layout.ui")
 class SummarySport(Gtk.Box):
     __gtype_name__ = "SummarySport"
 
@@ -132,9 +131,7 @@ class AggregatedStats(Gtk.VBox):
             self.pack_start(SummarySport(aggregated), False, False, 0)
 
 
-@Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui"
-)
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui")
 class AggregatedStatsMonth(Gtk.Box):
     __gtype_name__ = "AggregatedStatsMonth"
 
@@ -165,9 +162,7 @@ class AggregatedStatsMonth(Gtk.Box):
             self.pack_start(self._months_stack, False, False, 0)
 
 
-@Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui"
-)
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui")
 class AnalyticMonthsStack(Gtk.Box):
     __gtype_name__ = "AnalyticMonthsStack"
 
@@ -224,6 +219,7 @@ class AnalyticMonthsStack(Gtk.Box):
         data = self._data_list[child_name]
         aggregated_list = data.aggregated_list
         if aggregated_list:
+            box.pack_start(CalendarLayout(int(data.month), int(self._year)), False, False, 0)
             chart = AggregatedStatsChart(aggregated_list)
             box.pack_start(chart.get_canvas(), False, False, 0)
             chart.draw_and_show()
@@ -237,9 +233,7 @@ class AnalyticMonthsStack(Gtk.Box):
             box.show_all()
 
 
-@Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_year_layout.ui"
-)
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_year_layout.ui")
 class AggregatedStatsYear(Gtk.Box):
     __gtype_name__ = "AggregatedStatsYear"
 

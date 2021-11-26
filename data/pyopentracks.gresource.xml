@@ -12,6 +12,7 @@
     <file>ui/analytic_year_layout.ui</file>
     <file>ui/analytic_month_layout.ui</file>
     <file>ui/analytic_months_stack_layout.ui</file>
+    <file>ui/calendar_layout.ui</file>
 
     <file>ui/segments_layout.ui</file>
     <file>ui/segments_list_layout.ui</file>

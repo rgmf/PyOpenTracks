@@ -59,13 +59,16 @@ class AggregatedStats:
         return tu.ms_to_str(self._total_time_ms)
 
     @property
+    def total_moving_time_ms(self):
+        return self._total_moving_time_ms
+
+    @property
     def total_moving_time(self):
         return tu.ms_to_str(self._total_moving_time_ms)
 
     @property
     def total_short_moving_time(self):
         return tu.ms_to_str(self._total_moving_time_ms, True)
-
 
     @property
     def total_distance(self):

@@ -21,6 +21,7 @@ from pyopentracks.models.database import Database
 from pyopentracks.models.segment import Segment
 from pyopentracks.models.segment_point import SegmentPoint
 from pyopentracks.tasks.segment_search import SegmentSearch, SegmentTrackSearch
+from pyopentracks.utils.utils import DateTimeUtils
 
 
 class DatabaseHelper:
@@ -187,3 +188,8 @@ class DatabaseHelper:
     def delete(model):
         db = Database()
         db.delete(model)
+
+    @staticmethod
+    def get_tracks_in_day(y: int, m: int, d: int):
+        db = Database()
+        return db.get_tracks_between(DateTimeUtils.begin_of_day(y, m, d), DateTimeUtils.end_of_day(y, m, d))
