@@ -219,10 +219,21 @@ class AnalyticMonthsStack(Gtk.Box):
         data = self._data_list[child_name]
         aggregated_list = data.aggregated_list
         if aggregated_list:
+            # Calendar.
             box.pack_start(CalendarLayout(int(data.month), int(self._year)), False, False, 0)
             chart = AggregatedStatsChart(aggregated_list)
-            box.pack_start(chart.get_canvas(), False, False, 0)
+
+            # Month chart.
+            chart_box = Gtk.Box()
+            chart_box.set_margin_left(10)
+            chart_box.set_margin_right(10)
+            chart_box.get_style_context().add_class("pyot-stats-bg-color")
+            chart_box.pack_start(chart.get_canvas(), True, True, 10)
+            box.pack_start(chart_box, False, False, 0)
+            chart_box.show_all()
             chart.draw_and_show()
+
+            # Aggregated stats for every category.
             for a in aggregated_list:
                 box.pack_start(SummarySport(a), False, False, 0)
         else:

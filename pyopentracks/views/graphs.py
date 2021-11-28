@@ -24,7 +24,6 @@ from matplotlib.backends.backend_gtk3agg import (
     FigureCanvasGTK3Agg as FigureCanvas
 )
 from pyopentracks.utils.utils import DistanceUtils as du
-from pyopentracks.utils.utils import TimeUtils as tu
 
 
 class AggregatedStatsChart:
@@ -62,9 +61,7 @@ class AggregatedStatsChart:
         self.axes.set_yticklabels(categories)
         # Turn off x tick labels
         self.axes.set_xticklabels([])
-        #self.axes.invert_yaxis()  # labels read top-to-bottom
 
-        #rect_labels = []
         # Lastly, write in the ranking inside each bar to aid in interpretation
         for rect in rectangles:
             # Rectangle width
@@ -73,8 +70,8 @@ class AggregatedStatsChart:
             # Shift the text to the right side of the right edge
             xloc = 5
             # Black against white background
-            clr = 'black'
-            align = 'left'
+            clr = "black"
+            align = "left"
 
             # Center the text vertically in the bar
             y_loc = rect.get_y() + rect.get_height() / 2
@@ -89,7 +86,6 @@ class AggregatedStatsChart:
                 weight='bold',
                 clip_on=True
             )
-            #rect_labels.append(label)
 
     def get_canvas(self):
         return self.figure.canvas

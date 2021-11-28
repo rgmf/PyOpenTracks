@@ -61,7 +61,8 @@ class CalendarLayout(Gtk.Box):
             aggregated_lists.append(
                 DatabaseHelper.get_aggregated_stats(
                     dtu.begin_of_day(year, month, list(filter(lambda d: d != 0, week))[0]),
-                    dtu.end_of_day(year, month, list(filter(lambda d: d != 0, week))[-1])
+                    dtu.end_of_day(year, month, list(filter(lambda d: d != 0, week))[-1]),
+                    order_by_categories=True
                 )
             )
             row = row + 1
@@ -85,15 +86,15 @@ class CalendarLayout(Gtk.Box):
 
         vbox.set_homogeneous(True)
         hbox.set_homogeneous(True)
-        hbox.get_style_context().add_class("pyot-bg")
 
         for track in tracks:
             icon = Gtk.Image()
-            icon.set_from_pixbuf(tau.get_icon_pixbuf(track.activity_type))
-            hbox.pack_start(icon, True, True, 10)
+            icon.set_from_pixbuf(tau.get_icon_pixbuf(track.activity_type, 36, 36))
+            hbox.pack_start(icon, True, True, 0)
 
         vbox.pack_start(Gtk.Label(str(day)), True, True, 0)
         vbox.pack_start(hbox, True, True, 0)
+        vbox.get_style_context().add_class("pyot-stats-bg-color")
 
         self._grid.attach(vbox, left, top, 1, 1)
 

@@ -42,9 +42,9 @@ class DatabaseHelper:
         return db.get_track_points(trackid)
 
     @staticmethod
-    def get_aggregated_stats(date_from=None, date_to=None):
+    def get_aggregated_stats(date_from=None, date_to=None, order_by_categories=False):
         db = Database()
-        return db.get_aggregated_stats(date_from, date_to)
+        return db.get_aggregated_stats(date_from, date_to, order_by="category" if order_by_categories else "total_activities")
 
     @staticmethod
     def get_years():

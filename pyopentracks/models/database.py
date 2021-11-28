@@ -284,12 +284,13 @@ class Database:
                 print(error_msg)
                 raise
 
-    def get_aggregated_stats(self, date_from=None, date_to=None):
+    def get_aggregated_stats(self, date_from=None, date_to=None, order_by="total_activities"):
         """Query for aggregated stats.
 
         Arguments:
         date_from -- (optional) milliseconds to filter dates from.
         date_to -- (optional) milliseconds to filter dates to.
+        order_by -- (optional) name of the column that will be used to order the results.
 
         Return:
         the aggregated stats model.
@@ -330,7 +331,7 @@ class Database:
                 FROM tracks
                 {where}
                 GROUP BY category
-                ORDER BY total_activities DESC;
+                ORDER BY {order_by} DESC;
                 """
 
                 stats = conn.execute(query).fetchall()
