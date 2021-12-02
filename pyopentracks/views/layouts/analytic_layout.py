@@ -221,9 +221,9 @@ class AnalyticMonthsStack(Gtk.Box):
         if aggregated_list:
             # Calendar.
             box.pack_start(CalendarLayout(int(data.month), int(self._year)), False, False, 0)
-            chart = AggregatedStatsChart(aggregated_list)
 
             # Month chart.
+            chart = AggregatedStatsChart(aggregated_list)
             chart_box = Gtk.Box()
             chart_box.set_margin_left(10)
             chart_box.set_margin_right(10)
