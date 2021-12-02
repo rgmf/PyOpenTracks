@@ -20,11 +20,11 @@ import calendar
 
 from gi.repository import Gtk
 
-from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.utils.utils import TypeActivityUtils as tau
-from pyopentracks.utils.utils import DateTimeUtils as dtu
 from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.views.graphs import StackedBarsChart
+from pyopentracks.tasks.calendar_stats import CalendarStats
+from pyopentracks.views.layouts.process_view import ProcessView
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/calendar_layout.ui")
@@ -42,35 +42,18 @@ class CalendarLayout(Gtk.Box):
         """
         super().__init__()
 
-        self._cal = calendar.monthcalendar(year, month)
-
         self._label_month.get_style_context().add_class("pyot-h3")
         self._label_month.set_label(calendar.month_name[month])
 
         self._add_header_to_grid()
 
-        row = 1
-        column = 0
-        aggregated_lists = []
-        for week in self._cal:
-            for day in week:
-                if day != 0:
-                    tracks = DatabaseHelper.get_tracks_in_day(year, month, day)
-                    self._add_item_to_grid(day, tracks, column, row)
-                column = column + 1
-            aggregated_lists.append(
-                DatabaseHelper.get_aggregated_stats(
-                    dtu.begin_of_day(year, month, list(filter(lambda d: d != 0, week))[0]),
-                    dtu.end_of_day(year, month, list(filter(lambda d: d != 0, week))[-1]),
-                    order_by_categories=True
-                )
-            )
-            row = row + 1
-            column = 0
+        ProcessView(self._calendar_ready, CalendarStats.run, (month, year)).start()
 
-        max_moving_time = max(list(map(lambda ltimes: sum(ltimes), list(map(lambda alist: list(map(lambda o: o.total_moving_time_ms, alist)) if alist else [0], aggregated_lists)))))
-        for i, aggregated_list in enumerate(aggregated_lists):
-            self._add_aggregated_stats_to_grid(aggregated_list, i + 1, max_moving_time)
+    def _calendar_ready(self, calendar_stats):
+        for day in calendar_stats.days:
+            self._add_item_to_grid(day.day, day.tracks, day.column, day.row)
+        for week in calendar_stats.weeks:
+            self._add_aggregated_stats_to_grid(week.aggregated_list, week.week, week.max_value)
 
         self.show_all()
 

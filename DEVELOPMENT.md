@@ -34,6 +34,11 @@ pipenv install
 # Execute
 After building enter to `buildir/buildir/testdir/bin` and execute `./pyopentracks`.
 
+# Tests
+There are tests in the `tests` folder. To execute them, run the following command from project root directory:
+
+`python3 -m unittest discover -v -s tests/`
+
 # Internacionalization (i10n)
 Enter to `po/` directory and execute `update_potfiles.sh` to create a new language PO file or update the string to a language. Then edit the PO file and execute `compile_potfiles.sh` to generate mo file.
 
