@@ -43,6 +43,19 @@ There are tests in the `tests` folder. To execute them, run the following comman
 Enter to `po/` directory and execute `update_potfiles.sh` to create a new language PO file or update the string to a language. Then edit the PO file and execute `compile_potfiles.sh` to generate mo file.
 
 # Flatpak
+## Pre
+You need to install `flatpak` and `flatpak-builder` from your distro repositories of from you want.
+
+Then, you maybe want to add the Flathub repository:
+`flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo`
+
+And then, you'll need execute the following:
+
+`flatpak install flathub org.gnome.Sdk//3.38`
+
+`flatpak install flathub org.gnome.Platform//3.38`
+
+
 ## Build
 You can execute the following command indicating the folder where you want to build PyOpenTracks using flatpak:
 
