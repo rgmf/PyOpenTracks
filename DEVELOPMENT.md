@@ -21,6 +21,8 @@ sudo apt install appstream-util
 
 sudo apt install gettext
 
+sudo apt install sqlite
+
 # Virtual Environment
 pipenv --three
 
