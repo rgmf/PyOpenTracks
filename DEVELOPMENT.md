@@ -1,14 +1,7 @@
 # Install Dependencies
 In Debian:
 
-sudo apt install libgtk-3-dev libchamplain-gtk-0.12-dev libchamplain-0.12-dev libcairo2-dev libgirepository1.0-dev python3-numpy python3-matplotlib meson ninja-build appstream-util gettext sqlite
-
-# Virtual Environment
-pipenv --three
-
-pipenv shell
-
-pipenv install
+sudo apt install libgtk-3-dev libchamplain-gtk-0.12-dev libchamplain-0.12-dev libcairo2-dev libgirepository1.0-dev python3-numpy python3-matplotlib meson ninja-build appstream-util gettext
 
 # Build
 `sh build.sh`
@@ -23,6 +16,11 @@ There are tests in the `tests` folder. To execute them, run the following comman
 
 # Internacionalization (i10n)
 Enter to `po/` directory and execute `update_potfiles.sh` to create a new language PO file or update the string to a language. Then edit the PO file and execute `compile_potfiles.sh` to generate mo file.
+
+# Debian
+Execute `deb_package.sh` to build a .deb package that you can install on Debian distributions.
+
+If you install PyOpenTracks by installing .deb package then you have to be careful because gsettings to be used are the same than developing execution (see data/es.rgmf.pyopentracks.gschema.xml where is specified the path of the settings that you can see through dconf-editor, for example).
 
 # Flatpak
 ## Pre
