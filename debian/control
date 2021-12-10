@@ -1,0 +1,31 @@
+Source: pyopentracks
+Maintainer: Román Ginés Martínez Ferrández <rgmf@riseup.net>
+Section: misc
+Priority: optional
+Build-Depends:
+ meson (>=0.50),
+ appstream-util (>=0.7.14),
+ libglib2.0-dev-bin (>=2.58.3),
+ python3-cairo,
+ python3-gi (>=3.30.0)
+Standards-Version: 4.6.0
+Homepage: https://github.com/rgmf/PyOpenTracks
+
+Package: pyopentracks
+Architecture: all
+Section: misc
+Priority: optional
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+ python3-gi (>=3.40.1),
+ python3-gi-cairo (>=3.40.1),
+ gir1.2-gtk-3.0 (>=3.24.27),
+ sqlite3 (>=3.34.1),
+ gir1.2-champlain-0.12 (>=0.12.20),
+ gir1.2-gtkchamplain-0.12 (>=0.12.20),
+ libchamplain-0.12-0 (>=0.12.20),
+ libchamplain-gtk-0.12-0 (>=0.12.20),
+ python3-numpy (>=1.19.5),
+ python3-matplotlib (>=3.3.4)
+Description: Sport analytics desktop application from GPS data files.
