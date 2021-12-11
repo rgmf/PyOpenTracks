@@ -97,7 +97,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
         layout = InfoLayout(itype, message, buttons)
         top_widget.pack_start(layout, False, False, 0)
-        layout.show_all()
+        top_widget.show_all()
+        #layout.show_all()
 
     def connect_button_del(self, action_cb, *args):
         self._del_btn.show()

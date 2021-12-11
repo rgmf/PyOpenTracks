@@ -22,6 +22,8 @@ Execute `deb_package.sh` to build a .deb package that you can install on Debian 
 
 If you install PyOpenTracks by installing .deb package then you have to be careful because gsettings to be used are the same than developing execution (see data/es.rgmf.pyopentracks.gschema.xml where is specified the path of the settings that you can see through dconf-editor, for example).
 
+You can install PyOpenTracks through the deb package and test developing version (building and running the deveoping version) but this one need a change so both not use the same gsettings: change `path` attribute from `schema` tag on `data/es.rgmf.pyopentracks.gschema.xml`. Before pushing changes you has to restore this change.
+
 # Flatpak
 ## Pre
 You need to install `flatpak` and `flatpak-builder` from your distro repositories of from you want.
