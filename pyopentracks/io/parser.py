@@ -29,8 +29,10 @@ class Parser:
 
     # Speed threshold for considering that there is not movement (in mps).
     # TODO This should be a setting's option ¿?
-    AUTO_PAUSE_SPEED_THRESHOLD = 0.1
-    # Number of segments needed for create a segment (otherwise are ignore).
+    AUTO_PAUSE_SPEED_THRESHOLD = 0.138889
+    # Time between points threshold for considering a new segment (in ms).
+    AUTO_PAUSE_TIME_THRESHOLD = 20000
+    # Number of points needed for create a segment (otherwise are ignored).
     NUMBER_OF_POINTS_FOR_SEGMENT = 4
 
     def __init__(self):
@@ -51,7 +53,8 @@ class Parser:
         if not self._is_valid_location(track_point.latitude, track_point.longitude):
             return
 
-        if not self._is_moving(track_point.speed) or self._new_segment:
+        is_moving = self._is_moving(track_point)
+        if not is_moving or self._new_segment:
             self._add_current_segment_points()
             self._new_segment = False
 
@@ -65,8 +68,13 @@ class Parser:
             self._track_points.extend(self._current_segment_track_points)
         self._current_segment_track_points = []
 
-    def _is_moving(self, speed):
-        return speed and float(speed) >= Parser.AUTO_PAUSE_SPEED_THRESHOLD
+    def _is_moving(self, track_point):
+        speed = track_point.speed
+        time_last_point = track_point.time_ms - self._current_segment_track_points[-1].time_ms \
+            if len(self._current_segment_track_points) > 0 else None
+
+        return (speed and float(speed) >= Parser.AUTO_PAUSE_SPEED_THRESHOLD) and \
+            (time_last_point is None or time_last_point < Parser.AUTO_PAUSE_TIME_THRESHOLD)
 
     def _is_valid_location(self, lat, lon):
         try:
