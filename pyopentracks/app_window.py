@@ -56,12 +56,23 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._layout = None
         self.show_layout(GreeterLayout())
 
+    # def del_rec(self, widget):
+    #     if isinstance(widget, Gtk.Container):
+    #         for w in widget.get_children():
+    #             self.del_rec(w)
+    #         print("DESTROYING...", widget)
+    #         widget.destroy()
+    #     else:
+    #         print("DESTROYING...", widget)
+    #         widget.destroy()   
+            
+
     def show_layout(self, layout):
         if layout is self._layout:
             return
 
         if self._layout:
-            self.remove(self._layout)
+            self._layout.destroy()
 
         self._layout = layout
         self.add(self._layout)

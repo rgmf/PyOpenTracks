@@ -26,14 +26,14 @@ GtkClutter.init([])  # Must be initialized before importing those:
 from gi.repository import GtkChamplain, Champlain, Pango, Gtk
 
 
-class BaseMap:
+class BaseMap(Gtk.VBox):
     """
     Map with libchamplain library with controls to: zoom in/out and change map's source.
     It offers the possility of draw a path line.
     """
 
     def __init__(self):
-        self._vbox = Gtk.VBox(False, 10)
+        super().__init__()
 
         self._embed = GtkChamplain.Embed()
         self._view = self._embed.get_view()
@@ -78,8 +78,10 @@ class BaseMap:
         self._view.connect("notify::state", self._view_state_changed, button)
         bbox.pack_end(button, False, False, 0)
 
-        self._vbox.pack_start(bbox, expand=False, fill=False, padding=0)
-        self._vbox.add(self._embed)
+        self.pack_start(bbox, expand=False, fill=False, padding=0)
+        self.pack_start(self._embed, expand=False, fill=False, padding=0)
+
+        self._embed.set_size_request(640, 480)
 
     def _zoom_in(self, widget):
         self._view.zoom_in()
@@ -126,6 +128,3 @@ class BaseMap:
         idx = int(len(points_tuple) / 2)
         self._view.center_on(points_tuple[idx][0], points_tuple[idx][1])
         self._view.set_zoom_level(12)
-
-    def get_widget(self):
-        return self._vbox
