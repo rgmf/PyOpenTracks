@@ -202,8 +202,8 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
 
     def _load_map(self):
         """Load the map with."""
-        self._main_widget.attach(self._map.get_widget(), 2, 1, 2, 7)
-        self._map.get_widget().show_all()
+        self._main_widget.attach(self._map, 2, 1, 2, 7)
+        self._map.show_all()
         self._map.get_segment().connect("segment-ready", self._segment_ready_cb)
 
     def _segment_ready_cb(self, segment, trackpoint_begin_id, trackpoint_end_id):
