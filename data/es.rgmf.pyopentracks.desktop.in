@@ -1,7 +1,9 @@
 [Desktop Entry]
-Name=pyopentracks
+Name=PyOpenTracks
+Comment=Sport analytics application 
 Exec=pyopentracks
+Icon=es.rgmf.pyopentracks
 Terminal=false
 Type=Application
-Categories=GTK;
 StartupNotify=true
+Categories=GTK;
