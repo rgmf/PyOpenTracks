@@ -1,2 +1,3 @@
+*.deb
 buildir/*
 xdg_data_home/*
