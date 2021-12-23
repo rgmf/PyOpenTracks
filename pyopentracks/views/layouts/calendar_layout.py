@@ -84,9 +84,16 @@ class CalendarLayout(Gtk.Box):
     def _add_aggregated_stats_to_grid(self, aggregated_stats_list, top, max_moving_time):
         if aggregated_stats_list:
             results = {"": list(map(lambda o: o.total_moving_time_ms if o else 0, aggregated_stats_list))}
+            colors = list(map(lambda o: tau.get_color(o.category) if o else None, aggregated_stats_list))
         else:
             results = {"": [0]}
+            colors = None
 
-        graph = StackedBarsChart(results, max_width=max_moving_time, cb_annotate=lambda value: tu.ms_to_str(value, True))
+        graph = StackedBarsChart(
+            results,
+            colors=colors,
+            max_width=max_moving_time,
+            cb_annotate=lambda value: tu.ms_to_str(value, True)
+        )
         self._grid.attach(graph.get_canvas(), 7, top, 4, 1)
         graph.draw_and_show()

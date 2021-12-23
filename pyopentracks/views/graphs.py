@@ -24,6 +24,7 @@ from matplotlib.backends.backend_gtk3agg import (
     FigureCanvasGTK3Agg as FigureCanvas
 )
 from pyopentracks.utils.utils import DistanceUtils as du
+from pyopentracks.utils.utils import TypeActivityUtils as tau
 
 
 class AggregatedStatsChart:
@@ -63,27 +64,30 @@ class AggregatedStatsChart:
         self.axes.set_xticklabels([])
 
         # Lastly, write in the ranking inside each bar to aid in interpretation
-        for rect in rectangles:
+        for i, rect in enumerate(rectangles):
+            # Set rectangle color
+            rect.set_color(tau.get_color(categories[i]))
+            
             # Rectangle width
             width = rect.get_width()
 
             # Shift the text to the right side of the right edge
             xloc = 5
             # Black against white background
-            clr = "black"
+            color = "black"
             align = "left"
 
             # Center the text vertically in the bar
-            y_loc = rect.get_y() + rect.get_height() / 2
+            yloc = rect.get_y() + rect.get_height() / 2
             label = self.axes.annotate(
                 du.m_to_str(width * 1000),
-                xy=(width, y_loc),
+                xy=(width, yloc),
                 xytext=(xloc, 0),
                 textcoords="offset points",
                 horizontalalignment=align,
-                verticalalignment='center',
-                color=clr,
-                weight='bold',
+                verticalalignment="center",
+                color=color,
+                weight="bold",
                 clip_on=True
             )
 
@@ -98,19 +102,22 @@ class AggregatedStatsChart:
 
 class StackedBarsChart:
 
-    def __init__(self, results, max_width=None, cb_annotate=None):
+    def __init__(self, results, colors=None, max_width=None, cb_annotate=None):
         """Creates a set of horizontal bars with the results.
 
         Arguments:
-        results -- a dictionary with the results to represented like this (array of values to be stacked):
+        results -- a dictionary with the results represented like this (array of values to be stacked):
                    {
                         "Label 1": [15, 10, 20, 30],
                         "Label 2": [22, 8, 15, 20],
                         ...
                    }
+        colors -- list of colors to use for stacked bars.
         max_width -- (optional) if included the horizontal bar maximum width will be used, otherwise it will be calculated.
         cb_annotate -- (optional) it's a callback to be called for set the annotation on bar chart.
         """
+
+        self.cb_annotate = cb_annotate
 
         self.figure = Figure(figsize=(1, 1), dpi=100)
         self.figure.subplots()
@@ -129,7 +136,6 @@ class StackedBarsChart:
 
         self.figure.canvas = FigureCanvas(self.figure)
         self.figure.canvas.set_size_request(w, h)
-        self.figure.canvas.set_has_window(False)
 
         labels = list(results.keys())
         data = np.array(list(results.values()))
@@ -137,29 +143,86 @@ class StackedBarsChart:
 
         self.axes.invert_yaxis()
         self.axes.xaxis.set_visible(False)
-        self.axes.set_xlim(0, max_width if max_width else np.sum(data, axis=1).max())
+        max_x = max_width if max_width else np.sum(data, axis=1).max()
+        self.axes.set_xlim([0, max_x + max_x * 0.25])
 
-        # Adds stacked bars.
+        # Adds stacked bars if data
+        if data is None or len(data) == 0 or len(data[0]) == 0:
+            return
+        self.accum = 0
+        rects = None
+        self.bars = []
         for i in range(len(data[0])):
             widths = data[:, i]
             starts = data_cum[:, i] - widths
-            rects = self.axes.barh(labels, widths, left=starts, height=0.75)
-
-            # Annotate the stacked bars.
+            color = colors[i] if colors is not None and len(colors) > i else None
+            rects = self.axes.barh(labels, widths, left=starts, height=0.75, color=color)
+            # Annotate the stacked bars in the middle of the bar.
+            # for bar in rects:
+            #     width = bar.get_width()
+            #     yloc = bar.get_y() + bar.get_height() / 2
+            #     self.axes.annotate(
+            #             cb_annotate(width) if cb_annotate else width,
+            #             xy=(bar.get_x(), yloc),
+            #             xytext=(5, 0),
+            #             textcoords="offset points",
+            #             horizontalalignment="left",
+            #             verticalalignment="center",
+            #             color="black",
+            #             weight="bold",
+            #             clip_on=True
+            #         )
             for bar in rects:
-                width = bar.get_width()
-                yloc = bar.get_y() + bar.get_height() / 2
-                self.axes.annotate(
-                        cb_annotate(width) if cb_annotate else width,
-                        xy=(bar.get_x(), yloc),
-                        xytext=(5, 0),
-                        textcoords="offset points",
-                        horizontalalignment="left",
-                        verticalalignment="center",
-                        color="black",
-                        weight="bold",
-                        clip_on=True
-                    )
+                self.bars.append(bar)
+                self.accum += bar.get_width()
+
+        # Annotate the stacked bars at the end (out from last bar)
+        xloc = 5
+        yloc = rects[-1].get_y() + rects[-1].get_height() / 2
+        self.annotate = self.axes.annotate(
+            cb_annotate(self.accum) if cb_annotate else str(self.accum),
+            xy=(self.accum, yloc),
+            xytext=(xloc, 0),
+            textcoords="offset points",
+            horizontalalignment="left",
+            verticalalignment="center",
+            color="black",
+            weight="bold",
+            clip_on=True
+        )
+
+        self.figure.canvas.mpl_connect("motion_notify_event", lambda event: self._on_mouse_hover(event))
+
+    def _update_annotate(self, bar):
+        x = bar.get_x() + bar.get_width() / 2
+        y = bar.get_y() + bar.get_height()
+        #annot.xy = (x,y)
+        text = f"{x}"
+        self.annotate.set_text(self.cb_annotate(bar.get_width() if self.cb_annotate else str(bar.get_width())))
+        self.annotate.set_color(bar.get_facecolor())
+        self.figure.canvas.draw_idle()
+        #annot.get_bbox_patch().set_alpha(0.4)
+
+    def _on_mouse_hover(self, event):
+        #vis = annot.get_visible()
+        if event.inaxes == self.axes:
+            for bar in self.bars:
+                bar_contains_event, details = bar.contains(event)
+                if bar_contains_event:
+                    self._update_annotate(bar)
+                    #annot.set_visible(True)
+                    #self.figure.canvas.draw_idle()
+                    #accum_annotate.set_visible(False)
+                    #self.figure.canvas.draw_idle()
+                    return
+                # else:
+                #     accum_annotate.set_visible(True)
+                #     self.figure.canvas.draw_idle()
+        # if vis:
+        #accum_annotate.set_visible(True)
+        self.annotate.set_text(self.cb_annotate(self.accum) if self.cb_annotate else str(self.accum))
+        self.annotate.set_color("black")
+        self.figure.canvas.draw_idle()
 
     def get_canvas(self):
         return self.figure.canvas

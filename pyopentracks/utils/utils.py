@@ -226,20 +226,20 @@ class TypeActivityUtils:
     """
 
     _types = {
-        "running": "icons/run_black_48dp.svg",
-        "trail running": "icons/run_black_48dp.svg",
+        "running": {"icon": "icons/run_black_48dp.svg", "color": "#d32f2f"},
+        "trail running": {"icon": "icons/run_black_48dp.svg", "color": "#c2185b"},
 
-        "biking": "icons/bike_black_48dp.svg",
-        "cycling": "icons/bike_black_48dp.svg",
-        "road biking": "icons/bike_black_48dp.svg",
-        "mountain biking": "icons/bike_black_48dp.svg",
+        "biking": {"icon": "icons/bike_black_48dp.svg", "color": "#0097a7"},
+        "cycling": {"icon": "icons/bike_black_48dp.svg", "color": "#00bcd4"},
+        "road biking": {"icon": "icons/bike_black_48dp.svg", "color": "#388e3c"},
+        "mountain biking": {"icon": "icons/bike_black_48dp.svg", "color": "#00796b"},
 
-        "walking": "icons/walk_black_48dp.svg",
-        "trail walking": "icons/walk_black_48dp.svg",
-        "hiking": "icons/walk_black_48dp.svg",
-        "trail hiking": "icons/walk_black_48dp.svg",
+        "walking": {"icon": "icons/walk_black_48dp.svg", "color": "#1976d2"},
+        "trail walking": {"icon": "icons/walk_black_48dp.svg", "color": "#303f9f"},
+        "hiking": {"icon": "icons/walk_black_48dp.svg", "color": "#0288d1"},
+        "trail hiking": {"icon": "icons/walk_black_48dp.svg", "color": "#03a9f4"},
 
-        "driving": "icons/drive_car_black_48dp.svg",
+        "driving": {"icon": "icons/drive_car_black_48dp.svg", "color": "#5d4037"},
     }
 
     _speed = [
@@ -247,16 +247,18 @@ class TypeActivityUtils:
         "driving"
     ]
 
+    _color_default = "#e64a19"
+
     @staticmethod
     def get_icon_resource(activity_type: str) -> str:
         """Gets and returns resource path icon for activity's type."""
         if not activity_type:
             return "/es/rgmf/pyopentracks/icons/unknown_black_48dp.svg"
-        icon = TypeActivityUtils._types.get(activity_type)
-        if icon is None:
+        activity = TypeActivityUtils._types.get(activity_type)
+        if activity is None:
             return "/es/rgmf/pyopentracks/icons/unknown_black_48dp.svg"
 
-        return "/es/rgmf/pyopentracks/" + icon
+        return "/es/rgmf/pyopentracks/" + activity["icon"]
 
     @staticmethod
     def get_icon_pixbuf(activity_type: str, width=48, height=48):
@@ -273,8 +275,17 @@ class TypeActivityUtils:
     def get_activity_types():
         """Return a list with a list of two items: type's name and icon."""
         return [
-            [name, icon] for name, icon in TypeActivityUtils._types.items()
+            [name, data["icon"]] for name, data in TypeActivityUtils._types.items()
         ]
+
+    @staticmethod
+    def get_color(activity_type: str) -> str:
+        if not activity_type:
+            return TypeActivityUtils._color_default
+        activity = TypeActivityUtils._types.get(activity_type)
+        if activity is None:
+            return TypeActivityUtils._color_default
+        return activity["color"]
 
     @staticmethod
     def is_speed(category: str) -> bool:
