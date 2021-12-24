@@ -19,12 +19,15 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
+from functools import reduce
+
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.utils.utils import DateUtils as du
 from pyopentracks.utils.utils import DateTimeUtils as dtu
 from pyopentracks.utils.utils import StatsUtils as su
+from pyopentracks.utils.utils import DistanceUtils as distu
 from pyopentracks.models.database_helper import DatabaseHelper
-from pyopentracks.views.graphs import AggregatedStatsChart
+from pyopentracks.views.graphs import BarsChart
 from pyopentracks.views.layouts.calendar_layout import CalendarLayout
 from pyopentracks.views.layouts.process_view import ProcessView
 
@@ -223,7 +226,14 @@ class AnalyticMonthsStack(Gtk.Box):
             box.pack_start(CalendarLayout(int(data.month), int(self._year)), False, False, 0)
 
             # Month chart.
-            chart = AggregatedStatsChart(aggregated_list)
+            list_t = []
+            for i in aggregated_list:
+                list_t.append((i.category, i.total_distance_float))
+            chart = BarsChart(
+                results=dict(list_t),
+                colors=list(map(lambda a: tau.get_color(a.category), aggregated_list)),
+                cb_annotate=lambda value: distu.m_to_str(value * 1000)
+            )
             chart_box = Gtk.Box()
             chart_box.set_margin_left(10)
             chart_box.set_margin_right(10)
