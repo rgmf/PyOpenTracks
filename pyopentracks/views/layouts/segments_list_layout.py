@@ -52,8 +52,7 @@ class SegmentsListLayout(Gtk.Box):
         super().__init__()
 
         self._data_rows = 0
-
-        self._map = BaseMap()
+        self._map = None
 
         self._button_delete.connect("clicked", self._button_delete_clicked_cb)
         self._button_edit.connect("clicked", self._button_edit_clicked_cb)
@@ -190,6 +189,7 @@ class SegmentsListLayout(Gtk.Box):
             1, 4, 1, 1
         )
 
+        self._map = BaseMap()
         self._map.add_polyline([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment.id)])
         self._grid_segment_detail.attach(self._map, 2, 0, 4, 5)
 
