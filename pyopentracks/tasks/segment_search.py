@@ -17,24 +17,31 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from functools import reduce
+
 import multiprocessing as mp
 import numpy as np
 
 from pyopentracks.utils.utils import LocationUtils
 from pyopentracks.models.database import Database
 from pyopentracks.models.segment_track import SegmentTrack
+from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.models.segment import Segment
 from pyopentracks.models.location import Location
 
 
 class SegmentSearchAbstract(mp.Process):
+    SEARCH_RADIO = 10.0
+
     def __init__(self):
         super().__init__()
 
-    def _create_segment_track(self, segment: Segment, stats: TrackStats, from_point: SegmentTrack.Point,
-                             to_point: SegmentTrack.Point):
+    def _create_segment_track(self, segment: Segment, track_points: list[TrackPoint], from_point: SegmentTrack.Point, to_point: SegmentTrack.Point):
         """Creates a segmentrack register into the database and returns the new SegmentTrack's id"""
+        stats = TrackStats()
+        stats.compute(track_points)
+
         segment_track = SegmentTrack.from_points(segment.id, stats, from_point, to_point)
         db = Database()
         return db.insert(segment_track)
@@ -43,13 +50,32 @@ class SegmentSearchAbstract(mp.Process):
         db = Database()
         return db.get_track_points_between(tp1_id, tp2_id)
 
-    def _get_tracks_with_near_point_start(self, bbox, trackid=None):
+    def _get_points_near_point_start(self, bbox, trackid=None):
+        # Gets all points inside the bounding box
         db = Database()
-        return db.get_tracks_with_near_point_start(bbox, trackid)
+        points = db.get_points_near_point_start(bbox, trackid)
 
-    def _get_tracks_with_near_point_end(self, bbox, trackid, trackpoint_id_from):
+        # Filters points: it gets only one inside the same minute of time
+        filtered_points = []
+        nearly_points = []
+        for point in points:
+            if len(nearly_points) == 0:
+                nearly_points.append(point)
+            elif abs(nearly_points[0].timestamp - point.timestamp) <= 1 * 60 * 1000:
+                nearly_points.append(point)
+            else:
+                filtered_points.append(reduce(lambda a, b: a if a.timestamp > b.timestamp else b, nearly_points))
+                nearly_points = []
+
+        return filtered_points
+
+    def _get_points_near_point_end(self, bbox, trackid, trackpoint_id_from):
         db = Database()
-        return db.get_tracks_with_near_point_end(bbox, trackid, trackpoint_id_from)
+        return db.get_points_near_point_end(bbox, trackid, trackpoint_id_from)
+
+    def _frechet_threshold(self, distance_m: int) -> int:
+        """Computes and returns the threshold for linear frechet from a distance"""
+        return distance_m * 0.05
 
     def _linear_frechet(self, p: np.ndarray, q: np.ndarray) -> float:
         """Calculates the Fréchet distance between two curves: p and q."""
@@ -97,11 +123,11 @@ class SegmentTrackSearch(SegmentSearchAbstract):
             if not segment_points:
                 continue
 
-            bbox = Location(segment_points[0].latitude, segment_points[0].longitude).bounding_box(1.1 * 5.0)
-            start_points = self._get_tracks_with_near_point_start(bbox, self._trackid)
+            bbox = Location(segment_points[0].latitude, segment_points[0].longitude).bounding_box(1.1 * SegmentSearchAbstract.SEARCH_RADIO)
+            start_points = self._get_points_near_point_start(bbox, self._trackid)
             for start_p in start_points:
-                bbox = Location(segment_points[-1].latitude, segment_points[-1].longitude).bounding_box(1.1 * 5.0)
-                end_p = self._get_tracks_with_near_point_end(bbox, start_p.trackid, start_p.trackpointid)
+                bbox = Location(segment_points[-1].latitude, segment_points[-1].longitude).bounding_box(1.1 * SegmentSearchAbstract.SEARCH_RADIO)
+                end_p = self._get_points_near_point_end(bbox, start_p.trackid, start_p.trackpointid)
                 if end_p:
                     track_points = self._get_track_points_between(start_p.trackpointid, end_p.trackpointid)
 
@@ -110,12 +136,8 @@ class SegmentTrackSearch(SegmentSearchAbstract):
                         np.array(list(map(lambda tp: [tp.latitude, tp.longitude], track_points)))
                     )
 
-                    stats = TrackStats()
-                    stats.compute(track_points)
-
-                    threshold = segment.distance_m + (segment.distance_m * 0.0075)
-                    if segment.distance_m + threshold >= stats.total_distance >= segment.distance_m - threshold and frechet < segment.distance_m * 0.03:
-                        self._create_segment_track(segment, stats, start_p, end_p)
+                    if frechet < self._frechet_threshold(segment.distance_m):
+                        self._create_segment_track(segment, track_points, start_p, end_p)
 
 
 class SegmentSearch(SegmentSearchAbstract):
@@ -123,8 +145,6 @@ class SegmentSearch(SegmentSearchAbstract):
 
     Also, builds the stats and add the information into segmentracks table.
     """
-
-    SEARCH_RADIO = 10.0
 
     def __init__(self, segment, points):
         """
@@ -137,11 +157,11 @@ class SegmentSearch(SegmentSearchAbstract):
         self._points = points
 
     def run(self):
-        bbox = Location(self._points[0].latitude, self._points[0].longitude).bounding_box(1.1 * SegmentSearch.SEARCH_RADIO)
-        start_points = self._get_tracks_with_near_point_start(bbox)
+        bbox = Location(self._points[0].latitude, self._points[0].longitude).bounding_box(1.1 * SegmentSearchAbstract.SEARCH_RADIO)
+        start_points = self._get_points_near_point_start(bbox)
         for start_p in start_points:
-            bbox = Location(self._points[-1].latitude, self._points[-1].longitude).bounding_box(1.1 * SegmentSearch.SEARCH_RADIO)
-            end_p = self._get_tracks_with_near_point_end(bbox, start_p.trackid, start_p.trackpointid)
+            bbox = Location(self._points[-1].latitude, self._points[-1].longitude).bounding_box(1.1 * SegmentSearchAbstract.SEARCH_RADIO)
+            end_p = self._get_points_near_point_end(bbox, start_p.trackid, start_p.trackpointid)
             if end_p:
                 track_points = self._get_track_points_between(start_p.trackpointid, end_p.trackpointid)
 
@@ -150,9 +170,6 @@ class SegmentSearch(SegmentSearchAbstract):
                         np.array(list(map(lambda tp: [tp.latitude, tp.longitude], track_points)))
                 )
 
-                stats = TrackStats()
-                stats.compute(track_points)
+                if frechet < self._frechet_threshold(self._segment.distance_m):
+                    self._create_segment_track(self._segment, track_points, start_p, end_p)
 
-                threshold = self._segment.distance_m + (self._segment.distance_m * 0.0075)
-                if self._segment.distance_m + threshold >= stats.total_distance >= self._segment.distance_m - threshold and frechet < self._segment.distance_m * 0.03:
-                    self._create_segment_track(self._segment, stats, start_p, end_p)
