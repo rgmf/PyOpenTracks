@@ -171,7 +171,7 @@ class Database:
                 print(f"Error: [SQL] Couldn't execute the query: {error}")
         return []
 
-    def get_tracks_with_near_point_start(self, bbox, trackid=None):
+    def get_points_near_point_start(self, bbox, trackid=None):
         """Look for points inside trackpoints table that are inside the bounding box bbox.
 
         Arguments:
@@ -188,9 +188,9 @@ class Database:
                     SELECT
                         trackid,
                         _id,
+                        time,
                         latitude,
-                        longitude,
-                        strftime('%Y%m%d%H%M', time / 1000, 'unixepoch') datetimetominutes
+                        longitude
                     FROM
                         trackpoints
                     WHERE
@@ -199,8 +199,7 @@ class Database:
                         latitude < {bbox.north.latitude} AND
                         longitude < {bbox.east.longitude} AND
                         longitude > {bbox.west.longitude}
-                    GROUP BY datetimetominutes
-                    ORDER BY trackid DESC, _id ASC
+                    ORDER BY trackid DESC, time ASC
                 """
                 return [
                     SegmentTrack.Point(*row) for row in conn.execute(query).fetchall()
@@ -210,7 +209,7 @@ class Database:
                 print(f"Error: [SQL] Couldn't execute the query: {error}")
         return []
 
-    def get_tracks_with_near_point_end(self, bbox, trackid, trackpoint_id_from):
+    def get_points_near_point_end(self, bbox, trackid, trackpoint_id_from):
         """Look for points inside tracks identify by trackid that are inside the bounding box bbox.
 
         Only trackpoints identify by an id greater than trackpoint_id_from.
@@ -229,6 +228,7 @@ class Database:
                     SELECT
                         trackid,
                         _id,
+                        time,
                         latitude,
                         longitude,
                         MIN(time)
@@ -242,7 +242,7 @@ class Database:
                         longitude < {bbox.east.longitude} AND
                         longitude > {bbox.west.longitude}
                     GROUP BY time
-                    ORDER BY _id ASC
+                    ORDER BY time ASC
                 """
                 tuple_result = conn.execute(query).fetchone()
                 return SegmentTrack.Point(*tuple_result) if tuple_result else None

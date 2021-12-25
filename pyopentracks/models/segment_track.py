@@ -34,8 +34,9 @@ class SegmentTrack(Model):
         def __init__(self, *args):
             self._trackid = args[0] if args else None
             self._trackpointid = args[1] if args else None
-            self._latitude = args[2] if args else None
-            self._longitude = args[3] if args else None
+            self._timestamp = args[2] if args else None
+            self._latitude = args[3] if args else None
+            self._longitude = args[4] if args else None
 
         @property
         def trackid(self):
@@ -44,6 +45,10 @@ class SegmentTrack(Model):
         @property
         def trackpointid(self):
             return self._trackpointid
+
+        @property
+        def timestamp(self):
+            return self._timestamp
 
         @property
         def latitude(self):

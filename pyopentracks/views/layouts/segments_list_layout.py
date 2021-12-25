@@ -306,8 +306,12 @@ class SegmentsListLayout(Gtk.Box):
         segmentid = self._segments_list_store[iter_item][0]
         DatabaseHelper.delete(DatabaseHelper.get_segment_by_id(segmentid))
         self._title_label.set_text(_("Loading segments..."))
+        self._button_delete.set_sensitive(False)
+        self._button_edit.set_sensitive(False)
         self._segments_list_store.clear()
-        ProcessView(self._on_data_ready, self._data_loading, None).start()
+
+        self._on_data_ready(self._data_loading())
+        #ProcessView(self._on_data_ready, self._data_loading, None).start()
 
     def _button_edit_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()
