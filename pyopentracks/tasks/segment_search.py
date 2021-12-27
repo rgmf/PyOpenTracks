@@ -33,6 +33,7 @@ from pyopentracks.models.location import Location
 
 class SegmentSearchAbstract(mp.Process):
     SEARCH_RADIO = 10.0
+    FRECHET_THRESHOLD = 50.0
 
     def __init__(self):
         super().__init__()
@@ -72,10 +73,6 @@ class SegmentSearchAbstract(mp.Process):
     def _get_points_near_point_end(self, bbox, trackid, trackpoint_id_from):
         db = Database()
         return db.get_points_near_point_end(bbox, trackid, trackpoint_id_from)
-
-    def _frechet_threshold(self, distance_m: int) -> int:
-        """Computes and returns the threshold for linear frechet from a distance"""
-        return distance_m * 0.05
 
     def _linear_frechet(self, p: np.ndarray, q: np.ndarray) -> float:
         """Calculates the Fréchet distance between two curves: p and q."""
@@ -136,7 +133,7 @@ class SegmentTrackSearch(SegmentSearchAbstract):
                         np.array(list(map(lambda tp: [tp.latitude, tp.longitude], track_points)))
                     )
 
-                    if frechet < self._frechet_threshold(segment.distance_m):
+                    if frechet < SegmentSearchAbstract.FRECHET_THRESHOLD:
                         self._create_segment_track(segment, track_points, start_p, end_p)
 
 
@@ -170,6 +167,5 @@ class SegmentSearch(SegmentSearchAbstract):
                         np.array(list(map(lambda tp: [tp.latitude, tp.longitude], track_points)))
                 )
 
-                if frechet < self._frechet_threshold(self._segment.distance_m):
+                if frechet < SegmentSearchAbstract.FRECHET_THRESHOLD:
                     self._create_segment_track(self._segment, track_points, start_p, end_p)
-
