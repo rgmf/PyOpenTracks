@@ -169,3 +169,4 @@ class SegmentSearch(SegmentSearchAbstract):
 
                 if frechet < SegmentSearchAbstract.FRECHET_THRESHOLD:
                     self._create_segment_track(self._segment, track_points, start_p, end_p)
+

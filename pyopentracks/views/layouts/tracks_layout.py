@@ -40,6 +40,7 @@ class TracksLayout(Gtk.Box, Layout):
 
     _tree_view_widget: Gtk.TreeView = Gtk.Template.Child()
     _track_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
+    _entry_search_widget: Gtk.Entry = Gtk.Template.Child()
 
     def __init__(self, app_window, tracks):
         super().__init__()
@@ -53,7 +54,12 @@ class TracksLayout(Gtk.Box, Layout):
         self._list_store = Gtk.ListStore(int, str, GdkPixbuf.Pixbuf)
         for track in self._tracks:
             self._list_store.append([track.id, track.name, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32)])
-        self._tree_view_widget.set_model(self._list_store)
+
+        self._current_model_filter = None
+        self._tree_model_filter = self._list_store.filter_new()
+        self._tree_model_filter.set_visible_func(self._on_list_store_filter_func)
+
+        self._tree_view_widget.set_model(self._tree_model_filter)
         self._tree_view_widget.append_column(Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(), pixbuf=2))
         self._tree_view_widget.append_column(Gtk.TreeViewColumn(_("Tracks"), Gtk.CellRendererText(), text=1))
         self._list_store.connect("row-deleted", self._on_list_store_row_deleted)
@@ -64,6 +70,10 @@ class TracksLayout(Gtk.Box, Layout):
 
         if len(self._list_store) > 0:
             self._select_row(Gtk.TreePath.new_from_string("0"))
+
+        self._entry_search_widget.set_placeholder_text(_("Search Activities"))
+        self._entry_search_widget.connect("activate", self._on_search_text_changed)
+        self._entry_search_widget.connect("icon-press", self._on_search_text_icon_pressed)
 
         self.show_all()
 
@@ -194,6 +204,9 @@ class TracksLayout(Gtk.Box, Layout):
         if not track:
             return
 
+        self._tree_view_widget.set_cursor(treepath, None, False)
+        self._tree_view_widget.grab_focus()
+
         layout = TrackStatsLayout(track)
         self._add_widget(layout)
         layout.load_data()
@@ -257,3 +270,28 @@ class TracksLayout(Gtk.Box, Layout):
         if len(self._list_store) == 0:
             self._app_window.disconnect_action_buttons()
             self._app_window.load_tracks(None)
+
+    def _on_list_store_filter_func(self, treemodel, treeiter, data):
+        if self._current_model_filter is None:
+            return True
+        else:
+            return len(
+                list(
+                    filter(
+                        lambda i:
+                        i.lower() in treemodel[treeiter][1].lower(), self._current_model_filter.split()
+                    )
+                )
+            ) > 0
+
+    def _on_search_text_changed(self, entry):
+        self._current_model_filter = entry.get_text().strip() if entry.get_text().strip() else None
+        self._tree_model_filter.refilter()
+
+    def _on_search_text_icon_pressed(self, entry, position, event):
+        if position == Gtk.EntryIconPosition.PRIMARY:
+            self._on_search_text_changed(entry)
+        else:
+            self._entry_search_widget.set_text("")
+            self._current_model_filter = None
+            self._tree_model_filter.refilter()

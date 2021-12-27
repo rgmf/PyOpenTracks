@@ -64,8 +64,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
     #         widget.destroy()
     #     else:
     #         print("DESTROYING...", widget)
-    #         widget.destroy()   
-            
+    #         widget.destroy()
 
     def show_layout(self, layout):
         if layout is self._layout:
