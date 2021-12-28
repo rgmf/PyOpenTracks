@@ -18,7 +18,6 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import threading
-import shutil
 
 from os import path
 from pathlib import Path
@@ -29,7 +28,6 @@ from pyopentracks.io.gpx_parser import GpxParserHandler
 from pyopentracks.models.database import Database
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.auto_import import AutoImport
-from pyopentracks.settings import imported_tracks_folder
 from pyopentracks.io.result import Result
 
 
@@ -63,83 +61,44 @@ class ImportHandler():
                     result = Result(
                         code=Result.EXISTS,
                         track=track,
-                        filename=track.trackfile_path,
+                        filename=import_result.filename,
                         message=_("Track already exists")
                     )
                 else:
                     # Track doesn't exists -> make importing.
-                    result = self._import(track)
+                    result = self._import(track, import_result.filename)
 
             except Exception as error:
-                result = Result(code=Result.ERROR, filename=track.trackfile_path, message=str(error))
+                import traceback
+                print(traceback.format_exc())
+                result = Result(code=Result.ERROR, filename=import_result.filename, message=str(error))
 
         self._import_finished(result)
 
-    def _copy_file(self, path_str):
-        """Copy the file to internal data.
-
-        Copy the file in the path path_str to the internal folder
-        where all tracks are located.
-
-        It avoid collision looking for a name not used in all the
-        folder.
-
-        Arguments:
-        path_str -- the string representing the path of the file
-                    to be copied.
-
-        Return:
-        The string path of the destination file or None if copy was
-        not possible.
-        """
-        path_src = Path(path_str)
-        path_dst = Path(path.join(imported_tracks_folder(), path_src.name))
-        i = 0
-        while path_dst.exists():
-            newname = path_dst.stem + "." + str(i) + path_dst.suffix
-            path_dst = Path(path.join(imported_tracks_folder(), newname))
-            i = i + 1
-        try:
-            shutil.copy(path_src.absolute(), path_dst.absolute())
-        except Exception as error:
-            # TODO move this to logger.
-            print(f"Error: shutil copy error: {error}")
-            return None
-        return str(path_dst.absolute())
-
-    def _clean_file(self, path_str):
-        shutil.remove(path_str)
-
-    def _import(self, track):
+    def _import(self, track, filename):
         """Makes the importing of the track.
 
-        It copies the track file and then insert the track and its track points
-        to the database.
+        It inserts the track and its track points to the database.
 
         This method assumes track can be inserted in the database.
 
         Arguments:
-        track -- Track object to be inserted in the database.
+        track    -- Track object to be inserted in the database.
+        filename -- original filename.
 
         Return:
         Result object.
         """
-        code = Result.ERROR
-        message = _(f"File {track.trackfile_path} couldn't be copied to internal storage"),
+        trackid = DatabaseHelper.insert(track)
+        if not trackid:
+            code = Result.ERROR
+            message = _(f"Error importing the file {track.trackfile_path}.\nIt couldn't be inserted in the database")
+        else:
+            DatabaseHelper.bulk_insert(track.track_points, trackid)
+            code = Result.OK
+            message = _("Track imported")
 
-        dst_path = self._copy_file(track.trackfile_path)
-        if dst_path:
-            track.set_trackfile_path(dst_path)
-            trackid = DatabaseHelper.insert(track)
-            if not trackid:
-                shutil.remove(dst_path)
-            else:
-                DatabaseHelper.bulk_insert(track.track_points, trackid)
-
-            code = Result.OK if trackid else Result.ERROR
-            message = _("Track imported") if trackid else _(f"Error importing the file {track.trackfile_path}.\nIt couldn't be inserted in the database")
-
-        return Result(code=code, track=track, filename=track.trackfile_path, message=message)
+        return Result(code=code, track=track, filename=filename, message=message)
 
 
 class ImportFileHandler(ImportHandler):

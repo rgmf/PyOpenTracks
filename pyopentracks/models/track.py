@@ -33,27 +33,26 @@ from pyopentracks.utils.utils import TypeActivityUtils as tau
 class Track(Model):
     def __init__(self, *args):
         self._id = args[0]
-        self._trackfile = args[1]
-        self._uuid = args[2]
-        self._name = args[3]
-        self._description = args[4]
-        self._category = args[5]
-        self._starttime_ms = args[6]
-        self._stoptime_ms = args[7]
-        self._totaldistance_m = args[8]
-        self._totaltime_ms = args[9]
-        self._movingtime_ms = args[10]
-        self._avgspeed_mps = args[11]
-        self._avgmovingspeed_mps = args[12]
-        self._maxspeed_mps = args[13]
-        self._minelevation_m = args[14]
-        self._maxelevation_m = args[15]
-        self._elevationgain_m = args[16]
-        self._elevationloss_m = args[17]
-        self._maxhr_bpm = args[18]
-        self._avghr_bpm = args[19]
-        self._maxcadence_rpm = args[20]
-        self._avgcadence_rpm = args[21]
+        self._uuid = args[1]
+        self._name = args[2]
+        self._description = args[3]
+        self._category = args[4]
+        self._starttime_ms = args[5]
+        self._stoptime_ms = args[6]
+        self._totaldistance_m = args[7]
+        self._totaltime_ms = args[8]
+        self._movingtime_ms = args[9]
+        self._avgspeed_mps = args[10]
+        self._avgmovingspeed_mps = args[11]
+        self._maxspeed_mps = args[12]
+        self._minelevation_m = args[13]
+        self._maxelevation_m = args[14]
+        self._elevationgain_m = args[15]
+        self._elevationloss_m = args[16]
+        self._maxhr_bpm = args[17]
+        self._avghr_bpm = args[18]
+        self._maxcadence_rpm = args[19]
+        self._avgcadence_rpm = args[20]
 
         self._track_points = None
 
@@ -85,7 +84,7 @@ class Track(Model):
         """Returns the query for inserting a Track register."""
         return """
         INSERT INTO tracks VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -123,7 +122,6 @@ class Track(Model):
         """
         return (
             self._id,
-            self._trackfile,
             self._uuid,
             self._name,
             self._description,
@@ -156,13 +154,6 @@ class Track(Model):
     @property
     def uuid(self):
         return self._uuid
-
-    @property
-    def trackfile_path(self):
-        return path.join(xdg_data_home(), self._trackfile)
-
-    def set_trackfile_path(self, tfp: str):
-        self._trackfile = tfp
 
     @property
     def name(self):

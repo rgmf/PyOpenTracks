@@ -28,10 +28,3 @@ def xdg_data_home() -> str:
     if not p.exists():
         makedirs(p.absolute())
     return path.join(GLib.get_user_data_dir(), "PyOpenTracks")
-
-
-def imported_tracks_folder() -> str:
-    p = Path(path.join(xdg_data_home(), "trackfiles"))
-    if not p.exists():
-        makedirs(p.absolute())
-    return path.join(xdg_data_home(), "trackfiles")

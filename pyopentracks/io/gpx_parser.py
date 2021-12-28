@@ -96,11 +96,9 @@ class GpxParser(Parser):
     def close(self):
         super().close()
         self._track = Track(
-            None, self._filename_path, self._uuid,
-            self._name, self._desc, self._type,
-            None, None, None, None, None, None,
-            None, None, None, None, None, None,
-            None, None, None, None
+            None, self._uuid, self._name, self._desc, self._type,
+            None, None, None, None, None, None, None, None, None, None, None,
+            None, None, None, None, None
         )
         self._track.set_track_points(self._track_points)
         track_stats = TrackStats()
