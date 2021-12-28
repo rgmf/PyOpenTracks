@@ -19,7 +19,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 import threading
 
-from gi.repository import Gtk, GLib, GdkPixbuf, Pango
+from gi.repository import Gtk, GLib, GdkPixbuf
 
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
@@ -53,23 +53,30 @@ class TracksLayout(Gtk.Box, Layout):
         self._tracks = tracks
         self._list_store = Gtk.ListStore(int, str, GdkPixbuf.Pixbuf)
         for track in self._tracks:
-            self._list_store.append([track.id, track.name, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32)])
+            self._list_store.append([
+                track.id,
+                 track.name,
+                 TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32)
+            ])
 
         self._current_model_filter = None
         self._tree_model_filter = self._list_store.filter_new()
         self._tree_model_filter.set_visible_func(self._on_list_store_filter_func)
 
         self._tree_view_widget.set_model(self._tree_model_filter)
-        self._tree_view_widget.append_column(Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(), pixbuf=2))
-        self._tree_view_widget.append_column(Gtk.TreeViewColumn(_("Tracks"), Gtk.CellRendererText(), text=1))
+        self._tree_view_widget.append_column(
+            Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(), pixbuf=2)
+        )
+        self._tree_view_widget.append_column(
+            Gtk.TreeViewColumn(_("Tracks"), Gtk.CellRendererText(), text=1)
+        )
         self._list_store.connect("row-deleted", self._on_list_store_row_deleted)
 
         self._tree_selection = self._tree_view_widget.get_selection()
         self._tree_selection.set_mode(Gtk.SelectionMode.MULTIPLE)
         self._tree_selection.connect("changed", self._on_tree_selection_changed)
 
-        if len(self._list_store) > 0:
-            self._select_row(Gtk.TreePath.new_from_string("0"))
+        self._select_first_row()
 
         self._entry_search_widget.set_placeholder_text(_("Search Activities"))
         self._entry_search_widget.connect("activate", self._on_search_text_changed)
@@ -92,8 +99,13 @@ class TracksLayout(Gtk.Box, Layout):
             return
 
         def deletion_done():
-            for treeiter in treeiter_list:
-                self._remove_item_from_list_store(treeiter)
+            childiters = [
+                self._tree_model_filter.convert_iter_to_child_iter(treeiter)
+                for treeiter in treeiter_list
+            ]
+            for childiter in childiters:
+                self._list_store.remove(childiter)
+            self._treepath_selected = None
 
         def delete_in_thread():
             total = len(treeiter_list)
@@ -112,10 +124,11 @@ class TracksLayout(Gtk.Box, Layout):
         Remove from the model (Gtk.ListStore) the treeiter item.
 
         Arguments:
-        widget -- the Gtk.Widget that trigger this callback.
-        treeiter -- the Gtk.TreeIter that can be used to access to the node in the Gtk.TreeView through the model.
+        widget   -- the Gtk.Widget that trigger this callback.
+        treeiter -- the Gtk.TreeIter that can be used to access to the node in
+                    the Gtk.TreeView through the model.
         """
-        trackname = self._list_store.get_value(treeiter, 1)
+        trackname = self._tree_model_filter.get_value(treeiter, 1)
         dialog = QuestionDialog(
             parent=self._app_window,
             title=_("Remove Track"),
@@ -134,10 +147,11 @@ class TracksLayout(Gtk.Box, Layout):
         Edit from the model (Gtk.ListStore) the treeiter item.
 
         Arguments:
-        widget -- the Gtk.Widget that trigger this callback.
-        treeiter -- the Gtk.TreeIter that can be used to access to the node in the Gtk.TreeView through the model.
+        widget   -- the Gtk.Widget that trigger this callback.
+        treeiter -- the Gtk.TreeIter that can be used to access to the node in
+                    the Gtk.TreeView through the model.
         """
-        trackid = self._list_store.get_value(treeiter, 0)
+        trackid = self._tree_model_filter.get_value(treeiter, 0)
 
         track = DatabaseHelper.get_track_by_id(trackid)
         dialog = TrackEditDialog(parent=self._app_window, track=track)
@@ -147,13 +161,18 @@ class TracksLayout(Gtk.Box, Layout):
             return
 
         track = dialog.get_track()
-        self._list_store.set_value(treeiter, 1, track.name)
-        self._list_store.set_value(treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32))
+        self._tree_model_filter.set_value(treeiter, 1, track.name)
+        self._tree_model_filter.set_value(
+            treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32)
+        )
         DatabaseHelper.update(track)
         if dialog.correct_altitude():
             self._app_window.show_infobar(
                 itype=Gtk.MessageType.INFO,
-                message=_("Correcting altitude and updating the track. When it finishes then the track will be reloaded"),
+                message=_(
+                    "Correcting altitude and updating the track. When it "
+                    "finishes then the track will be reloaded"
+                ),
                 buttons=[
                     {
                         "text": _("Ok"),
@@ -164,7 +183,7 @@ class TracksLayout(Gtk.Box, Layout):
             altitude_correction = AltitudeCorrection(track.id)
             ProcessView(self._on_altitude_correction_done, altitude_correction.run, None).start()
         else:
-            self._select_row(self._list_store.get_path(treeiter), force=True)
+            self._select_row(self._tree_model_filter.get_path(treeiter), force=True)
 
     def _on_altitude_correction_done(self, track):
         if track is None:
@@ -181,11 +200,15 @@ class TracksLayout(Gtk.Box, Layout):
             )
             return
         self._app_window.clean_top_widget()
-        iter = self._list_store.get_iter_first()
-        while iter and self._list_store.get_value(iter, 0) != track.id:
-            iter = self._list_store.iter_next(iter)
-        if self._treepath_selected == self._list_store.get_path(iter):
-            self._select_row(self._list_store.get_path(iter), force=True)
+        iter = self._tree_model_filter.get_iter_first()
+        while iter and self._tree_model_filter.get_value(iter, 0) != track.id:
+            iter = self._tree_model_filter.iter_next(iter)
+        if self._treepath_selected == self._tree_model_filter.get_path(iter):
+            self._select_row(self._tree_model_filter.get_path(iter), force=True)
+
+    def _select_first_row(self):
+        if len(self._tree_model_filter) > 0:
+            self._select_row(Gtk.TreePath.new_from_string("0"), True)
 
     def _select_row(self, treepath, force=False):
         """It loads treepath item.
@@ -198,8 +221,8 @@ class TracksLayout(Gtk.Box, Layout):
             return
         self._treepath_selected = treepath
 
-        treeiter = self._list_store.get_iter(treepath)
-        track_id = self._list_store.get_value(treeiter, 0)
+        treeiter = self._tree_model_filter.get_iter(treepath)
+        track_id = self._tree_model_filter.get_value(treeiter, 0)
         track = DatabaseHelper.get_track_by_id(track_id)
         if not track:
             return
@@ -239,12 +262,12 @@ class TracksLayout(Gtk.Box, Layout):
         treeiter -- Gtk.TreeIter object that point to the item to be deleted from the model.
         """
         try:
-            trackid = self._list_store.get_value(treeiter, 0)
+            trackid = self._tree_model_filter.get_value(treeiter, 0)
             track = DatabaseHelper.get_track_by_id(trackid)
             DatabaseHelper.delete(track)
         except ValueError:
             # TODO use logger here.
-            print(f"Error: deleting track {self._list_store.get_value(treeiter, 1)}")
+            print(f"Error: deleting track {self._tree_model_filter.get_value(treeiter, 1)}")
 
     def _remove_item_from_list_store(self, treeiter):
         """Remove from Gtk.ListStore the item pointed by treeiter.
@@ -253,23 +276,36 @@ class TracksLayout(Gtk.Box, Layout):
         treeiter -- Gtk.TreeIter object that point to the item to be deleted from Gtk.ListStore.
         """
         self._treepath_selected = None
-        self._list_store.remove(treeiter)
+        childiter = self._tree_model_filter.convert_iter_to_child_iter(treeiter)
+        self._list_store.remove(childiter)
 
     def _on_tree_selection_changed(self, selection):
         model, treepath_list = selection.get_selected_rows()
         if len(treepath_list) == 1:
             self._select_row(treepath_list[0])
+            self._app_window.disconnect_action_buttons()
+            self._app_window.connect_button_del(
+                self.on_remove,
+                self._tree_model_filter.get_iter(treepath_list[0])
+            )
+            self._app_window.connect_button_edit(
+                self.on_edit,
+                self._tree_model_filter.get_iter(treepath_list[0])
+            )
         else:
             self._app_window.disconnect_action_buttons()
             self._app_window.connect_button_del(
                 self.on_remove_bulk,
-                [ self._list_store.get_iter(treepath) for treepath in treepath_list ]
+                [ self._tree_model_filter.get_iter(treepath) for treepath in treepath_list ]
             )
 
     def _on_list_store_row_deleted(self, treemodel, treepath):
         if len(self._list_store) == 0:
             self._app_window.disconnect_action_buttons()
             self._app_window.load_tracks(None)
+        if len(self._tree_model_filter) == 0:
+            self._app_window.disconnect_action_buttons()
+            self._show_message(_("Select a track to view its stats..."))
 
     def _on_list_store_filter_func(self, treemodel, treeiter, data):
         if self._current_model_filter is None:
@@ -278,8 +314,8 @@ class TracksLayout(Gtk.Box, Layout):
             return len(
                 list(
                     filter(
-                        lambda i:
-                        i.lower() in treemodel[treeiter][1].lower(), self._current_model_filter.split()
+                        lambda i: i.lower() in treemodel[treeiter][1].lower(),
+                        self._current_model_filter.split()
                     )
                 )
             ) > 0
@@ -287,6 +323,7 @@ class TracksLayout(Gtk.Box, Layout):
     def _on_search_text_changed(self, entry):
         self._current_model_filter = entry.get_text().strip() if entry.get_text().strip() else None
         self._tree_model_filter.refilter()
+        self._select_first_row()
 
     def _on_search_text_icon_pressed(self, entry, position, event):
         if position == Gtk.EntryIconPosition.PRIMARY:
