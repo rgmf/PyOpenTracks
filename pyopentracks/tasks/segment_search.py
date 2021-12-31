@@ -68,6 +68,10 @@ class SegmentSearchAbstract(mp.Process):
                 filtered_points.append(reduce(lambda a, b: a if a.timestamp > b.timestamp else b, nearly_points))
                 nearly_points = []
 
+        # If there are nearly_points then filter them
+        if len(nearly_points) > 0:
+            filtered_points.append(reduce(lambda a, b: a if a.timestamp > b.timestamp else b, nearly_points))
+
         return filtered_points
 
     def _get_points_near_point_end(self, bbox, trackid, trackpoint_id_from):
@@ -169,4 +173,3 @@ class SegmentSearch(SegmentSearchAbstract):
 
                 if frechet < SegmentSearchAbstract.FRECHET_THRESHOLD:
                     self._create_segment_track(self._segment, track_points, start_p, end_p)
-
