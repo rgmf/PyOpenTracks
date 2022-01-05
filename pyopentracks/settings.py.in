@@ -23,6 +23,9 @@ from pathlib import Path
 from gi.repository import GLib
 
 
+APP_ID = "@APP_ID@"
+
+
 def xdg_data_home() -> str:
     p = Path(path.join(GLib.get_user_data_dir(), "PyOpenTracks"))
     if not p.exists():

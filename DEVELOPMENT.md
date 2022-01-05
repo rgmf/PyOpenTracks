@@ -9,10 +9,25 @@ sudo apt install libgtk-3-dev libchamplain-gtk-0.12-dev libchamplain-0.12-dev li
 # Execute
 After building enter to `buildir/buildir/testdir/bin` and execute `./pyopentracks`.
 
+`./pyopentracks` can receive command line arguments:
+- `--loglevel` to indicate log level with an integer value from 1 to 5 (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+
+Also, you can run the shell script `sh run.sh` after building the project with `sh build.sh`. This `run.sh` script pass to `./pyopentracks` a set of environment variables and use `--loglevel` argument with a value of `3` that you can change.
+
 # Tests
 There are tests in the `tests` folder. To execute them, run the following command from project root directory:
 
 `python3 -m unittest discover -v -s tests/`
+
+# Logs
+PyOpenTracks uses `logging` standard Python library for logs. You can set the log's level executing PyOpenTracks from terminal and passing to it the argument `--loglevel` with a value:
+- 1: DEBUG, INFO, WARNING, ERROR and CRITICAL logs.
+- 2: INFO, WARNING, ERROR and CRITICAL logs.
+- 3: WARNING, ERROR and CRITICAL logs.
+- 4: ERROR and CRITICAL logs.
+- 5: CRITICAL logs.
+
+You can see logs from console when you execute PyOpenTracks from terminal or in the journald systemd (/var/log/messages typically on Debian).
 
 # Internacionalization (i10n)
 Enter to `po/` directory and execute `update_potfiles.sh` to create a new language PO file or update the string to a language. Then edit the PO file and execute `compile_potfiles.sh` to generate mo file.

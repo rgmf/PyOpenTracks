@@ -17,4 +17,4 @@ XDG_CONFIG_HOME=xdg_data_home/config/ \
 XDG_RUNTIME_DIR=xdg_data_home/runtime/dir/ \
 XDG_CONFIG_DIRS=xdg_data_home/etc/xdg/ \
 XDG_CACHE_HOME=xdg_data_home/cache/ \
-./buildir/buildir/testdir/bin/pyopentracks
+./buildir/buildir/testdir/bin/pyopentracks --loglevel 1

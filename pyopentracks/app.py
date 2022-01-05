@@ -17,8 +17,9 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk, Gio, Gdk
+from gi.repository import Gtk, Gio, Gdk, GLib
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.io.gpx_parser import GpxParserHandlerInThread
 from pyopentracks.app_window import PyopentracksWindow
@@ -44,7 +45,15 @@ class Application(Gtk.Application):
     def __init__(self, app_id):
         super().__init__(
             application_id=app_id,
-            flags=Gio.ApplicationFlags.FLAGS_NONE
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+        )
+        self.add_main_option(
+            "loglevel",
+            ord("l"),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.INT,
+            "Log level: Critical (5), Error (4), Warning (3), Info (2), Debug (1)",
+            None,
         )
         self._menu: Gio.Menu = Gio.Menu()
         self._window: PyopentracksWindow = None
@@ -73,6 +82,17 @@ class Application(Gtk.Application):
         self._auto_import()
         win.present()
         win.set_menu(self._menu)
+
+    def do_command_line(self, command_line):
+        options = command_line.get_options_dict()
+        options = options.end().unpack()
+
+        loglevel = 3 if "loglevel" not in options else options["loglevel"]
+        logger = pyot_logging.initialize(loglevel)
+        logger.debug("Logger initialized.")
+
+        self.activate()
+        return 0
 
     def on_open_file(self, action, param):
         dialog = FileChooserWindow(parent=self._window)

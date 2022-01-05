@@ -18,6 +18,14 @@ configure_file(
   install_dir: get_option('bindir')
 )
 
+configure_file(
+  input: 'settings.py.in',
+  output: 'settings.py',
+  configuration: conf,
+  install: true,
+  install_dir: moduledir
+)
+
 # pyopentracks_sources = [
 #   '__init__.py',
 #   'main.py',
