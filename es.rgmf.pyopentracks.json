@@ -16,7 +16,7 @@
         "/lib/pkgconfig",
         "/man",
         "/share/doc",
-        "/share/gtk-doc",
+       "/share/gtk-doc",
         "/share/man",
         "/share/pkgconfig",
         "*.la",
@@ -35,7 +35,7 @@
                 }
             ]
         },
-	    {
+	{
             "name": "pip-install",
             "buildsystem": "simple",
             "build-options": {
@@ -44,7 +44,8 @@
                 ]
             },
             "build-commands": [
-                "pip3 install --prefix=/app matplotlib==3.3.4"
+                "pip3 install --prefix=/app matplotlib==3.3.4",
+		"pip3 install --prefix=/app python-dateutil>=2.8.1"
             ]
         },
         {

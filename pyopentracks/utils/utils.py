@@ -23,6 +23,7 @@ from gi.repository import GdkPixbuf
 
 from math import radians, sin, cos, asin, sqrt
 
+from dateutil.parser import isoparse
 from datetime import datetime, timedelta, date, timezone
 from calendar import monthrange
 from locale import setlocale, LC_ALL
@@ -130,9 +131,7 @@ class TimeUtils:
         Returns:
         date_time's milliseconds.
         """
-        return datetime.fromisoformat(
-            date_time.replace("Z", "+00:00")
-        ).timestamp() * 1000
+        return isoparse(date_time).timestamp() * 1000
 
     @staticmethod
     def ms_to_iso(millis: int) -> str:

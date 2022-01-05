@@ -22,6 +22,7 @@ import threading
 from xml.etree.ElementTree import XMLParser
 from gi.repository import GLib, GObject
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.utils.utils import TrackPointUtils as tpu
 from pyopentracks.models.track import Track
@@ -162,10 +163,7 @@ class GpxParserHandler:
             return Result(code=Result.OK, track=gpx_parser._track, filename=filename)
         except Exception as error:
             message = f"Error parsing the file {filename}: {error}"
-            # TODO print to logger system. Be careful because if I print messages in a separate thread I get a segmentation fault
-            # print(message)
-            #import traceback
-            #traceback.print_exc()
+            pyot_logging.get_logger(__name__).exception(message)
             return Result(code=Result.ERROR, filename=filename, message=message)
 
 
