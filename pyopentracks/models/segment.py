@@ -104,10 +104,7 @@ class Segment(Model):
 
     @property
     def slope(self):
-        if self._distance_m and self._gain_m:
-            return ElevationUtils.slope_to_str(self._gain_m * 100 / self._distance_m)
-        else:
-            return "-"
+        return ElevationUtils.slope_to_str(self._distance_m, self._gain_m)
 
     @id.setter
     def id(self, id):

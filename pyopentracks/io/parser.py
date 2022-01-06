@@ -23,10 +23,12 @@ from pyopentracks.utils import logging as pyot_logging
 class Parser:
     """Generic class for parse files (import files).
 
-    It contains the minimal logic to get all track's points and it guarantees all points are correct and it also
-    handles segments, pauses, etc, in those points.
+    It contains the minimal logic to get all track's points and it guarantees
+    all points are correct and it also handles segments, pauses, etc, in those
+    points.
 
-    All parsers have to extends it and they has to add track points calling _add_track_point method.
+    All parsers have to extends it and they has to add track points calling
+    _add_track_point method.
     """
 
     # Speed threshold for considering that there is not movement (in mps).

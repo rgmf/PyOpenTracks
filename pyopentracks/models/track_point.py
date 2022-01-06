@@ -55,8 +55,8 @@ class TrackPoint(Model):
     def update_query(self):
         """Returns the query for updating a TrackPoint by id."""
         return """
-        UPDATE trackpoints SET longitude=?, latitude=?, time=?, speed=?, altitude=?,
-        gain=?, loss=?, heartrate=?, cadence=?, power=?
+        UPDATE trackpoints SET longitude=?, latitude=?, time=?, speed=?,
+        altitude=?, gain=?, loss=?, heartrate=?, cadence=?, power=?
         WHERE _id=?
         """
 
