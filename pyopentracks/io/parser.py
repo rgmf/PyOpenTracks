@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from pyopentracks.utils import logging as pyot_logging
+
 
 class Parser:
     """Generic class for parse files (import files).
@@ -75,6 +77,6 @@ class Parser:
             if (not (abs(lat) <= 90 and abs(lon) <= 180)):
                 return False
         except Exception as e:
-            print("Valid location exception:", e)
+            pyot_logging.get_logger(__name__).exception(str(e))
             return False
         return True

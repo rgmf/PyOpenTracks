@@ -24,6 +24,7 @@ from pathlib import Path
 
 from gi.repository import GLib, GObject
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.io.gpx_parser import GpxParserHandler
 from pyopentracks.models.database import Database
 from pyopentracks.models.database_helper import DatabaseHelper
@@ -69,9 +70,12 @@ class ImportHandler():
                     result = self._import(track, import_result.filename)
 
             except Exception as error:
-                import traceback
-                print(traceback.format_exc())
-                result = Result(code=Result.ERROR, filename=import_result.filename, message=str(error))
+                pyot_logging.get_logger(__name__).exception(str(error))
+                result = Result(
+                    code=Result.ERROR,
+                    filename=import_result.filename,
+                    message=str(error)
+                )
 
         self._import_finished(result)
 

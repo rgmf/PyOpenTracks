@@ -22,6 +22,7 @@ import json
 import math
 import collections
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.utils.utils import LocationUtils
 
@@ -56,6 +57,7 @@ class AltitudeCorrection:
         try:
             self._update_track_points()
         except Exception as e:
+            pyot_logging.get_logger(__name__).exception(str(e))
             return None
         self._compute_gain_and_loss()
         self._update_track_stats()

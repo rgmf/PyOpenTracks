@@ -21,6 +21,7 @@ import threading
 
 from gi.repository import Gtk, GLib, GdkPixbuf
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
 from pyopentracks.models.database_helper import DatabaseHelper
@@ -266,8 +267,9 @@ class TracksLayout(Gtk.Box, Layout):
             track = DatabaseHelper.get_track_by_id(trackid)
             DatabaseHelper.delete(track)
         except ValueError:
-            # TODO use logger here.
-            print(f"Error: deleting track {self._tree_model_filter.get_value(treeiter, 1)}")
+            pyot_logging.get_logger(__name__).exception(
+                f"Error: deleting track {self._tree_model_filter.get_value(treeiter, 1)}"
+            )
 
     def _remove_item_from_list_store(self, treeiter):
         """Remove from Gtk.ListStore the item pointed by treeiter.

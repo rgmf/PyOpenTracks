@@ -22,6 +22,7 @@ from os import path
 
 from gi.repository import GLib, GObject
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.utils.utils import TimeUtils
 from pyopentracks.io.result import Result
@@ -67,8 +68,9 @@ class ExportTrack():
                 gpx.write(self._close_track)
                 gpx.write(self._footer)
         except Exception as e:
-            # TODO use here logger
-            return Result(code=Result.ERROR, message=_(f"Error exporting the track {self._track.name}: {e}"))
+            message = _(f"Error exporting the track {self._track.name}: {e}")
+            pyot_logging.get_logger(__name__).exception(message)
+            return Result(code=Result.ERROR, message=message)
         return Result(code=Result.OK, message=_(f"Track {self._track.name} exported correctly"))
 
     @property

@@ -19,6 +19,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from parser import ParserError
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.utils.utils import LocationUtils
 
 
@@ -236,7 +237,7 @@ class TrackStats:
             self._last_segment_time_ms = timestamp_ms
 
         except ParserError as e:
-            print("Date time parsing Error", e)
+            pyot_logging.get_logger(__name__).exception(f"datetime parsing error: {str(e)}")
 
     def _add_distance(self, lat, lon):
         if self._total_distance_m is None:

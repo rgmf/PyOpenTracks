@@ -20,6 +20,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 import sqlite3
 from os import path
 
+from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.settings import xdg_data_home
 from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
@@ -52,10 +53,8 @@ class Database:
                 conn.execute(query)
                 conn.commit()
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(
-                    f"Error: [SQL] Couldn't execute the query: "
-                    f"{error}: {query}"
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}: {query}"
                 )
 
     def get_track_by_id(self, _id):
@@ -75,7 +74,9 @@ class Database:
                     return Track(*tuple_result)
             except Exception as error:
                 # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return None
 
     def get_tracks_between(self, begin, end):
@@ -93,8 +94,9 @@ class Database:
                 query = "SELECT * FROM tracks WHERE starttime>=? AND starttime<=?"
                 return [Track(*t) for t in conn.execute(query, (begin, end)).fetchall()]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
 
@@ -114,8 +116,9 @@ class Database:
                 if tuple_result:
                     return Segment(*tuple_result)
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return None
 
     def get_segment_tracks_by_trackid(self, trackid):
@@ -132,8 +135,9 @@ class Database:
                     SegmentTrack(*st) for st in conn.execute(query, (trackid,)).fetchall()
                 ]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_segment_tracks_by_segmentid(self, segmentid):
@@ -150,8 +154,9 @@ class Database:
                     SegmentTrack(*st) for st in conn.execute(query, (segmentid,)).fetchall()
                 ]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_tracks(self):
@@ -167,8 +172,9 @@ class Database:
                     Track(*track) for track in conn.execute(query).fetchall()
                 ]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_points_near_point_start(self, bbox, trackid=None):
@@ -205,8 +211,9 @@ class Database:
                     SegmentTrack.Point(*row) for row in conn.execute(query).fetchall()
                 ]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_points_near_point_end(self, bbox, trackid, trackpoint_id_from):
@@ -247,8 +254,9 @@ class Database:
                 tuple_result = conn.execute(query).fetchone()
                 return SegmentTrack.Point(*tuple_result) if tuple_result else None
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_existed_tracks(self, uuid, start, end):
@@ -279,9 +287,9 @@ class Database:
                     return [Track(*track) for track in tracks]
                 return None
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
                 raise
 
     def get_aggregated_stats(self, date_from=None, date_to=None, order_by="total_activities"):
@@ -339,9 +347,9 @@ class Database:
                     return [AggregatedStats(*s) for s in stats]
                 return None
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
                 raise
 
     def get_years(self):
@@ -361,9 +369,9 @@ class Database:
                 if items:
                     return [i[0] for i in items]
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_track_points(self, trackid):
@@ -383,9 +391,9 @@ class Database:
                 if trackpoints:
                     return [TrackPoint(*tp) for tp in trackpoints]
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_track_points_between(self, trackpoint_from_id, trackpoint_to_id):
@@ -410,8 +418,9 @@ class Database:
                 if trackpoints:
                     return [TrackPoint(*tp) for tp in trackpoints]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_segments(self):
@@ -427,8 +436,9 @@ class Database:
                     Segment(*segment_tuple) for segment_tuple in conn.execute(query).fetchall()
                 ]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def get_segment_points(self, segmentid):
@@ -444,8 +454,9 @@ class Database:
                     SegmentPoint(*segmentpoint_tuple) for segmentpoint_tuple in conn.execute(query).fetchall()
                 ]
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return []
 
     def insert(self, model):
@@ -464,9 +475,9 @@ class Database:
                 conn.commit()
                 return cursor.lastrowid
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return None
 
     def bulk_insert(self, model_list, fk_value):
@@ -488,9 +499,9 @@ class Database:
                 conn.commit()
                 return rowsInserted
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return 0
 
     def delete(self, model):
@@ -508,9 +519,9 @@ class Database:
                 cursor.execute(model.delete_query, (model.id,))
                 conn.commit()
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
 
     def update(self, model):
         """Update the model in the database.
@@ -527,9 +538,9 @@ class Database:
                 cursor.execute(model.update_query, model.update_data)
                 conn.commit()
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
 
     def update_altitude(self, trackid, data_list):
         """Update all trackpoints altitude from trackid.
@@ -549,9 +560,9 @@ class Database:
                     cursor.execute(sql, (data["elevation"], trackid, data["latitude"], data["longitude"]))
                 conn.commit()
             except Exception as error:
-                # TODO add this error message to a logger system
-                error_msg = f"Error: [SQL] Couldn't execute the query: {error}"
-                print(error_msg)
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
 
     def get_autoimport_by_trackfile(self, pathfile: str):
         """Return AutoImport object from trackfile.
@@ -569,6 +580,7 @@ class Database:
                 if tuple_result:
                     return AutoImport(*tuple_result)
             except Exception as error:
-                # TODO add this error message to a logger system
-                print(f"Error: [SQL] Couldn't execute the query: {error}")
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
         return None
