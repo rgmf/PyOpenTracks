@@ -44,6 +44,7 @@ class DateTimeUtils:
 
         Arguments:
         timestamp_ms -- timestamp in millis.
+        short        -- (optional) for a short version.
 
         Returns:
         An string representing the timestamp_ms in a human readable style.
@@ -51,7 +52,7 @@ class DateTimeUtils:
         if not timestamp_ms:
             return "-"
         return datetime.fromtimestamp(timestamp_ms / 1000).strftime(
-            "%a, %d %b %Y %H:%M:%S %Z" if not short else "%d %b %Y"
+            "%a, %d %b %Y %H:%M:%S" if not short else "%d %b %Y"
         )
 
     @staticmethod
@@ -72,7 +73,7 @@ class DateUtils:
         """Return the list of months names."""
         setlocale(LC_ALL, '')
         return [
-            datetime.strptime(str(i), "%m").strftime("%B")\
+            datetime.strptime(str(i), "%m").strftime("%B")
             for i in range(1, 13)
         ]
 
@@ -94,9 +95,9 @@ class TimeUtils:
         """
         ts = time.time()
         utc_offset = (datetime.fromtimestamp(ts) - datetime.utcfromtimestamp(ts)).total_seconds()
-        hours = (int) (utc_offset / 3600)
-        minutes = (int) ((utc_offset % 3600) / 60)
-        return f"{hours:03d}:{minutes:02d}" if hours < 0 else f"+{hours:02d}:{minutes:02d}"
+        hours = int(utc_offset / 3600)
+        minutes = int((utc_offset % 3600) / 60)
+        return f"{hours:+03d}:{minutes:02d}"
 
     @staticmethod
     def ms_to_str(time_ms: float, shorten=False) -> str:
@@ -108,7 +109,7 @@ class TimeUtils:
 
         Returns:
         An string representing the time in HH:MM:SS format when shorten is False.
-        An string representing the time in HHh \n MMm format when shorte is True.
+        An string representing the time in HHh \n MMm format when shorten is True.
         """
         if not time_ms:
             return "-"
@@ -159,10 +160,12 @@ class DistanceUtils:
         """
         if not distance_m:
             return "-"
-        return (
-            str(int(distance_m)) + " m" if distance_m < 1000
-            else str(round(distance_m / 1000, 2)) + " km"
-        )
+        elif distance_m < 1000:
+            return f"{int(distance_m)} m"
+        elif distance_m % 1000 == 0:
+            return f"{int(distance_m / 1000)} km"
+        else:
+            return f"{round(distance_m / 1000, 2)} km"
 
 
 class SpeedUtils:
@@ -213,8 +216,21 @@ class ElevationUtils:
         )
 
     @staticmethod
-    def slope_to_str(slope):
-        return str(round(slope, 1)) + "%"
+    def slope_to_str(distance: float, gain: float) -> str:
+        """From distance and gain return a slope string in human way.
+
+        Arguments:
+        distance -- distance in meters.
+        gain     -- gain in meters.
+
+        Returns:
+        An string representing the slope in %.
+        """
+        gain = gain if gain is not None else 0
+        if distance:
+            return str(round(gain * 100 / distance, 1)) + "%"
+        else:
+            return "-"
 
 
 class TypeActivityUtils:
@@ -241,9 +257,9 @@ class TypeActivityUtils:
         "driving": {"icon": "icons/drive_car_black_48dp.svg", "color": "#5d4037"},
     }
 
-    _speed = [
-        "biking", "cycling", "road biking", "mountain biking",
-        "driving"
+    _pace = [
+        "running", "trail running", "walking", "trail walking", "hiking",
+        "trail hiking"
     ]
 
     _color_default = "#e64a19"
@@ -288,7 +304,7 @@ class TypeActivityUtils:
 
     @staticmethod
     def is_speed(category: str) -> bool:
-        return category in TypeActivityUtils._speed
+        return category not in TypeActivityUtils._pace
 
 
 class TrackPointUtils:
@@ -352,7 +368,6 @@ class TrackPointUtils:
 
 
 class LocationUtils:
-
     @staticmethod
     def distance_between(lat1, lon1, lat2, lon2):
         """Hervasian algorithm.

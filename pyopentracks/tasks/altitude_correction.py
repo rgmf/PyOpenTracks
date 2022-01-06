@@ -29,7 +29,9 @@ from pyopentracks.utils.utils import LocationUtils
 
 class AltitudeCorrection:
     """
-    It uses Open Elevation API to correct track points altitudes and compute gain, loss, min and max altitudes.
+    It uses Open Elevation API to correct track points altitudes and compute
+    gain, loss, min and max altitudes.
+
     It also updates data in the database (tracks and trackpoints).
     """
 
