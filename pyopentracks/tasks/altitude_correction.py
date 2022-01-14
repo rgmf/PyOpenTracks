@@ -114,4 +114,4 @@ class AltitudeCorrection:
                 self._max = tp.altitude
 
     def _update_track_stats(self):
-        DatabaseHelper.update_stats(self._trackid, self._min, self._max, self._gain, self._loss)
+        DatabaseHelper.update_stats(self._trackid, self._gain, self._loss, self._min, self._max)

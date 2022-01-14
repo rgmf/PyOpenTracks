@@ -29,6 +29,7 @@ from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
 from pyopentracks.utils.utils import TypeActivityUtils
 from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.tasks.altitude_correction import AltitudeCorrection
+from pyopentracks.tasks.gain_loss_filter import GainLossFilter
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
@@ -182,16 +183,32 @@ class TracksLayout(Gtk.Box, Layout):
                 ]
             )
             altitude_correction = AltitudeCorrection(track.id)
-            ProcessView(self._on_altitude_correction_done, altitude_correction.run, None).start()
-        else:
+            ProcessView(self._on_correction_done, altitude_correction.run, None).start()
+        if dialog.correct_gain_loss():
+            self._app_window.show_infobar(
+                itype=Gtk.MessageType.INFO,
+                message=_(
+                    "Correcting elevation gain and loss. When it "
+                    "finishes then the track will be reloaded"
+                ),
+                buttons=[
+                    {
+                     "text": _("Ok"),
+                     "cb": lambda b: self._app_window.clean_top_widget()
+                    }
+                ]
+            )
+            gain_loss_correction = GainLossFilter(track.id)
+            ProcessView(self._on_correction_done, gain_loss_correction.run, None).start()
+        if dialog.correct_altitude() or dialog.correct_gain_loss():
             self._select_row(self._tree_model_filter.get_path(treeiter), force=True)
 
-    def _on_altitude_correction_done(self, track):
+    def _on_correction_done(self, track):
         if track is None:
             self._app_window.clean_top_widget()
             self._app_window.show_infobar(
                 itype=Gtk.MessageType.ERROR,
-                message=_("Altitude could not be corrected. The service is not working."),
+                message=_("An error was triggered and correction wasn't done."),
                 buttons=[
                     {
                         "text": _("Ok"),
