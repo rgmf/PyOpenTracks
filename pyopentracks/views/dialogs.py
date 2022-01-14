@@ -304,6 +304,7 @@ class TrackEditDialog(Gtk.Dialog):
     _activity_type: Gtk.ComboBox = Gtk.Template.Child()
     _type_list_store: Gtk.ListStore = Gtk.Template.Child()
     _altitude_correction: Gtk.CheckButton = Gtk.Template.Child()
+    _gain_loss_correction: Gtk.CheckButton = Gtk.Template.Child()
 
     def __init__(self, parent, track):
         Gtk.Dialog.__init__(
@@ -351,6 +352,9 @@ class TrackEditDialog(Gtk.Dialog):
 
     def correct_altitude(self):
         return self._altitude_correction.get_active()
+
+    def correct_gain_loss(self):
+        return self._gain_loss_correction.get_active()
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segment_edit_dialog.ui")

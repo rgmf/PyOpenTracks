@@ -31,16 +31,25 @@ from pyopentracks.models.segment import Segment
 from pyopentracks.models.segment_point import SegmentPoint
 
 
+config = {
+    "database": path.join(xdg_data_home(), "database.db")
+}
+
+
 class Database:
     """SQLite database handler."""
 
     @property
     def _db_file(self) -> str:
-        return path.join(self._db_dir, "database.db")
+        return config["database"]
 
-    @property
-    def _db_dir(self) -> str:
-        return xdg_data_home()
+    # @property
+    # def _db_file(self) -> str:
+    #     return path.join(self._db_dir, "database.db")
+
+    # @property
+    # def _db_dir(self) -> str:
+    #     return xdg_data_home()
 
     def execute(self, query: str):
         """Executes the raw query without return any results.

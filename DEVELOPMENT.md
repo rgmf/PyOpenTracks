@@ -19,6 +19,8 @@ There are tests in the `tests` folder. To execute them, run the following comman
 
 `python3 -m unittest discover -v -s tests/`
 
+You have to make sure that `python3-mock` is installed to run tests.
+
 # Logs
 PyOpenTracks uses `logging` standard Python library for logs. You can set the log's level executing PyOpenTracks from terminal and passing to it the argument `--loglevel` with a value:
 - 1: DEBUG, INFO, WARNING, ERROR and CRITICAL logs.

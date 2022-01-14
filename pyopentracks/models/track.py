@@ -268,12 +268,20 @@ class Track(Model):
         return eu.elevation_to_str(self._elevationgain_m)
 
     @property
+    def gain_elevation_m(self):
+        return self._elevationgain_m
+
+    @property
     def gain_elevation_label(self):
         return _("Elevation Gain")
 
     @property
     def loss_elevation(self):
         return eu.elevation_to_str(self._elevationloss_m)
+
+    @property
+    def loss_elevation_m(self):
+        return self._elevationloss_m
 
     @property
     def loss_elevation_label(self):
