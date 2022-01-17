@@ -27,7 +27,7 @@ from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
 from pyopentracks.utils.utils import TypeActivityUtils
-from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.views.layouts.process_view import QueuedProcessesView
 from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 from pyopentracks.tasks.gain_loss_filter import GainLossFilter
 
@@ -168,28 +168,21 @@ class TracksLayout(Gtk.Box, Layout):
             treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32)
         )
         DatabaseHelper.update(track)
-        if dialog.correct_altitude():
-            self._app_window.show_infobar(
-                itype=Gtk.MessageType.INFO,
-                message=_(
-                    "Correcting altitude and updating the track. When it "
-                    "finishes then the track will be reloaded"
-                ),
-                buttons=[
-                    {
-                        "text": _("Ok"),
-                        "cb": lambda b: self._app_window.clean_top_widget()
-                    }
-                ]
-            )
-            altitude_correction = AltitudeCorrection(track.id)
-            ProcessView(self._on_correction_done, altitude_correction.run, None).start()
+
+        funcs = []
         if dialog.correct_gain_loss():
+            gain_loss_correction = GainLossFilter(track.id)
+            funcs.append({"func": gain_loss_correction.run, "args": None})
+        if dialog.correct_altitude():
+            altitude_correction = AltitudeCorrection(track.id)
+            funcs.append({"func": altitude_correction.run, "args": None})
+
+        if funcs:
             self._app_window.show_infobar(
                 itype=Gtk.MessageType.INFO,
                 message=_(
-                    "Correcting elevation gain and loss. When it "
-                    "finishes then the track will be reloaded"
+                    "Doing corrections. When it finishes then the track will "
+                    "be reloaded"
                 ),
                 buttons=[
                     {
@@ -198,17 +191,18 @@ class TracksLayout(Gtk.Box, Layout):
                     }
                 ]
             )
-            gain_loss_correction = GainLossFilter(track.id)
-            ProcessView(self._on_correction_done, gain_loss_correction.run, None).start()
-        if dialog.correct_altitude() or dialog.correct_gain_loss():
+            QueuedProcessesView(self._on_correction_done, funcs).start()
+        else:
             self._select_row(self._tree_model_filter.get_path(treeiter), force=True)
 
-    def _on_correction_done(self, track):
-        if track is None:
+    def _on_correction_done(self, results):
+        if results is None:
             self._app_window.clean_top_widget()
             self._app_window.show_infobar(
                 itype=Gtk.MessageType.ERROR,
-                message=_("An error was triggered and correction wasn't done."),
+                message=_(
+                    "An error was triggered and correction wasn't done."
+                ),
                 buttons=[
                     {
                         "text": _("Ok"),
@@ -217,6 +211,8 @@ class TracksLayout(Gtk.Box, Layout):
                 ]
             )
             return
+
+        track = results[0]
         self._app_window.clean_top_widget()
         iter = self._tree_model_filter.get_iter_first()
         while iter and self._tree_model_filter.get_value(iter, 0) != track.id:

@@ -31,7 +31,8 @@ class ProcessView:
     """
 
     def __init__(self, cb, func, tuple_args):
-        """
+        """Init.
+
         Arguments:
         cb         -- callback that will receive an argument.
         func       -- the function that will be execute async (in a multiprocessing.Process).
@@ -42,6 +43,7 @@ class ProcessView:
         self._args = tuple_args
 
     def start(self):
+        """Start process."""
         thread = threading.Thread(target=self._run)
         thread.start()
 
@@ -51,3 +53,36 @@ class ProcessView:
         else:
             result = self._func()
         GLib.idle_add(self._cb, result)
+
+
+class QueuedProcessesView:
+    """Utility class for layouts to do a set of async tasks in order."""
+
+    def __init__(self, cb, funcs):
+        """Init.
+
+        Arguments:
+        cb    -- callback that will receive an argument (list with results for
+                 every function).
+        funcs -- list of dictionaries with functions to be executed in the
+                 order they are listed. Every dictionary item has to have the
+                 following keys:
+                 - "func": function that will be executed.
+                 - "args": tuple with arguments for that function.
+        """
+        self._cb = cb
+        self._funcs = funcs
+
+    def start(self):
+        """Start process."""
+        thread = threading.Thread(target=self._run)
+        thread.start()
+
+    def _run(self):
+        results = []
+        for func_dict in self._funcs:
+            if func_dict["args"]:
+                results.append(func_dict["func"](*func_dict["args"]))
+            else:
+                results.append(func_dict["func"]())
+        GLib.idle_add(self._cb, results)
