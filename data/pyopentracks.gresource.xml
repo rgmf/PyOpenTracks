@@ -22,6 +22,9 @@
 
     <file>ui/menu.ui</file>
 
+    <file>ui/preferences_layout.ui</file>
+    <file>ui/preferences_import_layout.ui</file>
+
     <file>ui/gtk_style.css</file>
 
     <file>icons/open-menu-pyot.svg</file>
