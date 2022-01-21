@@ -5,19 +5,19 @@
 .pyot-h1 {
     font-size: 3em;
     font-weight: bolder;
-    padding: 20px;
+    padding: 20px 0px 20px 0px;
 }
 
 .pyot-h2 {
     font-size: 2em;
     font-weight: bolder;
-    padding: 5px;
+    padding: 5px 0px 5px 0px;
 }
 
 .pyot-h3 {
     font-size: 1.15em;
     font-weight: bolder;
-    padding: 5px;
+    padding: 5px 0px 5px 0px;
 }
 
 .pyot-p-large {

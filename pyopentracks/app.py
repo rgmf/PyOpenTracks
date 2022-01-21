@@ -31,11 +31,11 @@ from pyopentracks.models.database import Database
 from pyopentracks.io.import_handler import (
     ImportFileHandler, AutoImportHandler
 )
+from pyopentracks.views.preferences.dialog import PreferencesDialog
 from pyopentracks.views.dialogs import (
     MessageDialogError,
     ImportResultDialog,
-    ExportResultDialog,
-    PreferencesDialog
+    ExportResultDialog
 )
 from pyopentracks.app_analytic import AppAnalytic
 from pyopentracks.app_segments import AppSegments
@@ -128,7 +128,10 @@ class Application(Gtk.Application):
         dialog = PreferencesDialog(parent=self._window, app=self)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            pass
+            updated_prefs = dialog.get_updated_preferences()
+            for p in updated_prefs:
+                print(p, p["pref"], p["value"])
+                self.set_pref(p["pref"], p["value"])
         dialog.destroy()
 
     def analytic_button_clicked(self, btn):
