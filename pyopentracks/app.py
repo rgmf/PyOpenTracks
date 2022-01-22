@@ -130,7 +130,6 @@ class Application(Gtk.Application):
         if response == Gtk.ResponseType.OK:
             updated_prefs = dialog.get_updated_preferences()
             for p in updated_prefs:
-                print(p, p["pref"], p["value"])
                 self.set_pref(p["pref"], p["value"])
         dialog.destroy()
 
@@ -191,6 +190,8 @@ class Application(Gtk.Application):
         if not folder:
             return
         handler = AutoImportHandler()
+        if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
+            handler.with_opentracks_gain_loss_correction()
         handler.connect("total-files-to-autoimport", self._auto_import_importing)
         handler.import_folder(folder, self._auto_import_new_tracks)
 
@@ -241,6 +242,8 @@ class Application(Gtk.Application):
                 parent=self._window,
                 folder=folder
             )
+            if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
+                import_dialog.with_opentracks_gain_loss_correction()
             import_dialog.run()
             import_dialog.destroy()
             self._load_tracks()
@@ -252,7 +255,10 @@ class Application(Gtk.Application):
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
             self._window.loading(0.5)
-            ImportFileHandler(dialog.get_filename(), self._import_ended).run()
+            handler = ImportFileHandler(dialog.get_filename(), self._import_ended)
+            if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
+                handler.with_opentracks_gain_loss_correction()
+            handler.run()
         dialog.destroy()
 
     def _import_ended(self, result):

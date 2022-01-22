@@ -29,10 +29,13 @@ from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.io.result import Result
+from pyopentracks.io.result import RecordedWith
 from pyopentracks.io.parser import Parser
 
 
 class GpxParser(Parser):
+    TAG_GPX = "gpx"
+    
     TAG_METADATA = "metadata"
     TAG_TRK = "trk"
     TAG_NAME = "name"
@@ -54,6 +57,7 @@ class GpxParser(Parser):
     def __init__(self, filename_path):
         super().__init__()
         self._filename_path = filename_path
+        self._recorded_with = RecordedWith.UNKNOWN
 
         self._name = _("No name")
         self._desc = None
@@ -70,6 +74,15 @@ class GpxParser(Parser):
         _, _, tag = tag.rpartition("}")
         self._data = ""
 
+        if tag == GpxParser.TAG_GPX:
+            for k, v in attr.items():
+                _, _, key = k.rpartition("}")
+                if (
+                    key == "schemaLocation" and
+                    "http://opentracksapp.com/xmlschemas/v1" in v
+                ):
+                    self._recorded_with = RecordedWith.OPENTRACKS
+            self._tag = tag
         if tag == GpxParser.TAG_METADATA:
             self._tag = tag
         elif tag == GpxParser.TAG_TRK:
@@ -80,8 +93,12 @@ class GpxParser(Parser):
         elif tag == GpxParser.TAG_TRKPT:
             self._tag = tag
             self._new_track_point = TrackPoint()
-            self._new_track_point.set_latitude(attr["lat"] if "lat" in attr else None)
-            self._new_track_point.set_longitude(attr["lon"] if "lon" in attr else None)
+            self._new_track_point.set_latitude(
+                attr["lat"] if "lat" in attr else None
+            )
+            self._new_track_point.set_longitude(
+                attr["lon"] if "lon" in attr else None
+            )
 
     def end(self, tag):
         _, _, tag = tag.rpartition("}")
@@ -135,7 +152,9 @@ class GpxParser(Parser):
             self._new_track_point.set_cadence(self._data)
         elif tag == GpxParser.TAG_TRKPT:
             if not self._new_track_point.speed_mps:
-                self._new_track_point.set_speed(tpu.speed(self._last_track_point, self._new_track_point))
+                self._new_track_point.set_speed(
+                    tpu.speed(self._last_track_point, self._new_track_point)
+                )
             self._add_track_point(self._new_track_point)
             self._last_track_point = self._new_track_point
             self._new_track_point = None
@@ -160,11 +179,20 @@ class GpxParserHandler:
             if not tp or len(tp) == 0:
                 raise Exception("empty track")
 
-            return Result(code=Result.OK, track=gpx_parser._track, filename=filename)
+            return Result(
+                code=Result.OK,
+                track=gpx_parser._track,
+                filename=filename,
+                recorded_with=gpx_parser._recorded_with
+            )
         except Exception as error:
             message = f"Error parsing the file {filename}: {error}"
             pyot_logging.get_logger(__name__).exception(message)
-            return Result(code=Result.ERROR, filename=filename, message=message)
+            return Result(
+                code=Result.ERROR,
+                filename=filename,
+                message=message
+            )
 
 
 class GpxParserHandlerInThread(GObject.GObject):
@@ -213,9 +241,23 @@ class GpxParserHandlerInThread(GObject.GObject):
             if not tp or len(tp) == 0:
                 raise Exception("empty track")
 
-            GLib.idle_add(self._callback, Result(code=Result.OK, filename=self._filename, track=gpx_parser._track))
+            GLib.idle_add(
+                self._callback,
+                Result(
+                    code=Result.OK,
+                    filename=self._filename,
+                    track=gpx_parser._track,
+                    recorded_with=gpx_parser._recorded_with
+                )
+            )
         except Exception as error:
             message = f"Error parsing the file {self._filename}: {error}"
-            # TODO print to logger system
-            #print(message)
-            GLib.idle_add(self._callback, Result(code=Result.ERROR, filename=self._filename, message=message))
+            pyot_logging.get_logger(__name__).exception(message)
+            GLib.idle_add(
+                self._callback,
+                Result(
+                    code=Result.ERROR,
+                    filename=self._filename,
+                    message=message
+                )
+            )

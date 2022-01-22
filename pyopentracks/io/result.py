@@ -17,17 +17,27 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from enum import Enum
+
+
+class RecordedWith(Enum):
+    UNKNOWN = 0
+    OPENTRACKS = 1
+
 
 class Result:
     OK = 0
     ERROR = 1
     EXISTS = 2
 
-    def __init__(self, code, track=None, filename=None, message=None):
+    def __init__(
+        self, code, track=None, filename=None, message=None, recorded_with=None
+    ):
         self._code = code
         self._track = track
         self._filename = filename
         self._message = message
+        self._recorded_with = recorded_with
 
     @property
     def code(self):
@@ -52,3 +62,8 @@ class Result:
     @property
     def is_ok(self):
         return self._code == Result.OK
+
+    @property
+    def recorded_with(self):
+        return RecordedWith.UNKNOWN if self._recorded_with is None \
+          else self._recorded_with

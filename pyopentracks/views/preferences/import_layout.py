@@ -53,8 +53,10 @@ class PreferencesImportLayout(Gtk.Box):
         pref_value = dialog.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
         if pref_value:
             self._file_chooser.set_current_folder(pref_value)
+            self._switch.set_sensitive(True)
         else:
             self._file_chooser.set_sensitive(False)
+            self._switch.set_sensitive(False)
         self._file_chooser.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
         self._file_chooser.connect("file-set", self._on_folder_pref_changed)
 

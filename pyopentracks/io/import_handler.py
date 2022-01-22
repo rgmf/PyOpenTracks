@@ -30,11 +30,24 @@ from pyopentracks.models.database import Database
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.auto_import import AutoImport
 from pyopentracks.io.result import Result
+from pyopentracks.io.result import RecordedWith
+from pyopentracks.tasks.gain_loss_filter import GainLossFilter
 
 
 class ImportHandler():
     def __init__(self):
         self._callback = None
+        self._opentracks_gain_loss_correction = False
+
+    def with_opentracks_gain_loss_correction(self):
+        """Add OpenTracks gain and loss correction when importing.
+
+        If the track was recorded with OpenTracks then it'll try to correct
+        gain and loss if a barometric sensor was used and added to file to be
+        imported.
+        """
+        self._opentracks_gain_loss_correction = True
+        return self
 
     def _import_finished(self, result):
         raise NotImplementedError
@@ -49,7 +62,12 @@ class ImportHandler():
         import_result -- Result object.
         """
         if not import_result.is_ok or not import_result.track:
-            result = Result(code=Result.ERROR, filename=import_result.filename, message=import_result.message)
+            result = Result(
+                code=Result.ERROR,
+                filename=import_result.filename,
+                message=import_result.message,
+                recorded_with=import_result.recorded_with
+            )
         else:
             track = import_result.track
             try:
@@ -63,23 +81,29 @@ class ImportHandler():
                         code=Result.EXISTS,
                         track=track,
                         filename=import_result.filename,
-                        message=_("Track already exists")
+                        message=_("Track already exists"),
+                        recorded_with=import_result.recorded_with
                     )
                 else:
                     # Track doesn't exists -> make importing.
-                    result = self._import(track, import_result.filename)
+                    result = self._import(
+                        track,
+                        import_result.filename,
+                        import_result.recorded_with
+                    )
 
             except Exception as error:
                 pyot_logging.get_logger(__name__).exception(str(error))
                 result = Result(
                     code=Result.ERROR,
                     filename=import_result.filename,
-                    message=str(error)
+                    message=str(error),
+                    recorded_with=import_result.recorded_with
                 )
 
         self._import_finished(result)
 
-    def _import(self, track, filename):
+    def _import(self, track, filename, recorded_with):
         """Makes the importing of the track.
 
         It inserts the track and its track points to the database.
@@ -87,8 +111,9 @@ class ImportHandler():
         This method assumes track can be inserted in the database.
 
         Arguments:
-        track    -- Track object to be inserted in the database.
-        filename -- original filename.
+        track         -- Track object to be inserted in the database.
+        filename      -- original filename.
+        recorded_with -- source of track recording.
 
         Return:
         Result object.
@@ -96,13 +121,34 @@ class ImportHandler():
         trackid = DatabaseHelper.insert(track)
         if not trackid:
             code = Result.ERROR
-            message = _(f"Error importing the file {track.trackfile_path}.\nIt couldn't be inserted in the database")
+            message = _(
+                f"Error importing the file {track.trackfile_path}."
+                "\nIt couldn't be inserted in the database"
+            )
         else:
             DatabaseHelper.bulk_insert(track.track_points, trackid)
             code = Result.OK
             message = _("Track imported")
 
-        return Result(code=code, track=track, filename=filename, message=message)
+        if (
+            code == Result.OK and
+            recorded_with == RecordedWith.OPENTRACKS and
+            self._opentracks_gain_loss_correction
+        ):
+            res_gain_loss_filter = GainLossFilter(trackid).run()
+            if res_gain_loss_filter is None:
+                message = (
+                    f"Error filtering gain and loss for the file {filename}"
+                )
+                pyot_logging.get_logger(__name__).error(message)
+
+        return Result(
+            code=code,
+            track=track,
+            filename=filename,
+            message=message,
+            recorded_with=recorded_with
+        )
 
 
 class ImportFileHandler(ImportHandler):

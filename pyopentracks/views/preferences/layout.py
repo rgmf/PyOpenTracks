@@ -20,6 +20,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk
 
 from pyopentracks.views.preferences.import_layout import PreferencesImportLayout
+from pyopentracks.views.preferences.opentracks_layout import PreferencesOpenTracksLayout
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/preferences_layout.ui")
@@ -33,8 +34,7 @@ class PreferencesLayout(Gtk.Paned):
 
         self._layouts = [
             {"key": _("Import"), "layout": PreferencesImportLayout},
-            {"key": "probando", "layout": None},
-            {"key": "otro", "layout": None},
+            {"key": "OpenTracks", "layout": PreferencesOpenTracksLayout},
         ]
 
         self._dialog = dialog
@@ -58,4 +58,6 @@ class PreferencesLayout(Gtk.Paned):
         if treeiter is None:
             return
         idx = model.get_value(treeiter, 0)
+        if self.get_child2():
+            self.remove(self.get_child2())
         self.pack2(self._layouts[idx]["layout"](self._dialog), True, True)

@@ -26,6 +26,7 @@ class AppPreferences:
     WIN_STATE_WIDTH = 2
     WIN_STATE_HEIGHT = 3
     WIN_STATE_IS_MAXIMIZED = 4
+    OPENTRACKS_GAIN_LOSS_FILTER = 5
 
     _settings: Gio.Settings = None
 
@@ -46,6 +47,8 @@ class AppPreferences:
             return self._settings.get_int("win-state-height")
         elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
             return self._settings.get_boolean("win-state-is-mamixmized")
+        elif pref == AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER:
+            return self._settings.get_boolean("opentracks-gain-loss-filter")
 
     def set_pref(self, pref, new_value):
         if pref == AppPreferences.DB_VERSION:
@@ -58,6 +61,8 @@ class AppPreferences:
             self._settings.set_int("win-state-height", new_value)
         elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
             self._settings.set_boolean("win-state-is-mamixmized", new_value)
+        elif pref == AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER:
+            self._settings.set_boolean("opentracks-gain-loss-filter", new_value)
 
     def _on_settings_folder_changed(self, settings, key):
         #self._load_folder()

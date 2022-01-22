@@ -120,11 +120,18 @@ class ImportResultDialog(ImportExportResultDialog):
     def __init__(self, parent, folder):
         self._total = 0
         self._imported = 0
+        self._with_opentracks_gain_loss_correction = False
         super().__init__(parent, folder, _("Importing..."), _("Importing files from folder:"))
+
+    def with_opentracks_gain_loss_correction(self):
+        self._with_opentracks_gain_loss_correction = False
+        return self
 
     def _start(self):
         self._progress.set_fraction(0)
         self._handler = ImportFolderHandler()
+        if self._with_opentracks_gain_loss_correction:
+            self._handler.with_opentracks_gain_loss_correction()
         self._handler.connect("total-files-to-import", self._total_files_cb)
         self._handler.import_folder(self._folder, self._import_ended_cb)
 
