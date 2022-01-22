@@ -48,13 +48,12 @@ class PreferencesImportLayout(Gtk.Box):
 
         self._content_box.get_style_context().add_class("pyot-stats-bg-color")
 
+        is_auto_import_set = dialog.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
+
+        self._switch.set_active(is_auto_import_set)
         self._switch.connect("notify::active", self._on_folder_pref_activated)
 
-        pref_value = dialog.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
-        if pref_value:
-            self._file_chooser.set_current_folder(pref_value)
-        else:
-            self._file_chooser.set_sensitive(False)
+        self._file_chooser.set_current_folder(is_auto_import_set)
         self._file_chooser.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
         self._file_chooser.connect("file-set", self._on_folder_pref_changed)
 
