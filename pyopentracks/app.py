@@ -240,10 +240,9 @@ class Application(Gtk.Application):
             dialog.destroy()
             import_dialog = ImportResultDialog(
                 parent=self._window,
-                folder=folder
+                folder=folder,
+                with_opentracks_gain_loss_correction=self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER)
             )
-            if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
-                import_dialog.with_opentracks_gain_loss_correction()
             import_dialog.run()
             import_dialog.destroy()
             self._load_tracks()

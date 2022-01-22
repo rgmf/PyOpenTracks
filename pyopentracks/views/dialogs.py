@@ -117,15 +117,11 @@ class ImportExportResultDialog(Gtk.Dialog):
 
 class ImportResultDialog(ImportExportResultDialog):
 
-    def __init__(self, parent, folder):
+    def __init__(self, parent, folder, with_opentracks_gain_loss_correction=False):
         self._total = 0
         self._imported = 0
-        self._with_opentracks_gain_loss_correction = False
+        self._with_opentracks_gain_loss_correction = with_opentracks_gain_loss_correction
         super().__init__(parent, folder, _("Importing..."), _("Importing files from folder:"))
-
-    def with_opentracks_gain_loss_correction(self):
-        self._with_opentracks_gain_loss_correction = False
-        return self
 
     def _start(self):
         self._progress.set_fraction(0)
