@@ -38,8 +38,15 @@ class SegmentSearchAbstract(mp.Process):
     def __init__(self):
         super().__init__()
 
-    def _create_segment_track(self, segment: Segment, track_points: list[TrackPoint], from_point: SegmentTrack.Point, to_point: SegmentTrack.Point):
-        """Creates a segmentrack register into the database and returns the new SegmentTrack's id"""
+    def _create_segment_track(self, segment, track_points, from_point, to_point):
+        """Creates a segmentrack register into the database and returns the new SegmentTrack's id.
+
+        Arguments:
+        segment      -- Segment object.
+        track_points -- list of TrackPoint.
+        from_point   -- SegmentTrack.Point object.
+        to_point     -- SegmentTrack.Point object.
+        """
         stats = TrackStats()
         stats.compute(track_points)
 
