@@ -129,8 +129,8 @@ class Application(Gtk.Application):
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
             updated_prefs = dialog.get_updated_preferences()
-            for p in updated_prefs:
-                self.set_pref(p["pref"], p["value"])
+            for pref, value in updated_prefs.items():
+                self.set_pref(pref, value)
         dialog.destroy()
 
     def analytic_button_clicked(self, btn):
