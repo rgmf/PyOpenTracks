@@ -35,7 +35,7 @@ class PreferencesDialog(Gtk.Dialog):
             Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
             Gtk.STOCK_OK, Gtk.ResponseType.OK
         )
-        self._preferences = []
+        self._preferences = {}
         self._app = app
         self._box = self.get_content_area()
         self._auto_import_folder = None
@@ -47,10 +47,12 @@ class PreferencesDialog(Gtk.Dialog):
         self._box.pack_start(PreferencesLayout(self), True, True, 0)
 
     def get_pref(self, pref):
+        if pref in self._preferences:
+            return self._preferences[pref]
         return self._app.get_pref(pref)
 
     def set_pref(self, pref, value):
-        self._preferences.append({"pref": pref, "value": value})
+        self._preferences[pref] = value
 
     def get_updated_preferences(self):
         return self._preferences
