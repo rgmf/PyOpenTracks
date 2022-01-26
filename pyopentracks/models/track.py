@@ -20,7 +20,6 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from os import path
 
 from .model import Model
-from pyopentracks.settings import xdg_data_home
 from pyopentracks.utils.utils import DateTimeUtils as dtu
 from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.utils.utils import DistanceUtils as du

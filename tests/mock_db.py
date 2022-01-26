@@ -27,9 +27,8 @@ class MockDB(unittest.TestCase):
     Extends test classes that need database.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """Set up database for tests."""
+    def setUp(cls):
+        """Set up database for tests for every method test."""
         cls.testconfig = {
             "database": os.path.join(
                 pathlib.Path(__file__).parent.resolve(),
@@ -50,9 +49,8 @@ class MockDB(unittest.TestCase):
             migration = Migration(db, 1)
             migration._migrate_1()
 
-    @classmethod
-    def tearDownClass(cls):
-        """Delete database for tests."""
+    def tearDown(cls):
+        """Delete database for tests for every method test."""
         dbpath = cls.testconfig["database"]
         try:
             os.remove(dbpath)
