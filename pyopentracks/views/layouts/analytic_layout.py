@@ -323,7 +323,7 @@ class AnalyticTotalsYear(Gtk.VBox):
         for i, aggregated in enumerate(aggregated_list):
             box_icon = self._build_icon_box(aggregated.category)
             box_activities = self._build_info_box(aggregated.total_activities)
-            box_activities_per_month = self._build_info_box(su.avg_per_month(aggregated.total_activities, self._year))
+            box_activities_per_month = self._build_info_box(su.avg_per_month(aggregated.total_activities, int(self._year)))
             box_distance = self._build_info_box(aggregated.total_distance)
             box_time = self._build_info_box(aggregated.total_short_moving_time)
             box_gain = self._build_info_box(aggregated.total_elevation_gain)
