@@ -1,5 +1,5 @@
 """
-Copyright (C) 2020 Román Ginés Martínez Ferrández <rgmf@riseup.net>
+Copyright (C) 2020 Román Ginés Martínez Ferrández <rgmf@riseup.net>.
 
 This file is part of PyOpenTracks.
 

@@ -1,5 +1,5 @@
 """
-Copyright (C) 2020 Román Ginés Martínez Ferrández <rgmf@riseup.net>
+Copyright (C) 2020 Román Ginés Martínez Ferrández <rgmf@riseup.net>.
 
 This file is part of PyOpenTracks.
 
@@ -19,8 +19,6 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
-from functools import reduce
-
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.utils.utils import DateUtils as du
 from pyopentracks.utils.utils import DateTimeUtils as dtu
@@ -34,9 +32,12 @@ from pyopentracks.views.layouts.process_view import ProcessView
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_layout.ui")
 class AnalyticLayout(Gtk.Notebook):
+    """Gtk.Notebook with analytic data."""
+
     __gtype_name__ = "AnalyticLayout"
 
     def __init__(self):
+        """Init."""
         super().__init__()
 
     def append(self, layout: Gtk.Widget, label: str):
@@ -58,8 +59,16 @@ class AnalyticLayout(Gtk.Notebook):
         self.show_all()
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_summary_sport_layout.ui")
+@Gtk.Template(
+    resource_path="/es/rgmf/pyopentracks/ui/analytic_summary_sport_layout.ui"
+)
 class SummarySport(Gtk.Box):
+    """Gtk.Box with total, averages and maximum stats for a sport.
+
+    From AggregatedStats model builds a layout with totals, averages and
+    maximums stats.
+    """
+
     __gtype_name__ = "SummarySport"
 
     _icon: Gtk.Image = Gtk.Template.Child()
@@ -88,9 +97,12 @@ class SummarySport(Gtk.Box):
     _max_heart_rate: Gtk.Label = Gtk.Template.Child()
 
     def __init__(self, aggregated):
+        """Fill Gtk.Box with the AggregatedStats model (aggregated)."""
         super().__init__()
         self._icon.set_from_pixbuf(tau.get_icon_pixbuf(aggregated.category))
-        self._sport_name.set_label(aggregated.category if aggregated.category else _("Unknown"))
+        self._sport_name.set_label(
+            aggregated.category if aggregated.category else _("Unknown")
+        )
         self._total_activities.set_label(str(aggregated.total_activities))
         self._total_time.set_label(aggregated.total_time)
         self._total_moving_time.set_label(aggregated.total_moving_time)
@@ -114,10 +126,20 @@ class SummarySport(Gtk.Box):
 
 
 class AggregatedStats(Gtk.VBox):
+    """Gtk.VBox with all aggregated stats from all categories (sports)."""
+
     def __init__(self):
+        """Get all aggregated stats from database and builds the Gtk.VBox.
+
+        It uses a ProcessView (thread) to do all its job.
+        """
         super().__init__()
         self._setup_ui()
-        ProcessView(self._aggregated_stats_ready, DatabaseHelper.get_aggregated_stats, None).start()
+        ProcessView(
+            self._aggregated_stats_ready,
+            DatabaseHelper.get_aggregated_stats,
+            None
+        ).start()
 
     def _setup_ui(self):
         self.set_spacing(10)
@@ -134,14 +156,22 @@ class AggregatedStats(Gtk.VBox):
             self.pack_start(SummarySport(aggregated), False, False, 0)
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui")
+@Gtk.Template(
+    resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui"
+)
 class AggregatedStatsMonth(Gtk.Box):
+    """Gtk.Box with years combo.
+
+    It loads AnalyticMonthsStack when user select a yer in the combo box.
+    """
+
     __gtype_name__ = "AggregatedStatsMonth"
 
     _combo_years: Gtk.ComboBox = Gtk.Template.Child()
     _year_list_store: Gtk.ListStore = Gtk.Template.Child()
 
     def __init__(self):
+        """Get years and initialize the UI."""
         super().__init__()
         self._setup_ui(DatabaseHelper.get_years())
 
@@ -165,26 +195,45 @@ class AggregatedStatsMonth(Gtk.Box):
             self.pack_start(self._months_stack, False, False, 0)
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui")
+@Gtk.Template(
+    resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui"
+)
 class AnalyticMonthsStack(Gtk.Box):
+    """Gtk.Box with Gtk.StackSwitcher with months.
+
+    It loads the following data by month (depending the selected month):
+    - a calendar with activities per day and total time per week,
+    - total distance chart by activity and
+    - SummarySport layout by activity.
+    """
+
     __gtype_name__ = "AnalyticMonthsStack"
 
     _stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
     _stack: Gtk.Stack = Gtk.Template.Child()
 
     class Data:
+        """Data needed for month."""
+
         def __init__(self, al, m, mn):
+            """Initialize data."""
             self.aggregated_list = al
             self.month = m
             self.month_name = mn
 
     def __init__(self, year):
+        """Initialize the switcher and load data through ProcessView."""
         super().__init__()
         self._year = year
         self._data_list = []
-        self._stack.connect("notify::visible-child", self._visible_child_changed)
+        self._stack.connect(
+            "notify::visible-child",
+            self._visible_child_changed
+        )
         self._stack_switcher.set_stack(self._stack)
-        ProcessView(self._on_stack_data_ready, self._data_loading, (year,)).start()
+        ProcessView(
+            self._on_stack_data_ready, self._data_loading, (year,)
+        ).start()
 
     def _data_loading(self, year):
         data_list = {}
@@ -193,7 +242,9 @@ class AnalyticMonthsStack(Gtk.Box):
             date_from = dtu.first_day_ms(int(year), month)
             date_to = dtu.last_day_ms(int(year), month)
             data_list[str(year) + str(month)] = AnalyticMonthsStack.Data(
-                DatabaseHelper.get_aggregated_stats(date_from=date_from, date_to=date_to),
+                DatabaseHelper.get_aggregated_stats(
+                    date_from=date_from, date_to=date_to
+                ),
                 month,
                 month_name
             )
@@ -216,14 +267,19 @@ class AnalyticMonthsStack(Gtk.Box):
         child_name = self._stack.get_visible_child_name()
         if box and len(box.get_children()) > 0:
             return
-        if not child_name or not child_name in self._data_list:
+        if not child_name or child_name not in self._data_list:
             return
 
         data = self._data_list[child_name]
         aggregated_list = data.aggregated_list
         if aggregated_list:
             # Calendar.
-            box.pack_start(CalendarLayout(int(data.month), int(self._year)), False, False, 0)
+            box.pack_start(
+                CalendarLayout(int(data.month), int(self._year)),
+                False,
+                False,
+                0
+            )
 
             # Month chart.
             list_t = []
@@ -231,7 +287,9 @@ class AnalyticMonthsStack(Gtk.Box):
                 list_t.append((i.category, i.total_distance_float))
             chart = BarsChart(
                 results=dict(list_t),
-                colors=list(map(lambda a: tau.get_color(a.category), aggregated_list)),
+                colors=list(
+                    map(lambda a: tau.get_color(a.category), aggregated_list)
+                ),
                 cb_annotate=lambda value: distu.m_to_str(value * 1000)
             )
             chart_box = Gtk.Box()
@@ -256,12 +314,15 @@ class AnalyticMonthsStack(Gtk.Box):
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_year_layout.ui")
 class AggregatedStatsYear(Gtk.Box):
+    """Gtk.Box with a combo box with year to load AnalyticTotalsYear."""
+
     __gtype_name__ = "AggregatedStatsYear"
 
     _combo_years: Gtk.ComboBox = Gtk.Template.Child()
     _year_list_store: Gtk.ListStore = Gtk.Template.Child()
 
     def __init__(self):
+        """Load years in the combo box and load last AnalyticTotalsYear."""
         super().__init__()
         self._setup_ui(DatabaseHelper.get_years())
 
@@ -286,7 +347,14 @@ class AggregatedStatsYear(Gtk.Box):
 
 
 class AnalyticTotalsYear(Gtk.VBox):
+    """Gtk.VBox with activities totals stats in a year."""
+
     def __init__(self, year):
+        """Load through a ProcessView the totals for the year.
+
+        Arguments:
+        year -- the year of the totals stats.
+        """
         super().__init__()
         self.get_style_context().add_class(".pru")
         self._year = year
@@ -323,7 +391,9 @@ class AnalyticTotalsYear(Gtk.VBox):
         for i, aggregated in enumerate(aggregated_list):
             box_icon = self._build_icon_box(aggregated.category)
             box_activities = self._build_info_box(aggregated.total_activities)
-            box_activities_per_month = self._build_info_box(su.avg_per_month(aggregated.total_activities, int(self._year)))
+            box_activities_per_month = self._build_info_box(
+                su.avg_per_month(aggregated.total_activities, int(self._year))
+            )
             box_distance = self._build_info_box(aggregated.total_distance)
             box_time = self._build_info_box(aggregated.total_short_moving_time)
             box_gain = self._build_info_box(aggregated.total_elevation_gain)

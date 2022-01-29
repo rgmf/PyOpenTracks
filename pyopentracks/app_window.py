@@ -1,5 +1,5 @@
 """
-Copyright (C) 2020 Román Ginés Martínez Ferrández <rgmf@riseup.net>
+Copyright (C) 2020 Román Ginés Martínez Ferrández <rgmf@riseup.net>.
 
 This file is part of PyOpenTracks.
 
@@ -71,7 +71,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             return
 
         if self._layout:
-            self._layout.destroy()
+            self.remove(self._layout)
 
         self._layout = layout
         self.add(self._layout)
