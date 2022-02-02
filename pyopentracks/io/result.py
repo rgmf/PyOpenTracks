@@ -21,11 +21,15 @@ from enum import Enum
 
 
 class RecordedWith(Enum):
+    """Enum with recorded devices possibilities."""
+
     UNKNOWN = 0
     OPENTRACKS = 1
 
 
 class Result:
+    """Result for importing tracks."""
+
     OK = 0
     ERROR = 1
     EXISTS = 2
@@ -33,6 +37,7 @@ class Result:
     def __init__(
         self, code, track=None, filename=None, message=None, recorded_with=None
     ):
+        """Create a Result object with a code at least."""
         self._code = code
         self._track = track
         self._filename = filename
@@ -41,29 +46,33 @@ class Result:
 
     @property
     def code(self):
+        """Return code property."""
         return self._code
 
     @property
     def track(self):
+        """Return track object."""
         return self._track
 
     @property
     def filename(self):
+        """Return name of the file imported."""
         if not self._filename:
-            return _("file name unknown")
+            return "unknown"
         return self._filename
 
     @property
-    def message(self):
-        if not self._message:
-            return ""
-        return self._message
-
-    @property
     def is_ok(self):
+        """Return True if importing was ok."""
         return self._code == Result.OK
 
     @property
+    def message(self):
+        """Return the message if any. Otherwise return empty string."""
+        return self._message if self._message is not None else ""
+
+    @property
     def recorded_with(self):
-        return RecordedWith.UNKNOWN if self._recorded_with is None \
+        """Return RecordedWith enumeration value for recorded_with."""
+        return RecordedWith.UNKNOWN if self._recorded_with is None\
           else self._recorded_with

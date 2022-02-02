@@ -122,7 +122,7 @@ class ImportHandler():
         if not trackid:
             code = Result.ERROR
             message = _(
-                f"Error importing the file {track.trackfile_path}."
+                f"Error importing the file {filename}."
                 "\nIt couldn't be inserted in the database"
             )
         else:
