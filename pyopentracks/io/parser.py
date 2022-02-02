@@ -48,17 +48,29 @@ class Parser:
         self._add_current_segment_points()
 
     def _add_track_point(self, track_point):
-        if not track_point:
+        # Check track_point is a good one.
+        if track_point is None:
             return
-        if not track_point.latitude or not track_point.longitude or not track_point.time_ms or not track_point.speed_mps:
+        if not track_point.latitude or not track_point.longitude:
             return
-        if not self._is_valid_location(track_point.latitude, track_point.longitude):
+        if not track_point.time_ms:
+            return
+        if not self._is_valid_location(
+            track_point.latitude, track_point.longitude
+        ):
             return
 
-        if not self._is_moving(track_point.speed) or self._new_segment:
+        # When a track_point is not moving and it's in the middle of a segment
+        # or a new segment has to be created then finishes the current segment.
+        if (
+            (not self._is_moving(track_point.speed) and
+             self._current_segment_track_points) or
+            self._new_segment
+        ):
             self._add_current_segment_points()
             self._new_segment = False
 
+        # Add the track to the current segment.
         self._current_segment_track_points.append(track_point)
 
     def _add_current_segment_points(self):

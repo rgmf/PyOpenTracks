@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx
+    version="1.1"
+    creator="OpenTracks"
+    xmlns="http://www.topografix.com/GPX/1/1"
+    xmlns:topografix="http://www.topografix.com/GPX/Private/TopoGrafix/0/1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:opentracks="http://opentracksapp.com/xmlschemas/v1"
+    xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v2"
+    xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1"
+    xmlns:pwr="http://www.garmin.com/xmlschemas/PowerExtension/v1"
+    xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.topografix.com/GPX/Private/TopoGrafix/0/1 http://www.topografix.com/GPX/Private/TopoGrafix/0/1/topografix.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v2 https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd http://www.garmin.com/xmlschemas/PowerExtension/v1 https://www8.garmin.com/xmlschemas/PowerExtensionv1.xsd http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://opentracksapp.com/xmlschemas/v1 http://opentracksapp.com/xmlschemas/OpenTracks_v1.xsd">
+  <trk>
+    <name><![CDATA[For tests]]></name>
+    <desc><![CDATA[This is a GPX created for tests]]></desc>
+    <type><![CDATA[road biking]]></type>
+    <trkseg>
+      <trkpt lat="41.39655" lon="2.20821">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:00.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39674" lon="2.20834">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:05.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39689" lon="2.20841">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:08.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39707" lon="2.20847">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:12.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39720" lon="2.20855">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:15.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+    </trkseg>
+
+    <trkseg>
+      <trkpt lat="41.39736" lon="2.20861">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:20.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39749" lon="2.20864">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:25.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39763" lon="2.20870">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:30.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39775" lon="2.20876">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:35.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39786" lon="2.20881">
+        <ele>10</ele>
+        <time>2022-02-02T08:00:40.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+    </trkseg>
+
+    <trkseg>
+      <trkpt lat="41.39794" lon="2.20886">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:00.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39804" lon="2.20891">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:02.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39814" lon="2.20899">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:05.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39822" lon="2.20906">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:10.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39832" lon="2.20914">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:12.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39845" lon="2.20924">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:15.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39860" lon="2.20934">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:17.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39869" lon="2.20943">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:19.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+      <trkpt lat="41.39880" lon="2.20951">
+        <ele>10</ele>
+        <time>2022-02-02T09:00:20.000+01:00</time>
+        <extensions><gpxtpx:TrackPointExtension>
+          <gpxtpx:hr>100</gpxtpx:hr>
+          <opentracks:gain>1</opentracks:gain>
+          <opentracks:loss>0</opentracks:loss>
+        </gpxtpx:TrackPointExtension></extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

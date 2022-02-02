@@ -59,7 +59,7 @@ class GpxParser(Parser):
         self._filename_path = filename_path
         self._recorded_with = RecordedWith.UNKNOWN
 
-        self._name = _("No name")
+        self._name = "PyOpenTracks"
         self._desc = None
         self._type = None
         self._uuid = None

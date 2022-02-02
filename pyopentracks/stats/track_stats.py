@@ -169,37 +169,47 @@ class TrackStats:
     def compute(self, track_points):
         """Compute stats from track_points
 
-        It expects all track points are valid ones: correct location (lat, lon), time and speed.
+        It expects all track points are valid ones: correct location
+        (lat, lon), time and speed.
 
         Arguments:
-        track_points -- all TrackPoint's objects to compute that will be use to compute stats.
+        track_points -- all TrackPoint's objects to compute that will be use
+        to compute stats.
         """
         for tp in track_points:
             self._new_track_point(tp)
+        self._avg_speed_mps = (
+            self._total_distance_m / (self._total_time_ms / 1000)
+        )
+        self._avg_moving_speed_mps = (
+            self._total_distance_m / (self._moving_time_ms / 1000)
+        )
 
     def _new_track_point(self, track_point):
         """Compute all stats from new track point.
 
-        It expects track_point to have the following data: latitude, longitude, time, speed.
+        It expects track_point to have the following data: latitude, longitude,
+        time, speed.
 
         Arguments:
-        track_point -- TrackPoint object with, at least, location (with latitude and longitude), time and speed.
+        track_point -- TrackPoint object with, at least, location (with
+        latitude and longitude), time and speed.
         """
         if track_point.segment != self._segment:
             self._last_segment_time_ms = None
             self._hr.reset()
             self._cadence.reset()
-        else:
-            self._add_speed(self._get_float_or_none(track_point.speed))
-            self._add_elevation(
-                self._get_float_or_none(track_point.altitude),
-                self._get_float_or_none(track_point.elevation_gain),
-                self._get_float_or_none(track_point.elevation_loss)
-            )
-            self._add_distance(track_point.latitude, track_point.longitude)
-            self._add_time(track_point.time_ms)
-            self._hr.add(track_point.heart_rate, track_point.time_ms)
-            self._cadence.add(track_point.cadence, track_point.time_ms)
+
+        self._add_speed(self._get_float_or_none(track_point.speed))
+        self._add_elevation(
+            self._get_float_or_none(track_point.altitude),
+            self._get_float_or_none(track_point.elevation_gain),
+            self._get_float_or_none(track_point.elevation_loss)
+        )
+        self._add_distance(track_point.latitude, track_point.longitude)
+        self._add_time(track_point.time_ms)
+        self._hr.add(track_point.heart_rate, track_point.time_ms)
+        self._cadence.add(track_point.cadence, track_point.time_ms)
 
         self._segment = track_point.segment
         self._last_latitude = track_point.latitude
@@ -237,30 +247,29 @@ class TrackStats:
             self._last_segment_time_ms = timestamp_ms
 
         except ParserError as e:
-            pyot_logging.get_logger(__name__).exception(f"datetime parsing error: {str(e)}")
+            pyot_logging.get_logger(__name__).exception(
+                f"datetime parsing error: {str(e)}"
+            )
 
     def _add_distance(self, lat, lon):
         if self._total_distance_m is None:
             self._total_distance_m = 0
         else:
-            to_accum = LocationUtils.distance_between(self._last_latitude, self._last_longitude, lat, lon)
+            to_accum = LocationUtils.distance_between(
+                self._last_latitude, self._last_longitude,
+                lat, lon
+            )
             self._total_distance_m = (self._total_distance_m + to_accum)
 
     def _add_speed(self, speed):
-        if speed is not None:
-            self._max_speed_mps = (
-                speed
-                if self._max_speed_mps is None or speed > self._max_speed_mps
-                else self._max_speed_mps
-            )
-        if self._total_distance_m and self._total_time_ms:
-            self._avg_speed_mps = (
-                self._total_distance_m / (self._total_time_ms / 1000)
-            )
-        if self._total_distance_m and self._moving_time_ms:
-            self._avg_moving_speed_mps = (
-                self._total_distance_m / (self._moving_time_ms / 1000)
-            )
+        if speed is None:
+            return
+
+        self._max_speed_mps = (
+            speed
+            if self._max_speed_mps is None or speed > self._max_speed_mps
+            else self._max_speed_mps
+        )
 
     def _add_elevation(self, ele, gain, loss):
         if ele is not None:
