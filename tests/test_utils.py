@@ -42,32 +42,32 @@ class TestDateTimeUtils(unittest.TestCase):
 
     def test_ms_to_str(self):
         naive_dt = datetime(2022, 1, 1, 10, 30, 15)
-        self.assertEquals(
+        self.assertEqual(
             DateTimeUtils.ms_to_str(naive_dt.timestamp() * 1000.0),
             "Sat, 01 Jan 2022 10:30:15"
         )
-        self.assertEquals(
+        self.assertEqual(
             DateTimeUtils.ms_to_str(naive_dt.timestamp() * 1000.0, True),
             "01 Jan 2022"
         )
 
     def test_first_day_ms(self):
         jan_2022 = 1640991600000
-        self.assertEquals(DateTimeUtils.first_day_ms(2022, 1), jan_2022)
+        self.assertEqual(DateTimeUtils.first_day_ms(2022, 1), jan_2022)
 
     def test_last_day_ms(self):
         jan_2022 = 1643669999000
-        self.assertEquals(DateTimeUtils.last_day_ms(2022, 1), jan_2022)
+        self.assertEqual(DateTimeUtils.last_day_ms(2022, 1), jan_2022)
         feb_2021 = 1614553199000
-        self.assertEquals(DateTimeUtils.last_day_ms(2021, 2), feb_2021)
+        self.assertEqual(DateTimeUtils.last_day_ms(2021, 2), feb_2021)
         feb_2004 = 1078095599000
-        self.assertEquals(DateTimeUtils.last_day_ms(2004, 2), feb_2004)
+        self.assertEqual(DateTimeUtils.last_day_ms(2004, 2), feb_2004)
 
 
 class TestDateUtils(unittest.TestCase):
     def test_get_months(self):
         months = DateUtils.get_months()
-        self.assertEquals(len(months), 12)
+        self.assertEqual(len(months), 12)
         self.assertTrue(isinstance(months, list))
 
     def test_get_today(self):
@@ -152,88 +152,88 @@ class TestTimeUtils(unittest.TestCase):
 
 class TestDistanceUtils(unittest.TestCase):
     def test_m_to_str(self):
-        self.assertEquals(DistanceUtils.m_to_str(None), "-")
-        self.assertEquals(DistanceUtils.m_to_str(999), "999 m")
-        self.assertEquals(DistanceUtils.m_to_str(999.99), "999 m")
-        self.assertEquals(DistanceUtils.m_to_str(1000), "1 km")
-        self.assertEquals(DistanceUtils.m_to_str(84000), "84 km")
-        self.assertEquals(DistanceUtils.m_to_str(84525), "84.53 km")
-        self.assertEquals(DistanceUtils.m_to_str(84500.683), "84.5 km")
+        self.assertEqual(DistanceUtils.m_to_str(None), "-")
+        self.assertEqual(DistanceUtils.m_to_str(999), "999 m")
+        self.assertEqual(DistanceUtils.m_to_str(999.99), "999 m")
+        self.assertEqual(DistanceUtils.m_to_str(1000), "1 km")
+        self.assertEqual(DistanceUtils.m_to_str(84000), "84 km")
+        self.assertEqual(DistanceUtils.m_to_str(84525), "84.53 km")
+        self.assertEqual(DistanceUtils.m_to_str(84500.683), "84.5 km")
 
 
 class TestSpeedUtils(unittest.TestCase):
     def test_mps_to_kph(self):
-        self.assertEquals(SpeedUtils.mps_to_kph(None), "-")
-        self.assertEquals(SpeedUtils.mps_to_kph(1), "3.6 km/h")
-        self.assertEquals(SpeedUtils.mps_to_kph(5.55555556), "20.0 km/h")
-        self.assertEquals(SpeedUtils.mps_to_kph(7.1527778), "25.8 km/h")
+        self.assertEqual(SpeedUtils.mps_to_kph(None), "-")
+        self.assertEqual(SpeedUtils.mps_to_kph(1), "3.6 km/h")
+        self.assertEqual(SpeedUtils.mps_to_kph(5.55555556), "20.0 km/h")
+        self.assertEqual(SpeedUtils.mps_to_kph(7.1527778), "25.8 km/h")
 
     def test_mps_to_category_rate(self):
-        self.assertEquals(
+        self.assertEqual(
             SpeedUtils.mps_to_category_rate(7.1527778, "cycling"),
             "25.8 km/h"
         )
-        self.assertEquals(
+        self.assertEqual(
             SpeedUtils.mps_to_category_rate(5.55555556, "running"),
             "3:00 min/km"
         )
-        self.assertEquals(
+        self.assertEqual(
             SpeedUtils.mps_to_category_rate(3.75, "running"),
             "4:26 min/km"
         )
 
     def test_mps(self):
-        self.assertEquals(SpeedUtils.mps(1, 1000), 1.0)
-        self.assertEquals(SpeedUtils.mps(1, 100), 10.0)
+        self.assertEqual(SpeedUtils.mps(1, 1000), 1.0)
+        self.assertEqual(SpeedUtils.mps(1, 100), 10.0)
 
 
 class TestElevationUtils(unittest.TestCase):
     def test_elevation_to_str(self):
-        self.assertEquals(ElevationUtils.elevation_to_str(None), "-")
-        self.assertEquals(ElevationUtils.elevation_to_str(15.5), "15 m")
-        self.assertEquals(ElevationUtils.elevation_to_str(0), "0 m")
+        self.assertEqual(ElevationUtils.elevation_to_str(None), "-")
+        self.assertEqual(ElevationUtils.elevation_to_str(15.5), "15 m")
+        self.assertEqual(ElevationUtils.elevation_to_str(0), "0 m")
 
     def test_slope_to_str(self):
-        self.assertEquals(ElevationUtils.slope_to_str(None, None), "-")
-        self.assertEquals(ElevationUtils.slope_to_str(100, None), "0.0%")
-        self.assertEquals(ElevationUtils.slope_to_str(None, 100), "-")
-        self.assertEquals(ElevationUtils.slope_to_str(0, 0), "-")
-        self.assertEquals(ElevationUtils.slope_to_str(100, 0), "0.0%")
-        self.assertEquals(ElevationUtils.slope_to_str(0, 100), "-")
-        self.assertEquals(ElevationUtils.slope_to_str(100, 1), "1.0%")
-        self.assertEquals(ElevationUtils.slope_to_str(4000, 200), "5.0%")
+        self.assertEqual(ElevationUtils.slope_to_str(None, None), "-")
+        self.assertEqual(ElevationUtils.slope_to_str(100, None), "0.0%")
+        self.assertEqual(ElevationUtils.slope_to_str(None, 100), "-")
+        self.assertEqual(ElevationUtils.slope_to_str(0, 0), "-")
+        self.assertEqual(ElevationUtils.slope_to_str(100, 0), "0.0%")
+        self.assertEqual(ElevationUtils.slope_to_str(0, 100), "-")
+        self.assertEqual(ElevationUtils.slope_to_str(100, 1), "1.0%")
+        self.assertEqual(ElevationUtils.slope_to_str(4000, 200), "5.0%")
 
 
 class TestTypeActivityUtils(unittest.TestCase):
     def test_get_icon_resource(self):
-        self.assertEquals(
+        self.assertEqual(
             TypeActivityUtils.get_icon_resource(None),
             "/es/rgmf/pyopentracks/icons/unknown_black_48dp.svg"
         )
-        self.assertEquals(
+        self.assertEqual(
             TypeActivityUtils.get_icon_resource("not exists"),
             "/es/rgmf/pyopentracks/icons/unknown_black_48dp.svg"
         )
         for activity_type in ["running", "trail running"]:
-            self.assertEquals(
+            self.assertEqual(
                 TypeActivityUtils.get_icon_resource(activity_type),
                 "/es/rgmf/pyopentracks/icons/run_black_48dp.svg"
             )
         for activity_type in [
             "biking", "cycling", "road biking", "mountain biking"
         ]:
-            self.assertEquals(
+            self.assertEqual(
                 TypeActivityUtils.get_icon_resource(activity_type),
                 "/es/rgmf/pyopentracks/icons/bike_black_48dp.svg"
             )
         for activity_type in [
             "walking", "trail walking", "hiking", "trail hiking"
         ]:
-            self.assertEquals(
+            self.assertEqual(
                 TypeActivityUtils.get_icon_resource(activity_type),
                 "/es/rgmf/pyopentracks/icons/walk_black_48dp.svg"
             )
-        self.assertEquals(
+        self.assertEqual(
             TypeActivityUtils.get_icon_resource("driving"),
             "/es/rgmf/pyopentracks/icons/drive_car_black_48dp.svg"
         )
@@ -257,7 +257,7 @@ class TestTrackPointUtils(unittest.TestCase):
         tp2 = TrackPoint(0, 0, 0, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0)
         tp3 = TrackPoint(0, 0, 0, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0)
         tp4 = TrackPoint(0, 0, 0, 8, 7, 0, 0, 0, 0, 0, 0, 0, 0)
-        self.assertEquals(
+        self.assertEqual(
             TrackPointUtils.to_locations([tp1, tp2, tp3, tp4]),
             [(1.0, 2.0), (3.0, 4.0), (5.0, 6.0), (7.0, 8.0)]
         )
@@ -269,7 +269,7 @@ class TestTrackPointUtils(unittest.TestCase):
         tp2 = TrackPoint(
             0, 0, 0, -73.96537, 40.78378, 10000, 0, 0, 0, 0, 0, 0, 0
         )
-        self.assertAlmostEquals(TrackPointUtils.speed(tp1, tp2), 5, 2)
+        self.assertAlmostEqual(TrackPointUtils.speed(tp1, tp2), 5, 2)
 
     def test_extract_dict_values(self):
         tp1 = TrackPoint(
@@ -291,7 +291,7 @@ class TestTrackPointUtils(unittest.TestCase):
             0, 0, 0, -73.96537, 40.78378, 50000, 0, 0, 0, 0, 0, 0, 0
         )
         tpoints = [tp1, tp2, tp3, tp4, tp5, tp6]
-        self.assertEquals(
+        self.assertEqual(
             len(TrackPointUtils.extract_dict_values(tpoints, 50)),
             4
         )
@@ -299,7 +299,7 @@ class TestTrackPointUtils(unittest.TestCase):
 
 class TestLocationUtils(unittest.TestCase):
     def test_distance_between(self):
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             LocationUtils.distance_between(
                 40.78395, -73.96592, 40.78378, -73.96537
             ),
@@ -310,14 +310,14 @@ class TestLocationUtils(unittest.TestCase):
 
 class TestSensorUtils(unittest.TestCase):
     def test_hr_to_str(self):
-        self.assertEquals(SensorUtils.hr_to_str(None), "-")
-        self.assertEquals(SensorUtils.hr_to_str(0), "0 bpm")
-        self.assertEquals(SensorUtils.hr_to_str(95.87), "95 bpm")
+        self.assertEqual(SensorUtils.hr_to_str(None), "-")
+        self.assertEqual(SensorUtils.hr_to_str(0), "0 bpm")
+        self.assertEqual(SensorUtils.hr_to_str(95.87), "95 bpm")
 
     def test_cadence_to_str(self):
-        self.assertEquals(SensorUtils.cadence_to_str(None), "-")
-        self.assertEquals(SensorUtils.cadence_to_str(0), "0 rpm")
-        self.assertEquals(SensorUtils.cadence_to_str(95.87), "95 rpm")
+        self.assertEqual(SensorUtils.cadence_to_str(None), "-")
+        self.assertEqual(SensorUtils.cadence_to_str(0), "0 rpm")
+        self.assertEqual(SensorUtils.cadence_to_str(95.87), "95 rpm")
 
 
 class TestStatsUtils(unittest.TestCase):

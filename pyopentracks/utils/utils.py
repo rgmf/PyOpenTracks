@@ -304,6 +304,8 @@ class TypeActivityUtils:
 
     @staticmethod
     def is_speed(category: str) -> bool:
+        if category is None:
+            return True
         return category not in TypeActivityUtils._pace
 
 

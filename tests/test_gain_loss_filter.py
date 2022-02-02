@@ -16,8 +16,8 @@ class TestGainLossFilter(MockDB):
             GainLossFilter(trackid).run()
 
         track = self.get_track(trackid)
-        self.assertEquals(track.gain_elevation_m, 0)
-        self.assertEquals(track.loss_elevation_m, 0)
+        self.assertEqual(track.gain_elevation_m, 0)
+        self.assertEqual(track.loss_elevation_m, 0)
 
     def test_gain_loss_filter_2(self):
         """Flat terrain with 10 track points."""
@@ -41,7 +41,7 @@ class TestGainLossFilter(MockDB):
                 tp.latitude, tp.longitude
             )
             last_tp = tp
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             distance,
             (num_points - 1) * distance_between_tp,
             0
@@ -51,8 +51,8 @@ class TestGainLossFilter(MockDB):
             GainLossFilter(trackid).run()
 
         track = self.get_track(trackid)
-        self.assertEquals(track.gain_elevation_m, 0)
-        self.assertEquals(track.loss_elevation_m, 0)
+        self.assertEqual(track.gain_elevation_m, 0)
+        self.assertEqual(track.loss_elevation_m, 0)
 
     def test_gain_loss_filter_3(self):
         """Set of track points with one of them set with 3m gain."""
@@ -78,7 +78,7 @@ class TestGainLossFilter(MockDB):
                 tp.latitude, tp.longitude
             )
             last_tp = tp
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             distance,
             (num_points - 1) * distance_between_tp,
             0
@@ -88,8 +88,8 @@ class TestGainLossFilter(MockDB):
             GainLossFilter(trackid).run()
 
         track = self.get_track(trackid)
-        self.assertEquals(track.gain_elevation_m, 3)
-        self.assertEquals(track.loss_elevation_m, 0)
+        self.assertEqual(track.gain_elevation_m, 3)
+        self.assertEqual(track.loss_elevation_m, 0)
 
     def test_gain_loss_filter_4(self):
         """Climbing/Descending bad. All points with 3m gain and 3m loss."""
@@ -116,7 +116,7 @@ class TestGainLossFilter(MockDB):
                 tp.latitude, tp.longitude
             )
             last_tp = tp
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             distance,
             (num_points - 1) * distance_between_tp,
             0
@@ -128,13 +128,13 @@ class TestGainLossFilter(MockDB):
             GainLossFilter(trackid).run()
 
         track = self.get_track(trackid)
-        self.assertEquals(track.gain_elevation_m, 0)
-        self.assertEquals(track.loss_elevation_m, 0)
-        self.assertEquals(
+        self.assertEqual(track.gain_elevation_m, 0)
+        self.assertEqual(track.loss_elevation_m, 0)
+        self.assertEqual(
             sum([tp.elevation_gain for tp in trackpoints_after]),
             num_points * 3
         )
-        self.assertEquals(
+        self.assertEqual(
             sum([tp.elevation_loss for tp in trackpoints_after]),
             num_points * 3
         )
@@ -164,7 +164,7 @@ class TestGainLossFilter(MockDB):
                 tp.latitude, tp.longitude
             )
             last_tp = tp
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             distance,
             (num_points - 1) * distance_between_tp,
             0
@@ -176,13 +176,13 @@ class TestGainLossFilter(MockDB):
             GainLossFilter(trackid).run()
 
         track = self.get_track(trackid)
-        self.assertEquals(track.gain_elevation_m, 12)
-        self.assertEquals(track.loss_elevation_m, 0)
-        self.assertEquals(
+        self.assertEqual(track.gain_elevation_m, 12)
+        self.assertEqual(track.loss_elevation_m, 0)
+        self.assertEqual(
             sum([tp.elevation_gain for tp in trackpoints_after]),
             num_points * 3
         )
-        self.assertEquals(
+        self.assertEqual(
             sum([tp.elevation_loss for tp in trackpoints_after]),
             3
         )
@@ -212,7 +212,7 @@ class TestGainLossFilter(MockDB):
                 tp.latitude, tp.longitude
             )
             last_tp = tp
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             distance,
             (num_points - 1) * distance_between_tp,
             0
@@ -224,13 +224,13 @@ class TestGainLossFilter(MockDB):
             GainLossFilter(trackid).run()
 
         track = self.get_track(trackid)
-        self.assertEquals(track.gain_elevation_m, 0)
-        self.assertEquals(track.loss_elevation_m, 12)
-        self.assertEquals(
+        self.assertEqual(track.gain_elevation_m, 0)
+        self.assertEqual(track.loss_elevation_m, 12)
+        self.assertEqual(
             sum([tp.elevation_gain for tp in trackpoints_after]),
             3
         )
-        self.assertEquals(
+        self.assertEqual(
             sum([tp.elevation_loss for tp in trackpoints_after]),
             num_points * 3
         )
