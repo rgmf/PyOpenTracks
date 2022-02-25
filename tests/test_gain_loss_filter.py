@@ -70,7 +70,7 @@ class TestGainLossFilter(MockDB):
 
         distance = 0
         last_tp = trackpoints[0]
-        last_tp.set_elevation_gain(3)
+        last_tp.elevation_gain = 3
         self.update(last_tp)
         for tp in trackpoints:
             distance += LocationUtils.distance_between(
@@ -108,8 +108,8 @@ class TestGainLossFilter(MockDB):
         distance = 0
         last_tp = trackpoints[0]
         for tp in trackpoints:
-            tp.set_elevation_gain(3)
-            tp.set_elevation_loss(3)
+            tp.elevation_gain = 3
+            tp.elevation_loss = 3
             self.update(tp)
             distance += LocationUtils.distance_between(
                 last_tp.latitude, last_tp.longitude,
@@ -156,8 +156,8 @@ class TestGainLossFilter(MockDB):
         distance = 0
         last_tp = trackpoints[0]
         for idx, tp in enumerate(trackpoints):
-            tp.set_elevation_gain(3)
-            tp.set_elevation_loss(3 if idx == 0 else 0)
+            tp.elevation_gain = 3
+            tp.elevation_loss = 3 if idx == 0 else 0
             self.update(tp)
             distance += LocationUtils.distance_between(
                 last_tp.latitude, last_tp.longitude,
@@ -204,8 +204,8 @@ class TestGainLossFilter(MockDB):
         distance = 0
         last_tp = trackpoints[0]
         for idx, tp in enumerate(trackpoints):
-            tp.set_elevation_gain(3 if idx == 0 else 0)
-            tp.set_elevation_loss(3)
+            tp.elevation_gain = 3 if idx == 0 else 0
+            tp.elevation_loss = 3
             self.update(tp)
             distance += LocationUtils.distance_between(
                 last_tp.latitude, last_tp.longitude,

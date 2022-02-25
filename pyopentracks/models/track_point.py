@@ -157,6 +157,10 @@ class TrackPoint(Model):
         return 0
 
     @property
+    def heart_rate_bpm(self):
+        return self._hear_rate_bpm
+
+    @property
     def heart_rate(self):
         if self._heart_rate_bpm is not None:
             return float(self._heart_rate_bpm)
@@ -169,6 +173,10 @@ class TrackPoint(Model):
         return None
 
     @property
+    def cadence_rpm(self):
+        return self._cadence_rpm
+
+    @property
     def time_ms(self):
         return self._time_ms
 
@@ -176,35 +184,42 @@ class TrackPoint(Model):
     def speed_mps(self):
         return self._speed_mps
 
-    def set_num_segment(self, num_segment):
+    @segment.setter
+    def segment(self, num_segment):
         self._numsegment = num_segment
 
-    def set_latitude(self, latitude):
+    @latitude.setter
+    def latitude(self, latitude):
         self._latitude = latitude
 
-    def set_longitude(self, longitude):
+    @longitude.setter
+    def longitude(self, longitude):
         self._longitude = longitude
 
-    def set_trackid(self, trackid):
-        self._trackid = trackid
-
-    def set_altitude(self, altitude):
+    @altitude.setter
+    def altitude(self, altitude):
         self._altitude_m = altitude
 
-    def set_elevation_gain(self, gain):
+    @elevation_gain.setter
+    def elevation_gain(self, gain):
         self._elevation_gain_m = gain
 
-    def set_elevation_loss(self, loss):
+    @elevation_loss.setter
+    def elevation_loss(self, loss):
         self._elevation_loss_m = loss
 
-    def set_time(self, time):
+    @time_ms.setter
+    def time_ms(self, time):
         self._time_ms = time
 
-    def set_speed(self, speed):
+    @speed_mps.setter
+    def speed_mps(self, speed):
         self._speed_mps = speed
 
-    def set_heart_rate(self, hr):
+    @heart_rate_bpm.setter
+    def heart_rate_bpm(self, hr):
         self._heart_rate_bpm = hr
 
-    def set_cadence(self, cadence):
+    @cadence_rpm.setter
+    def cadence_rpm(self, cadence):
         self._cadence_rpm = cadence

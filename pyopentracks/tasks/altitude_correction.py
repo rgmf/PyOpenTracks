@@ -100,7 +100,7 @@ class AltitudeCorrection:
                     last_valid_tp = tp
                     self._buffer.append(tp.altitude)
                     last_valid_altitude = round(sum(self._buffer) / AltitudeCorrection.CIRCULAR_BUFFER_LEN, 2)
-                    last_valid_tp.set_elevation_gain(diff)
+                    last_valid_tp.elevation_gain = diff
                     DatabaseHelper.update(last_valid_tp)
                 elif tp.altitude <= last_valid_altitude - AltitudeCorrection.GAIN_LOSS_THRESHOLD:
                     diff = last_valid_tp.altitude - tp.altitude
@@ -108,7 +108,7 @@ class AltitudeCorrection:
                     last_valid_tp = tp
                     self._buffer.append(tp.altitude)
                     last_valid_altitude = round(sum(self._buffer) / AltitudeCorrection.CIRCULAR_BUFFER_LEN, 2)
-                    last_valid_tp.set_elevation_loss(diff)
+                    last_valid_tp.elevation_loss = diff
                     DatabaseHelper.update(last_valid_tp)
             if not self._min or self._min > tp.altitude:
                 self._min = tp.altitude

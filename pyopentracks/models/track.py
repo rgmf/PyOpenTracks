@@ -163,7 +163,7 @@ class Track(Model):
         return self._description if self._description else ""
 
     @property
-    def activity_type(self):
+    def category(self):
         return self._category
 
     @property
@@ -247,12 +247,20 @@ class Track(Model):
         return _("Avg. Moving Speed") if tau.is_speed(self._category) else _("Avg. Moving Pace")
 
     @property
+    def max_elevation_m(self):
+        return self._maxelevation_m
+
+    @property
     def max_elevation(self):
         return eu.elevation_to_str(self._maxelevation_m)
 
     @property
     def max_elevation_label(self):
         return _("Max. Altitude")
+
+    @property
+    def min_elevation_m(self):
+        return self._minelevation_m
 
     @property
     def min_elevation(self):
@@ -318,26 +326,34 @@ class Track(Model):
     def avg_cadence_label(self):
         return _("Avg. Cadence")
 
-    def set_name(self, new_name):
-        self._name = new_name
+    @name.setter
+    def name(self, name):
+        self._name = name
 
-    def set_description(self, new_desc):
-        self._description = new_desc
+    @description.setter
+    def description(self, description):
+        self._description = description
 
-    def set_activity_type(self, new_category):
-        self._category = new_category
+    @category.setter
+    def category(self, category):
+        self._category = category
 
-    def set_gain(self, gain):
+    @gain_elevation_m.setter
+    def gain_elevation_m(self, gain):
         self._elevationgain_m = gain
 
-    def set_loss(self, loss):
+    @loss_elevation_m.setter
+    def loss_elevation_m(self, loss):
         self._elevationloss_m = loss
 
-    def set_max_altitude(self, altitude):
-        self._maxelevation_m = altitude
+    @max_elevation_m.setter
+    def max_elevation_m(self, elevation):
+        self._maxelevation_m = elevation
 
-    def set_min_altitude(self, altitude):
-        self._minelevation_m = altitude
+    @min_elevation_m.setter
+    def min_elevation_m(self, elevation):
+        self._minelevation_m = elevation
 
-    def set_track_points(self, track_points):
+    @track_points.setter
+    def track_points(self, track_points):
         self._track_points = track_points

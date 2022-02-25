@@ -170,15 +170,15 @@ class DatabaseHelper:
         db.update_altitude(trackid, results)
 
     @staticmethod
-    def update_stats(trackid, gain, loss, min_altitude=None, max_altitude=None):
+    def update_stats(trackid, gain, loss, min_elevation=None, max_elevation=None):
         db = Database()
         track = db.get_track_by_id(trackid)
-        track.set_gain(gain)
-        track.set_loss(loss)
-        if max_altitude is not None:
-            track.set_max_altitude(max_altitude)
-        if min_altitude is not None:
-            track.set_min_altitude(min_altitude)
+        track.gain_elevation_m = gain
+        track.loss_elevation_m = loss
+        if max_elevation is not None:
+            track.max_elevation_m = max_elevation
+        if min_elevation is not None:
+            track.min_elevation_m = min_elevation
         db.update(track)
 
     @staticmethod

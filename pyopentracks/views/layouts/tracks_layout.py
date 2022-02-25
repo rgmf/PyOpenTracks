@@ -57,8 +57,8 @@ class TracksLayout(Gtk.Box, Layout):
         for track in self._tracks:
             self._list_store.append([
                 track.id,
-                 track.name,
-                 TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32)
+                track.name,
+                TypeActivityUtils.get_icon_pixbuf(track.category, 32, 32)
             ])
 
         self._current_model_filter = None
@@ -168,7 +168,7 @@ class TracksLayout(Gtk.Box, Layout):
         track = dialog.get_track()
         self._tree_model_filter.set_value(treeiter, 1, track.name)
         self._tree_model_filter.set_value(
-            treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.activity_type, 32, 32)
+            treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.category, 32, 32)
         )
         DatabaseHelper.update(track)
 

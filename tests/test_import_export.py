@@ -67,7 +67,7 @@ class TestImportExport(MockDB):
                     track.description,
                     "This is a GPX created for tests"
                 )
-                self.assertEqual(track.activity_type, "road biking")
+                self.assertEqual(track.category, "road biking")
                 self.assertEqual(track._totaltime_ms, 20_000)
                 self.assertEqual(track._movingtime_ms, 20_000)
                 self.assertEqual(track.gain_elevation_m, 6)
@@ -123,7 +123,7 @@ class TestImportExport(MockDB):
                     track.description,
                     "This is a GPX created for tests"
                 )
-                self.assertEqual(track.activity_type, "road biking")
+                self.assertEqual(track.category, "road biking")
                 self.assertEqual(track._totaltime_ms, 40_000)
                 self.assertEqual(track._movingtime_ms, 20_000 + 19_000)
                 self.assertEqual(track.gain_elevation_m, 11)
@@ -181,7 +181,7 @@ class TestImportExport(MockDB):
                     track.description,
                     "This is a GPX created for tests"
                 )
-                self.assertEqual(track.activity_type, "road biking")
+                self.assertEqual(track.category, "road biking")
                 self.assertEqual(track._totaltime_ms, 70_000)
                 self.assertEqual(track._movingtime_ms, 20_000 + 19_000 + 21_000)
                 self.assertEqual(track.gain_elevation_m, 21)
@@ -235,7 +235,7 @@ class TestImportExport(MockDB):
                     track.description,
                     "This is a GPX created for tests"
                 )
-                self.assertEqual(track.activity_type, "road biking")
+                self.assertEqual(track.category, "road biking")
                 self.assertEqual(track._totaltime_ms, 3_620_000)
                 self.assertEqual(track._movingtime_ms, 15_000 + 20_000 + 20_000)
                 self.assertEqual(track.gain_elevation_m, 19)

@@ -97,7 +97,7 @@ class ExportTrack():
             f"<name>{self._track.name}</name>\n" \
             f"<time>{TimeUtils.ms_to_iso(self._track.start_time_ms)}</time>\n" \
             f"<desc>{self._track.description}</desc>\n" \
-            f"<type>{self._track.activity_type}</type>\n" \
+            f"<type>{self._track.category}</type>\n" \
             "</metadata>\n"
 
     @property

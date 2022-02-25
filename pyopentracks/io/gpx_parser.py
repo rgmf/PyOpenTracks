@@ -93,12 +93,8 @@ class GpxParser(Parser):
         elif tag == GpxParser.TAG_TRKPT:
             self._tag = tag
             self._new_track_point = TrackPoint()
-            self._new_track_point.set_latitude(
-                attr["lat"] if "lat" in attr else None
-            )
-            self._new_track_point.set_longitude(
-                attr["lon"] if "lon" in attr else None
-            )
+            self._new_track_point.latitude = attr["lat"] if "lat" in attr else None
+            self._new_track_point.longitude = attr["lon"] if "lon" in attr else None
 
     def end(self, tag):
         _, _, tag = tag.rpartition("}")
@@ -118,7 +114,7 @@ class GpxParser(Parser):
             None, None, None, None, None, None, None, None, None, None, None,
             None, None, None, None, None
         )
-        self._track.set_track_points(self._track_points)
+        self._track.track_points = self._track_points
         track_stats = TrackStats()
         track_stats.compute(self._track_points)
         self._track.add_track_stats(track_stats)
@@ -137,23 +133,23 @@ class GpxParser(Parser):
     def _end_tag_inside_trkpt(self, tag):
         """Compute the tag tag that is inside trkpt tag."""
         if tag == GpxParser.TAG_ELEVATION:
-            self._new_track_point.set_altitude(self._data)
+            self._new_track_point.altitude = self._data
         elif tag == GpxParser.TAG_GAIN:
-            self._new_track_point.set_elevation_gain(self._data)
+            self._new_track_point.elevation_gain = self._data
         elif tag == GpxParser.TAG_LOSS:
-            self._new_track_point.set_elevation_loss(self._data)
+            self._new_track_point.elevation_loss = self._data
         elif tag == GpxParser.TAG_TIME:
-            self._new_track_point.set_time(tu.iso_to_ms(self._data))
+            self._new_track_point.time_ms = tu.iso_to_ms(self._data)
         elif tag == GpxParser.TAG_SPEED:
-            self._new_track_point.set_speed(self._data)
+            self._new_track_point.speed_mps = self._data
         elif tag == GpxParser.TAG_HR:
-            self._new_track_point.set_heart_rate(self._data)
+            self._new_track_point.heart_rate_bpm = self._data
         elif tag == GpxParser.TAG_CADENCE:
-            self._new_track_point.set_cadence(self._data)
+            self._new_track_point.cadence_rpm = self._data
         elif tag == GpxParser.TAG_TRKPT:
             if not self._new_track_point.speed_mps:
-                self._new_track_point.set_speed(
-                    tpu.speed(self._last_track_point, self._new_track_point)
+                self._new_track_point.speed_mps = tpu.speed(
+                    self._last_track_point, self._new_track_point
                 )
             self._add_track_point(self._new_track_point)
             self._last_track_point = self._new_track_point

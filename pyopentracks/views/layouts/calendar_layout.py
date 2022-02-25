@@ -72,7 +72,7 @@ class CalendarLayout(Gtk.Box):
 
         for track in tracks:
             icon = Gtk.Image()
-            icon.set_from_pixbuf(tau.get_icon_pixbuf(track.activity_type, 36, 36))
+            icon.set_from_pixbuf(tau.get_icon_pixbuf(track.category, 36, 36))
             hbox.pack_start(icon, True, True, 0)
 
         vbox.pack_start(Gtk.Label(str(day)), True, True, 0)

@@ -214,23 +214,23 @@ class TestTypeActivityUtils(unittest.TestCase):
             TypeActivityUtils.get_icon_resource("not exists"),
             "/es/rgmf/pyopentracks/icons/unknown_black_48dp.svg"
         )
-        for activity_type in ["running", "trail running"]:
+        for category in ["running", "trail running"]:
             self.assertEqual(
-                TypeActivityUtils.get_icon_resource(activity_type),
+                TypeActivityUtils.get_icon_resource(category),
                 "/es/rgmf/pyopentracks/icons/run_black_48dp.svg"
             )
-        for activity_type in [
+        for category in [
             "biking", "cycling", "road biking", "mountain biking"
         ]:
             self.assertEqual(
-                TypeActivityUtils.get_icon_resource(activity_type),
+                TypeActivityUtils.get_icon_resource(category),
                 "/es/rgmf/pyopentracks/icons/bike_black_48dp.svg"
             )
-        for activity_type in [
+        for category in [
             "walking", "trail walking", "hiking", "trail hiking"
         ]:
             self.assertEqual(
-                TypeActivityUtils.get_icon_resource(activity_type),
+                TypeActivityUtils.get_icon_resource(category),
                 "/es/rgmf/pyopentracks/icons/walk_black_48dp.svg"
             )
         self.assertEqual(
@@ -239,16 +239,16 @@ class TestTypeActivityUtils(unittest.TestCase):
         )
 
     def test_is_speed(self):
-        for activity_type in [
+        for category in [
             "running", "trail running", "walking", "trail walking", "hiking",
             "trail hiking"
         ]:
-            self.assertFalse(TypeActivityUtils.is_speed(activity_type))
-        for activity_type in [
+            self.assertFalse(TypeActivityUtils.is_speed(category))
+        for category in [
             None, "not exists",
             "biking", "cycling", "road biking", "mountain biking", "driving"
         ]:
-            self.assertTrue(TypeActivityUtils.is_speed(activity_type))
+            self.assertTrue(TypeActivityUtils.is_speed(category))
 
 
 class TestTrackPointUtils(unittest.TestCase):

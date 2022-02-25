@@ -248,22 +248,22 @@ class TrackEditDialog(Gtk.Dialog):
 
         for idx, item in enumerate(TAU.get_activity_types()):
             self._type_list_store.append(item)
-            if item[0] == self._track.activity_type:
+            if item[0] == self._track.category:
                 self._activity_type_name = item[0]
                 self._activity_type.set_active(idx)
         self._activity_type.connect("changed", self._on_activity_type_changed)
 
     def _on_name_changed(self, entry):
-        self._track.set_name(entry.get_text())
+        self._track.name = entry.get_text()
 
     def _on_description_changed(self, entry):
-        self._track.set_description(entry.get_text())
+        self._track.description = entry.get_text()
 
     def _on_activity_type_changed(self, combo):
         iter_item = combo.get_active_iter()
         if iter_item is not None:
             name, icon = self._type_list_store[iter_item][:2]
-            self._track.set_activity_type(name)
+            self._track.category = name
 
     def get_track(self):
         return self._track

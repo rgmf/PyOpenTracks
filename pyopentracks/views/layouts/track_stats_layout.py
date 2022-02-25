@@ -112,9 +112,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         hbox.set_homogeneous(False)
         hbox.get_style_context().add_class("pyot-box-with-margin")
 
-        icon = Gtk.Image.new_from_pixbuf(
-            tau.get_icon_pixbuf(track.activity_type)
-        )
+        icon = Gtk.Image.new_from_pixbuf(tau.get_icon_pixbuf(track.category))
         icon.set_valign(Gtk.Align.START)
         hbox.pack_start(icon, False, True, 0)
 
