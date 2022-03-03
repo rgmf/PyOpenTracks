@@ -162,7 +162,7 @@ class AggregatedStats(Gtk.VBox):
 class AggregatedStatsMonth(Gtk.Box):
     """Gtk.Box with years combo.
 
-    It loads AnalyticMonthsStack when user select a yer in the combo box.
+    It loads AnalyticMonthsStack when user select a year in the combo box.
     """
 
     __gtype_name__ = "AggregatedStatsMonth"
@@ -261,6 +261,7 @@ class AnalyticMonthsStack(Gtk.Box):
             box.get_style_context().add_class("pyot-bg")
             self._stack.add_titled(box, self._year + str(month), month_name)
         self.show_all()
+        self._stack.set_visible_child_name(self._year + str(du.get_today()[1]))
 
     def _visible_child_changed(self, stack, gparamstring):
         box = self._stack.get_visible_child()
