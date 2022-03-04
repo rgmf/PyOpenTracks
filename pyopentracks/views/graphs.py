@@ -30,15 +30,17 @@ class BarsChart:
         """Creates a set of bar chart with results dictionary.
 
         Arguments:
-        results -- dictionary with values and labels for all bars to add. For example:
+        results -- dictionary with values and labels for all bars to
+                   add. For example:
                    {
                         "Label 1": 30,
                         "Label 2": 50,
                         "Label 3": 40
                    }
         colors -- (optional) list of colors to be used for every bar.
-        cb_annotate -- (optional) it's a callback to parse the bars annotation. If it's not passed
-                       then the values will be used like are.
+        cb_annotate -- (optional) it's a callback to parse the bars
+                       annotation. If it's not passed then the values
+                       will be used like are.
         """
         self._results = results
         self._colors = colors
@@ -120,15 +122,18 @@ class StackedBarsChart:
         """Creates a set of horizontal bars with the results.
 
         Arguments:
-        results -- a dictionary with the results represented like this (array of values to be stacked):
+        results -- a dictionary with the results represented like this
+                   (array of values to be stacked):
                    {
                         "Label 1": [15, 10, 20, 30],
                         "Label 2": [22, 8, 15, 20],
                         ...
                    }
         colors -- list of colors to use for stacked bars.
-        max_width -- (optional) if included the horizontal bar maximum width will be used, otherwise it will be calculated.
-        cb_annotate -- (optional) it's a callback to be called for set the annotation on bar chart.
+        max_width -- (optional) if included the horizontal bar maximum
+                     width will be used, otherwise it will be calculated.
+        cb_annotate -- (optional) it's a callback to be called for set
+                       the annotation on bar chart.
         """
 
         self._cb_annotate = cb_annotate
@@ -262,12 +267,13 @@ class LinePlot:
         """Add values to the LinePlot object.
 
         Arguments:
-        values - A list with a dictionary with ditance, elevation and location information:
-            {
-              'distance': <value in km>,
-              'elevation': <value in meters>,
-              'location': <location's tuple: latitude and longitude>
-            }
+        values - A list with a dictionary with ditance, elevation and
+                 location information:
+                 {
+                 'distance': <value in km>,
+                 'elevation': <value in meters>,
+                 'location': <location's tuple: latitude and longitude>
+                 }
         """
         self._xvalues = [ item['distance'] for item in values ]
         self._yvalues = [ item['elevation'] for item in values ]

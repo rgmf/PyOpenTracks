@@ -64,8 +64,6 @@ class SegmentsListLayout(Gtk.Box):
 
         self._title_label.set_text(_("Segments"))
         self._title_label.set_line_wrap(True)
-        self._title_label.set_margin_top(20)
-        self._title_label.set_margin_left(20)
         self._title_label.get_style_context().add_class("pyot-h2")
 
         self._grid_segment_detail.get_style_context().add_class("pyot-stats-bg-color")
@@ -92,12 +90,24 @@ class SegmentsListLayout(Gtk.Box):
         for i, st in enumerate(segmentracks):
             segment = DatabaseHelper.get_segment_by_id(st.segmentid)
             object._grid.attach(
-                object._build_info_box(segment.name, segment.distance, segment.gain, segment.slope),
-                0, i + 1, 1, 1)
+                object._build_info_box(
+                    segment.name, segment.distance, segment.gain, segment.slope
+                ),
+                0, i + 1, 1, 1
+            )
             object._grid.attach(object._build_box(st.time), 1, i + 1, 1, 1)
-            object._grid.attach(object._build_box(st.avgspeed), 2, i + 1, 1, 1)
-            object._grid.attach(object._build_box(st.avghr), 3, i + 1, 1, 1)
-            object._grid.attach(object._build_box(st.avgcadence), 4, i + 1, 1, 1)
+            object._grid.attach(
+                object._build_box_2((_("Avg.:"), st.avgspeed), (_("Max.:"), st.maxspeed)),
+                2, i + 1, 1, 1
+            )
+            object._grid.attach(
+                object._build_box_2((_("Avg.:"), st.avghr), (_("Max.:"), st.maxhr)),
+                3, i + 1, 1, 1
+            )
+            object._grid.attach(
+                object._build_box_2((_("Avg.:"), st.avgcadence), (_("Max.:"), st.maxcadence)),
+                4, i + 1, 1, 1
+            )
             object._data_rows = object._data_rows + 1
         return object
 
@@ -195,25 +205,27 @@ class SegmentsListLayout(Gtk.Box):
 
         top = 0
 
-        self._grid.attach(Gtk.Label(_("Time")), 0, top, 1, 1)
-        self._grid.attach(Gtk.Label(_("Avg. Speed")), 1, top, 1, 1)
-        self._grid.attach(Gtk.Label(_("Max. Speed")), 2, top, 1, 1)
-        self._grid.attach(Gtk.Label(_("Avg. Heart Rate")), 3, top, 1, 1)
-        self._grid.attach(Gtk.Label(_("Max. Heart Rate")), 4, top, 1, 1)
-        self._grid.attach(Gtk.Label(_("Avg. Cadence")), 5, top, 1, 1)
-        self._grid.attach(Gtk.Label(_("Max. Cadence")), 6, top, 1, 1)
-        self._grid.attach(Gtk.Label(_("Activity Information")), 7, top, 1, 1)
-        for i in segment_tracks:
-            st = i["segmentrack_object"]
+        self._grid.attach(Gtk.Label("#"), 0, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Time")), 1, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Avg. Speed")), 2, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Max. Speed")), 3, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Avg. Heart Rate")), 4, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Max. Heart Rate")), 5, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Avg. Cadence")), 6, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Max. Cadence")), 7, top, 1, 1)
+        self._grid.attach(Gtk.Label(_("Activity Information")), 8, top, 1, 1)
+        for i, v in enumerate(segment_tracks):
+            st = v["segmentrack_object"]
             top = top + 1
-            self._grid.attach(self._build_box(st.time), 0, top, 1, 1)
-            self._grid.attach(self._build_box(st.avgspeed), 1, top, 1, 1)
-            self._grid.attach(self._build_box(st.maxspeed), 2, top, 1, 1)
-            self._grid.attach(self._build_box(st.avghr), 3, top, 1, 1)
-            self._grid.attach(self._build_box(st.maxhr), 4, top, 1, 1)
-            self._grid.attach(self._build_box(st.avgcadence), 5, top, 1, 1)
-            self._grid.attach(self._build_box(st.maxcadence), 6, top, 1, 1)
-            self._grid.attach(self._build_track_box(i["track_object"]), 7, top, 1, 1)
+            self._grid.attach(Gtk.Label(str(i + 1)), 0, top, 1, 1)
+            self._grid.attach(self._build_box(st.time), 1, top, 1, 1)
+            self._grid.attach(self._build_box(st.avgspeed), 2, top, 1, 1)
+            self._grid.attach(self._build_box(st.maxspeed), 3, top, 1, 1)
+            self._grid.attach(self._build_box(st.avghr), 4, top, 1, 1)
+            self._grid.attach(self._build_box(st.maxhr), 5, top, 1, 1)
+            self._grid.attach(self._build_box(st.avgcadence), 6, top, 1, 1)
+            self._grid.attach(self._build_box(st.maxcadence), 7, top, 1, 1)
+            self._grid.attach(self._build_track_box(v["track_object"]), 8, top, 1, 1)
             self._data_rows = self._data_rows + 1
 
         self._title_label.set_text(_("Segments"))
@@ -282,6 +294,30 @@ class SegmentsListLayout(Gtk.Box):
         box.set_homogeneous(False)
         box.pack_start(Gtk.Label(label=value, xalign=0.0, yalign=0.0), True, True, 0)
         return box
+
+    def _build_box_2(self, value1: tuple, value2: tuple):
+        """Builds a box with two values.
+
+        Arguments:
+        value1 - tuple with label and value.
+        value2 - tuple with label and value.
+        """
+        vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
+        vbox.get_style_context().add_class("pyot-stats-bg-color")
+        vbox.set_homogeneous(False)
+
+        hbox1 = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
+        hbox1.pack_start(Gtk.Label(label=value1[0], xalign=0.0, yalign=0.0), True, True, 0)
+        hbox1.pack_start(Gtk.Label(label=value1[1], xalign=0.0, yalign=0.0), True, True, 0)
+
+        hbox2 = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
+        hbox2.pack_start(Gtk.Label(label=value2[0], xalign=0.0, yalign=0.0), True, True, 0)
+        hbox2.pack_start(Gtk.Label(label=value2[1], xalign=0.0, yalign=0.0), True, True, 0)
+
+        vbox.pack_start(hbox1, True, True, 0)
+        vbox.pack_start(hbox2, True, True, 0)
+
+        return vbox
 
     def _button_delete_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()
