@@ -329,41 +329,53 @@ class TrackPointUtils:
 
     @staticmethod
     def extract_dict_values(trackpoints, distance_threshold=5):
-        """Returns a list with all information from trackpoints: distances, elevations and locations.
+        """Returns a list with all information from trackpoints.
+
+        It gets from trackpoints: distances, elevations, heart rates
+        and locations.
 
         It returns the values every distance_threshold meters.
 
         Arguments:
         trackpoints -- track point's list (TrackPoint object's list).
-        distance_threshold -- it determines points to be added (every x number of meters add the track point).
+        distance_threshold -- it determines points to be added (every x
+                              number of meters add the track point).
 
         Return:
         A list with a dictionary like this:
         {
-          'distance': <value in km>,
-          'elevation': <value in meters>,
-          'location': <location's tuple: latitude and longitude>
+          "distance": <value in km>,
+          "elevation": <value in meters>,
+          "hr": <value in bpm>,
+          "location": <location's tuple: latitude and longitude>
         }
         """
         if not trackpoints:
             return []
         result = [{
-            'distance': 0,
-            'elevation': float(trackpoints[0].altitude),
-            'location': trackpoints[0].location_tuple
+            "distance": 0,
+            "elevation": float(trackpoints[0].altitude),
+            "hr": float(trackpoints[0].heart_rate) if trackpoints[0].heart_rate else 0,
+            "location": trackpoints[0].location_tuple
         }]
         dist_acc = 0
         total_distance = 0
         last_tp = trackpoints[0]
         for tp in trackpoints:
-            dist_acc = dist_acc + LocationUtils.distance_between(last_tp.latitude, last_tp.longitude, tp.latitude, tp.longitude)
+            dist_acc = (
+                dist_acc +
+                LocationUtils.distance_between(
+                    last_tp.latitude, last_tp.longitude, tp.latitude, tp.longitude
+                )
+            )
             last_tp = tp
             if dist_acc >= distance_threshold:
                 total_distance = total_distance + dist_acc
                 result.append({
-                    'distance': round(total_distance / 1000, 2),
-                    'elevation': float(tp.altitude),
-                    'location': tp.location_tuple
+                    "distance": round(total_distance / 1000, 2),
+                    "elevation": float(tp.altitude),
+                    "hr": float(tp.heart_rate) if tp.heart_rate else 0,
+                    "location": tp.location_tuple
                 })
                 dist_acc = 0
         return result
