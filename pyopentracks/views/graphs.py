@@ -267,17 +267,18 @@ class LinePlot:
         """Add values to the LinePlot object.
 
         Arguments:
-        values - A list with a dictionary with ditance, elevation and
-                 location information:
+        values - A list with a dictionary with ditance, elevation,
+                 heart rate and location information:
                  {
-                 'distance': <value in km>,
-                 'elevation': <value in meters>,
-                 'location': <location's tuple: latitude and longitude>
+                   "distance": <value in km>,
+                   "elevation": <value in meters>,
+                   "hr": <value in bpm>,
+                   "location": <location's tuple: lat and lon>
                  }
         """
-        self._xvalues = [ item['distance'] for item in values ]
-        self._yvalues = [ item['elevation'] for item in values ]
-        self._locations = [ item['location'] for item in values ]
+        self._xvalues = [item["distance"] for item in values]
+        self._yvalues = [item["elevation"] for item in values]
+        self._locations = [item["location"] for item in values]
 
         self._axes = self._figure.axes[0]
         self._axes.spines["left"].set_visible(True)
@@ -286,6 +287,16 @@ class LinePlot:
         self._axes.spines["top"].set_visible(False)
         #self._axes.plot([0, 200],[50, 50],'--g',label='min: '+str(50)+' m')
         self._axes.fill_between(self._xvalues, 0, self._yvalues, facecolor="green", alpha=0.5)
+
+        # Second axes with different top and bottom scales for heart rate.
+        yheart_rates = [item["hr"] for item in values]
+        if sum(yheart_rates) > 0:
+            ax2 = self._axes.twinx()
+            ax2.spines["left"].set_visible(False)
+            ax2.spines["right"].set_visible(True)
+            ax2.spines["bottom"].set_visible(True)
+            ax2.spines["top"].set_visible(False)
+            ax2.plot(self._xvalues, yheart_rates, color="red")
 
     def get_canvas(self):
         return self._canvas

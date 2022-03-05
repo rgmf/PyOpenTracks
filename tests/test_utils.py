@@ -291,10 +291,19 @@ class TestTrackPointUtils(unittest.TestCase):
             0, 0, 0, -73.96537, 40.78378, 50000, 0, 0, 0, 0, 0, 0, 0
         )
         tpoints = [tp1, tp2, tp3, tp4, tp5, tp6]
-        self.assertEqual(
-            len(TrackPointUtils.extract_dict_values(tpoints, 50)),
-            4
-        )
+        dict_list = TrackPointUtils.extract_dict_values(tpoints, 50)
+        self.assertEqual(len(dict_list), 4)
+        for dictionary in dict_list:
+            self.assertTrue(isinstance(dictionary, dict))
+            self.assertTrue("distance" in dictionary)
+            self.assertTrue(isinstance(dictionary["distance"], (int, float)))
+            self.assertTrue("elevation" in dictionary)
+            self.assertTrue(isinstance(dictionary["elevation"], (int, float)))
+            self.assertTrue("hr" in dictionary)
+            self.assertTrue(isinstance(dictionary["hr"], (int, float)))
+            self.assertTrue("location" in dictionary)
+            self.assertTrue(isinstance(dictionary["location"], tuple))
+            self.assertEqual(len(dictionary["location"]), 2)
 
 
 class TestLocationUtils(unittest.TestCase):
