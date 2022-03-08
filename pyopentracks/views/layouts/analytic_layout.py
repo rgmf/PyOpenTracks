@@ -387,7 +387,8 @@ class AnalyticTotalsYear(Gtk.VBox):
             _("Time"),
             _("Elevation\nGain"),
             _("Heart Rate\nMaximum"),
-            _("Heart Rate\nAverage")
+            _("Heart Rate\nAverage"),
+            _("Speed/Pace\nAverage")
         )
         for i, aggregated in enumerate(aggregated_list):
             box_icon = self._build_icon_box(aggregated.category)
@@ -400,6 +401,7 @@ class AnalyticTotalsYear(Gtk.VBox):
             box_gain = self._build_info_box(aggregated.total_elevation_gain)
             box_hr_max = self._build_info_box(aggregated.max_heart_rate)
             box_hr_avg = self._build_info_box(aggregated.avg_heart_rate)
+            box_speed_pace_avg = self._build_info_box(aggregated.avg_speed)
 
             grid.attach(box_icon, 0, i + 1, 1, 1)
             grid.attach(box_activities, 1, i + 1, 1, 1)
@@ -409,6 +411,7 @@ class AnalyticTotalsYear(Gtk.VBox):
             grid.attach(box_gain, 5, i + 1, 1, 1)
             grid.attach(box_hr_max, 6, i + 1, 1, 1)
             grid.attach(box_hr_avg, 7, i + 1, 1, 1)
+            grid.attach(box_speed_pace_avg, 8, i + 1, 1, 1)
         self.pack_start(grid, True, True, 10)
         self.show_all()
 
