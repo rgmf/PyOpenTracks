@@ -25,9 +25,7 @@ import numpy as np
 from pyopentracks.utils.utils import LocationUtils
 from pyopentracks.models.database import Database
 from pyopentracks.models.segment_track import SegmentTrack
-from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
-from pyopentracks.models.segment import Segment
 from pyopentracks.models.location import Location
 
 

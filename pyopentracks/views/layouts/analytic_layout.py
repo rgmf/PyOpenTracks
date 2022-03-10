@@ -19,6 +19,9 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
+from dataclasses import dataclass
+from typing import List
+
 from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.utils.utils import DateUtils as du
 from pyopentracks.utils.utils import DateTimeUtils as dtu
@@ -212,20 +215,20 @@ class AnalyticMonthsStack(Gtk.Box):
     _stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
     _stack: Gtk.Stack = Gtk.Template.Child()
 
-    class Data:
-        """Data needed for month."""
+    @dataclass
+    class MonthStats:
+        month: int
+        stats: List[AggregatedStats]
 
-        def __init__(self, al, m, mn):
-            """Initialize data."""
-            self.aggregated_list = al
-            self.month = m
-            self.month_name = mn
+        @property
+        def month_name(self):
+            return du.get_month_name(self.month)
 
     def __init__(self, year):
         """Initialize the switcher and load data through ProcessView."""
         super().__init__()
         self._year = year
-        self._data_list = []
+        self._data = {}
         self._stack.connect(
             "notify::visible-child",
             self._visible_child_changed
@@ -236,47 +239,41 @@ class AnalyticMonthsStack(Gtk.Box):
         ).start()
 
     def _data_loading(self, year):
-        data_list = {}
-        month = 1
-        for month_name in du.get_months():
+        data = {}
+        for month in range(1, 13):
             date_from = dtu.first_day_ms(int(year), month)
             date_to = dtu.last_day_ms(int(year), month)
-            data_list[str(year) + str(month)] = AnalyticMonthsStack.Data(
+            data[str(year) + str(month)] = AnalyticMonthsStack.MonthStats(
+                month,
                 DatabaseHelper.get_aggregated_stats(
                     date_from=date_from, date_to=date_to
-                ),
-                month,
-                month_name
+                )
             )
-            month = month + 1
-        return data_list
+        return data
 
-    def _on_stack_data_ready(self, data_list):
-        self._data_list = data_list
-        for idx in self._data_list:
-            data = self._data_list[idx]
-            month = data.month
-            month_name = data.month_name
+    def _on_stack_data_ready(self, data: dict):
+        self._data = data
+        for idx in self._data:
+            ms = self._data[idx]
             box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
             box.get_style_context().add_class("pyot-bg")
-            self._stack.add_titled(box, self._year + str(month), month_name)
+            self._stack.add_titled(box, self._year + str(ms.month), ms.month_name)
         self.show_all()
-        self._stack.set_visible_child_name(self._year + str(du.get_today()[1]))
+        self._stack.set_visible_child_name(self._year + str(du.get_today().month))
 
     def _visible_child_changed(self, stack, gparamstring):
         box = self._stack.get_visible_child()
         child_name = self._stack.get_visible_child_name()
         if box and len(box.get_children()) > 0:
             return
-        if not child_name or child_name not in self._data_list:
+        if not child_name or child_name not in self._data:
             return
 
-        data = self._data_list[child_name]
-        aggregated_list = data.aggregated_list
-        if aggregated_list:
+        ms = self._data[child_name]
+        if ms.stats:
             # Calendar.
             box.pack_start(
-                CalendarLayout(int(data.month), int(self._year)),
+                CalendarLayout(int(ms.month), int(self._year)),
                 False,
                 False,
                 0
@@ -284,12 +281,12 @@ class AnalyticMonthsStack(Gtk.Box):
 
             # Month chart.
             list_t = []
-            for i in aggregated_list:
+            for i in ms.stats:
                 list_t.append((i.category, i.total_distance_float))
             chart = BarsChart(
                 results=dict(list_t),
                 colors=list(
-                    map(lambda a: tau.get_color(a.category), aggregated_list)
+                    map(lambda a: tau.get_color(a.category), ms.stats)
                 ),
                 cb_annotate=lambda value: distu.m_to_str(value * 1000)
             )
@@ -303,7 +300,7 @@ class AnalyticMonthsStack(Gtk.Box):
             chart.draw_and_show()
 
             # Aggregated stats for every category.
-            for a in aggregated_list:
+            for a in ms.stats:
                 box.pack_start(SummarySport(a), False, False, 0)
         else:
             label = Gtk.Label(_("There are not stats for this date"))

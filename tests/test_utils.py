@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 
 from pyopentracks.models.track_point import TrackPoint
+from pyopentracks.models.location import Location
 from pyopentracks.utils.utils import (
     StatsUtils,
     TimeUtils,
@@ -70,10 +71,26 @@ class TestDateUtils(unittest.TestCase):
         self.assertEqual(len(months), 12)
         self.assertTrue(isinstance(months, list))
 
+    def test_get_month_name(self):
+        self.assertEqual(DateUtils.get_month_name(1), "enero")
+        self.assertEqual(DateUtils.get_month_name(2), "febrero")
+        self.assertEqual(DateUtils.get_month_name(3), "marzo")
+        self.assertEqual(DateUtils.get_month_name(4), "abril")
+        self.assertEqual(DateUtils.get_month_name(5), "mayo")
+        self.assertEqual(DateUtils.get_month_name(6), "junio")
+        self.assertEqual(DateUtils.get_month_name(7), "julio")
+        self.assertEqual(DateUtils.get_month_name(8), "agosto")
+        self.assertEqual(DateUtils.get_month_name(9), "septiembre")
+        self.assertEqual(DateUtils.get_month_name(10), "octubre")
+        self.assertEqual(DateUtils.get_month_name(11), "noviembre")
+        self.assertEqual(DateUtils.get_month_name(12), "diciembre")
+        self.assertEqual(DateUtils.get_month_name(15), "enero")
+        self.assertEqual(DateUtils.get_month_name(0), "enero")
+
     def test_get_today(self):
         year, month, day = DateUtils.get_today()
         self.assertTrue(isinstance(year, int))
-        self.assertTrue(isinstance(month, int) and 0 <= month <= 12)
+        self.assertTrue(isinstance(month, int) and 0 <= month < 12)
         self.assertTrue(isinstance(day, int))
 
 
@@ -258,7 +275,7 @@ class TestTrackPointUtils(unittest.TestCase):
         tp3 = TrackPoint(0, 0, 0, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0)
         tp4 = TrackPoint(0, 0, 0, 8, 7, 0, 0, 0, 0, 0, 0, 0, 0)
         self.assertEqual(
-            TrackPointUtils.to_locations([tp1, tp2, tp3, tp4]),
+            [(loc.latitude, loc.longitude) for loc in TrackPointUtils.to_locations([tp1, tp2, tp3, tp4])],
             [(1.0, 2.0), (3.0, 4.0), (5.0, 6.0), (7.0, 8.0)]
         )
 
@@ -302,8 +319,9 @@ class TestTrackPointUtils(unittest.TestCase):
             self.assertTrue("hr" in dictionary)
             self.assertTrue(isinstance(dictionary["hr"], (int, float)))
             self.assertTrue("location" in dictionary)
-            self.assertTrue(isinstance(dictionary["location"], tuple))
-            self.assertEqual(len(dictionary["location"]), 2)
+            self.assertTrue(isinstance(dictionary["location"], Location))
+            self.assertTrue(isinstance(dictionary["location"].latitude, float))
+            self.assertTrue(isinstance(dictionary["location"].longitude, float))
 
 
 class TestLocationUtils(unittest.TestCase):

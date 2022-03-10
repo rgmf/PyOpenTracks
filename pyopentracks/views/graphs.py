@@ -273,7 +273,7 @@ class LinePlot:
                    "distance": <value in km>,
                    "elevation": <value in meters>,
                    "hr": <value in bpm>,
-                   "location": <location's tuple: lat and lon>
+                   "location": <Location object>
                  }
         """
         self._xvalues = [item["distance"] for item in values]

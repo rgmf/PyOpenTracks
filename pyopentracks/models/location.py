@@ -29,7 +29,13 @@ class Location:
     SOUTH_DEGREES = 180
     WEST_DEGREES = 270
 
-    def __init__(self, lat, lon):
+    def __init__(self, lat: float, lon: float):
+        """Creates a location from latitude and longitude.
+
+        Arguments:
+        lat -- latitude in decimal degrees format.
+        lon -- longitude in decimal degrees format.
+        """
         self._lat = lat
         self._lon = lon
 
@@ -44,7 +50,8 @@ class Location:
     def calculate_derived_position(self, range, bearing):
         """Calculates a new Location derived from self.
 
-        The new Location is range meters from this, in a direction indicated by bearing.
+        The new Location is range meters from this, in a direction
+        indicated by bearing.
 
         Arguments:
         range   -- meters to go.
@@ -74,7 +81,9 @@ class Location:
         return Location(lat, lon)
 
     def bounding_box(self, radio):
-        """Calculates a bounding box with the radio's meters indicated from this Location's object.
+        """Calculates a bounding box.
+
+        With the radio's meters indicated from this Location's object.
 
         Arguments:
         radio -- meters for the bounding box.
@@ -86,7 +95,10 @@ class Location:
 
 
 class BoundingBox:
-    """A bounding box are four locations: north, east, south and west from a location.
+    """A bounding box from a location.
+
+    A bounding box are four locations: north, east, south and west from
+    a location.
 
                             North's Location
                                    |

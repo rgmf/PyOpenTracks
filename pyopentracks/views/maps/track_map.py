@@ -24,6 +24,7 @@ from gi.repository import Champlain, GtkChamplain, Pango
 from pyopentracks.views.maps.base_map import BaseMap
 from pyopentracks.views.maps.map_segment import MapSegment
 from pyopentracks.utils.utils import LocationUtils, TrackPointUtils
+from pyopentracks.models.location import Location
 
 
 class TrackMap(BaseMap):
@@ -88,7 +89,9 @@ class TrackMap(BaseMap):
             self._append_point(tp.latitude, tp.longitude)
         self._view.add_layer(self._layer_polyline)
 
-        x_coordinates, y_coordinates = zip(*TrackPointUtils.to_locations(track_points))
+        x_coordinates, y_coordinates = zip(
+            *[(loc.latitude, loc.longitude) for loc in TrackPointUtils.to_locations(track_points)]
+        )
         # bbox = self._view.get_bounding_box()
         bbox = Champlain.BoundingBox.new()
         bbox.left = min(y_coordinates)
@@ -99,9 +102,9 @@ class TrackMap(BaseMap):
         self._view.ensure_visible(bbox, False)
         self._view.set_zoom_level(10)
 
-    def set_location_marker(self, location_tuple, text):
+    def set_location_marker(self, location: Location, text: str):
         self._layer_marker.show()
-        self._marker.set_location(location_tuple[0], location_tuple[1])
+        self._marker.set_location(location.latitude, location.longitude)
         self._marker.set_text(text)
 
     def get_segment(self):
