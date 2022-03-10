@@ -19,8 +19,17 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
-from pyopentracks.views.dialogs import QuestionDialog, MessageDialogError, SegmentEditDialog
+from dataclasses import dataclass
+from typing import List
+
+from pyopentracks.views.dialogs import (
+    QuestionDialog,
+    MessageDialogError,
+    SegmentEditDialog
+)
 from pyopentracks.models.database_helper import DatabaseHelper
+from pyopentracks.models.segment_track import SegmentTrack
+from pyopentracks.models.segment import Segment
 from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.maps.base_map import BaseMap
 
@@ -38,15 +47,12 @@ class SegmentsListLayout(Gtk.Box):
     _grid_segment_detail: Gtk.Grid = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
 
-    class Data:
-        def __init__(self, segment, segmentracks):
-            self.segment = segment
-            self.segment_tracks = []
-            for st in segmentracks:
-                self.segment_tracks.append({
-                    "segmentrack_object": st,
-                    "track_object": DatabaseHelper.get_track_by_id(st.trackid)
-                })
+
+    @dataclass
+    class SegmentData:
+        segment: Segment
+        segment_tracks: List[SegmentTrack]
+
 
     def __init__(self):
         super().__init__()
@@ -136,13 +142,19 @@ class SegmentsListLayout(Gtk.Box):
         self._combobox_segments.set_active(0)
         self._combobox_segments.connect("changed", self._on_segment_changed)
 
-        return SegmentsListLayout.Data(segments[0], DatabaseHelper.get_segment_tracks_by_segmentid(segments[0].id))
+        return SegmentsListLayout.SegmentData(
+            segments[0],
+            DatabaseHelper.get_segment_tracks_by_segmentid(segments[0].id, True)
+        )
 
     def _data_changing(self, segmentid):
         segment = DatabaseHelper.get_segment_by_id(segmentid)
-        return SegmentsListLayout.Data(segment, DatabaseHelper.get_segment_tracks_by_segmentid(segment.id))
+        return SegmentsListLayout.SegmentData(
+            segment,
+            DatabaseHelper.get_segment_tracks_by_segmentid(segment.id, True)
+        )
 
-    def _on_data_ready(self, data: Data):
+    def _on_data_ready(self, data: SegmentData):
         for w in self._grid.get_children():
             self._grid.remove(w)
         for w in self._grid_segment_detail.get_children():
@@ -155,15 +167,12 @@ class SegmentsListLayout(Gtk.Box):
         self._button_delete.set_sensitive(True)
         self._button_edit.set_sensitive(True)
 
-        segment = data.segment
-        segment_tracks = data.segment_tracks
-
         self._grid_segment_detail.attach(
             self._build_header_label(_("Name:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 0, 1, 1
         )
         self._label_segment_name = self._build_header_label(
-            segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20
+            data.segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20
         )
         self._grid_segment_detail.attach(self._label_segment_name, 1, 0, 1, 1)
         self._grid_segment_detail.attach(
@@ -171,7 +180,7 @@ class SegmentsListLayout(Gtk.Box):
             0, 1, 1, 1
         )
         self._grid_segment_detail.attach(
-            self._build_header_label(segment.distance, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            self._build_header_label(data.segment.distance, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 1, 1, 1
         )
         self._grid_segment_detail.attach(
@@ -179,7 +188,7 @@ class SegmentsListLayout(Gtk.Box):
             0, 2, 1, 1
         )
         self._grid_segment_detail.attach(
-            self._build_header_label(segment.gain, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            self._build_header_label(data.segment.gain, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 2, 1, 1
         )
         self._grid_segment_detail.attach(
@@ -187,7 +196,7 @@ class SegmentsListLayout(Gtk.Box):
             0, 3, 1, 1
         )
         self._grid_segment_detail.attach(
-            self._build_header_label(segment.loss, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            self._build_header_label(data.segment.loss, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 3, 1, 1
         )
         self._grid_segment_detail.attach(
@@ -195,12 +204,12 @@ class SegmentsListLayout(Gtk.Box):
             0, 4, 1, 1
         )
         self._grid_segment_detail.attach(
-            self._build_header_label(segment.slope, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
+            self._build_header_label(data.segment.slope, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 4, 1, 1
         )
 
         self._map = BaseMap()
-        self._map.add_polyline([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment.id)])
+        self._map.add_polyline([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(data.segment.id)])
         self._grid_segment_detail.attach(self._map, 2, 0, 4, 5)
 
         top = 0
@@ -214,8 +223,7 @@ class SegmentsListLayout(Gtk.Box):
         self._grid.attach(Gtk.Label(_("Avg. Cadence")), 6, top, 1, 1)
         self._grid.attach(Gtk.Label(_("Max. Cadence")), 7, top, 1, 1)
         self._grid.attach(Gtk.Label(_("Activity Information")), 8, top, 1, 1)
-        for i, v in enumerate(segment_tracks):
-            st = v["segmentrack_object"]
+        for i, st in enumerate(data.segment_tracks):
             top = top + 1
             self._grid.attach(Gtk.Label(str(i + 1)), 0, top, 1, 1)
             self._grid.attach(self._build_box(st.time), 1, top, 1, 1)
@@ -225,7 +233,7 @@ class SegmentsListLayout(Gtk.Box):
             self._grid.attach(self._build_box(st.maxhr), 5, top, 1, 1)
             self._grid.attach(self._build_box(st.avgcadence), 6, top, 1, 1)
             self._grid.attach(self._build_box(st.maxcadence), 7, top, 1, 1)
-            self._grid.attach(self._build_track_box(v["track_object"]), 8, top, 1, 1)
+            self._grid.attach(self._build_track_box(st.track), 8, top, 1, 1)
             self._data_rows = self._data_rows + 1
 
         self._title_label.set_text(_("Segments"))

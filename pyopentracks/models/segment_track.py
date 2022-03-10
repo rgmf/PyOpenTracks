@@ -72,6 +72,7 @@ class SegmentTrack(Model):
         self._maxcadence = args[10] if args else None
         self._avgcadence = args[11] if args else None
         self._avgpower = args[12] if args else None
+        self._track = None
 
     @staticmethod
     def from_points(segment_id: int, stats: TrackStats, from_point: Point, to_point: Point):
@@ -141,6 +142,10 @@ class SegmentTrack(Model):
         return self._trackid
 
     @property
+    def track(self):
+        return self._track
+
+    @property
     def time(self):
         return TimeUtils.ms_to_str(self._time)
 
@@ -167,3 +172,7 @@ class SegmentTrack(Model):
     @property
     def maxcadence(self):
         return SensorUtils.cadence_to_str(self._maxcadence)
+
+    @track.setter
+    def track(self, track):
+        self._track = track

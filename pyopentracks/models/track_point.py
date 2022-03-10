@@ -18,6 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .model import Model
+from .location import Location
 
 
 class TrackPoint(Model):
@@ -116,9 +117,9 @@ class TrackPoint(Model):
         return self._numsegment
 
     @property
-    def location_tuple(self):
-        """Build and return a tuple object representing location."""
-        return (float(self._latitude), float(self._longitude))
+    def location(self) -> Location:
+        """Build and return a Location object."""
+        return Location(float(self._latitude), float(self._longitude))
 
     @property
     def longitude(self):

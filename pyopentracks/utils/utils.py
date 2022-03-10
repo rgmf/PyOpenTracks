@@ -21,12 +21,16 @@ import time
 
 from gi.repository import GdkPixbuf
 
+from collections import namedtuple
 from math import radians, sin, cos, asin, sqrt
+from typing import List
 
 from dateutil.parser import isoparse
 from datetime import datetime, timedelta, date, timezone
 from calendar import monthrange
 from locale import setlocale, LC_ALL
+
+from pyopentracks.models.location import Location
 
 
 class DateTimeUtils:
@@ -78,10 +82,25 @@ class DateUtils:
         ]
 
     @staticmethod
+    def get_month_name(month: int) -> str:
+        """Return the name of the month.
+
+        Arguments:
+        month -- number of month from 1 to 12.
+
+        Return:
+        Month's name or January if month is out of 1 - 12 range.
+        """
+        if not isinstance(month, int) or not 1 <= month <= 12:
+            return DateUtils.get_months()[0]
+        return DateUtils.get_months()[month - 1]
+
+    @staticmethod
     def get_today():
         """Return year, month and day of today."""
         t = date.today()
-        return t.year, t.month, t.day
+        TodayResult = namedtuple("TodayResult", "year month day")
+        return TodayResult(t.year, t.month, t.day)
 
 
 class TimeUtils:
@@ -312,11 +331,11 @@ class TypeActivityUtils:
 class TrackPointUtils:
 
     @staticmethod
-    def to_locations(trackpoints):
-        """Convert a list of track points to locations."""
+    def to_locations(trackpoints) -> List[Location]:
+        """Convert a list of track points to list of Location."""
         if not trackpoints:
             return []
-        return [tp.location_tuple for tp in trackpoints]
+        return [tp.location for tp in trackpoints]
 
     @staticmethod
     def speed(tp1, tp2):
@@ -347,7 +366,7 @@ class TrackPointUtils:
           "distance": <value in km>,
           "elevation": <value in meters>,
           "hr": <value in bpm>,
-          "location": <location's tuple: latitude and longitude>
+          "location": <Location object>
         }
         """
         if not trackpoints:
@@ -356,7 +375,7 @@ class TrackPointUtils:
             "distance": 0,
             "elevation": float(trackpoints[0].altitude),
             "hr": float(trackpoints[0].heart_rate) if trackpoints[0].heart_rate else 0,
-            "location": trackpoints[0].location_tuple
+            "location": trackpoints[0].location
         }]
         dist_acc = 0
         total_distance = 0
@@ -375,7 +394,7 @@ class TrackPointUtils:
                     "distance": round(total_distance / 1000, 2),
                     "elevation": float(tp.altitude),
                     "hr": float(tp.heart_rate) if tp.heart_rate else 0,
-                    "location": tp.location_tuple
+                    "location": tp.location
                 })
                 dist_acc = 0
         return result

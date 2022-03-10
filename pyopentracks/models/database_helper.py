@@ -117,9 +117,16 @@ class DatabaseHelper:
         return db.get_segment_tracks_by_trackid(trackid)
 
     @staticmethod
-    def get_segment_tracks_by_segmentid(segmentid):
+    def get_segment_tracks_by_segmentid(segmentid, fetch_track=False):
         db = Database()
-        return db.get_segment_tracks_by_segmentid(segmentid)
+        segment_tracks = db.get_segment_tracks_by_segmentid(segmentid)
+        if not fetch_track:
+            return segment_tracks
+
+        for st in segment_tracks:
+            st.track = DatabaseHelper.get_track_by_id(st.trackid)
+
+        return segment_tracks
 
     @staticmethod
     def get_segment_tracks():
