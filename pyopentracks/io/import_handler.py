@@ -21,20 +21,22 @@ import threading
 
 from os import path
 from pathlib import Path
+from xml.etree.ElementTree import XMLParser
 
 from gi.repository import GLib, GObject
 
 from pyopentracks.utils import logging as pyot_logging
-from pyopentracks.io.gpx_parser import GpxParserHandler
+from pyopentracks.io.gpx_parser import GpxParser
+from pyopentracks.io.fit_parser import FitParser
+from pyopentracks.io.result import Result
+from pyopentracks.io.result import RecordedWith
 from pyopentracks.models.database import Database
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.auto_import import AutoImport
-from pyopentracks.io.result import Result
-from pyopentracks.io.result import RecordedWith
 from pyopentracks.tasks.gain_loss_filter import GainLossFilter
 
 
-class ImportHandler():
+class ImportHandler:
     def __init__(self):
         self._callback = None
         self._opentracks_gain_loss_correction = False
@@ -172,7 +174,7 @@ class ImportFileHandler(ImportHandler):
         thread.start()
 
     def _import_in_thread(self):
-        parser = GpxParserHandler()
+        parser = ParserHandler()
         result = parser.parse(self._filename)
         self._import_track(result)
 
@@ -206,7 +208,8 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
     def import_folder(self, path: str, cb):
         self._result["folder"] = path
         p = Path(self._result["folder"])
-        self._files_name = [f for f in p.glob("*.gpx")]
+        self._files_name = [f for f in p.glob("*.gpx")] # add GPX files
+        self._files_name.extend([f for f in p.glob("*.fit")]) # add FIT files
         self._result["total"] = len(self._files_name)
         self.emit("total-files-to-import", int(self._result["total"]))
         self._callback = cb
@@ -215,9 +218,9 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
         self._thread.start()
 
     def _import_in_thread(self):
-        parser = GpxParserHandler()
+        parser = ParserHandler()
         for f in self._files_name:
-            result = parser.parse(f)
+            result = parser.parse(str(f))
             self._import_track(result)
             if not getattr(self._thread, "do_run", True):
                 break
@@ -260,7 +263,7 @@ class AutoImportHandler(ImportHandler, GObject.GObject):
             return
 
         files_to_import = []
-        parser = GpxParserHandler()
+        parser = ParserHandler()
         db = Database()
         for f in p.glob("*.gpx"):
             ai_object = db.get_autoimport_by_trackfile(str(f.absolute()))
@@ -299,3 +302,118 @@ class AutoImportHandler(ImportHandler, GObject.GObject):
             code
         )
         db.insert(auto_import)
+
+
+class ParserHandler:
+    """Handler the GPX parser task."""
+
+    def parse(self, filename):
+        try:
+            if filename.endswith(".gpx"):
+                parser = GpxParser(filename)
+                xmlparser = XMLParser(target=parser)
+                with open(filename, "rb") as file:
+                    for data in file:
+                        xmlparser.feed(data)
+                    xmlparser.close()
+            elif filename.endswith(".fit"):
+                parser = FitParser(filename)
+                parser.parse()
+            else:
+                raise Exception(f"invalid file to parse: {filename}")
+
+            if not parser._track:
+                raise Exception("empty track")
+
+            tp = parser._track.track_points
+            if not tp or len(tp) == 0:
+                raise Exception("empty track")
+
+            return Result(
+                code=Result.OK,
+                track=parser._track,
+                filename=filename,
+                recorded_with=parser._recorded_with
+            )
+        except Exception as error:
+            message = f"Error parsing the file {filename}: {error}"
+            pyot_logging.get_logger(__name__).exception(message)
+            return Result(
+                code=Result.ERROR,
+                filename=filename,
+                message=message
+            )
+
+
+class ParserHandlerInThread(GObject.GObject):
+    """Handle the parser task into a thread."""
+
+    __gsignals__ = {
+        "end-parse": (GObject.SIGNAL_RUN_FIRST, None, ()),
+    }
+
+    def __init__(self):
+        GObject.GObject.__init__(self)
+        self._filename = None
+        self._callback = None
+
+    def parse(self, filename, callback):
+        """Parse the filename.
+        Arguments:
+        filename -- the filename to be parsed.
+        callback -- a function that accept a dictionary with the
+                    following keys:
+                    - file: path's file.
+                    - track: Track object or None if any error.
+                    - error: message's error or None.
+        """
+        self._filename = filename
+        self._callback = callback
+        thread = threading.Thread(target=self._parse_in_thread)
+        thread.daemon = True
+        thread.start()
+
+    def _parse_in_thread(self):
+        try:
+            if self._filename.endswith(".gpx"):
+                parser = GpxParser(self._filename)
+                xmlparser = XMLParser(target=parser)
+                with open(self._filename, 'rb') as file:
+                    for data in file:
+                        xmlparser.feed(data)
+                    xmlparser.close()
+            elif self._filename.endswith(".fit"):
+                parser = FitParser(self._filename)
+                parser.parse()
+            else:
+                raise Exception(f"invalid file to parse: {self._filename}")
+
+            self.emit("end-parse")
+
+            if not parser._track:
+                raise Exception("empty track")
+
+            tp = parser._track.track_points
+            if not tp or len(tp) == 0:
+                raise Exception("empty track")
+
+            GLib.idle_add(
+                self._callback,
+                Result(
+                    code=Result.OK,
+                    filename=self._filename,
+                    track=parser._track,
+                    recorded_with=parser._recorded_with
+                )
+            )
+        except Exception as error:
+            message = f"Error parsing the file {self._filename}: {error}"
+            pyot_logging.get_logger(__name__).exception(message)
+            GLib.idle_add(
+                self._callback,
+                Result(
+                    code=Result.ERROR,
+                    filename=self._filename,
+                    message=message
+                )
+            )

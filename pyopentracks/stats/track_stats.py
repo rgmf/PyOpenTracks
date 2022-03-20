@@ -173,8 +173,8 @@ class TrackStats:
         (lat, lon), time and speed.
 
         Arguments:
-        track_points -- all TrackPoint's objects to compute that will be use
-        to compute stats.
+        track_points -- all TrackPoint's objects to compute that will
+        be used to compute stats.
         """
         for tp in track_points:
             self._new_track_point(tp)

@@ -76,8 +76,8 @@ class Parser:
     def _add_current_segment_points(self):
         if len(self._current_segment_track_points) > Parser.NUMBER_OF_POINTS_FOR_SEGMENT:
             self._num_segments = self._num_segments + 1
-            for i in self._current_segment_track_points:
-                i.segment = self._num_segments
+            for track_point in self._current_segment_track_points:
+                track_point.segment = self._num_segments
             self._track_points.extend(self._current_segment_track_points)
         self._current_segment_track_points = []
 

@@ -17,18 +17,11 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import threading
-
-from xml.etree.ElementTree import XMLParser
-from gi.repository import GLib, GObject
-
-from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.utils.utils import TrackPointUtils as tpu
 from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.stats.track_stats import TrackStats
-from pyopentracks.io.result import Result
 from pyopentracks.io.result import RecordedWith
 from pyopentracks.io.parser import Parser
 
@@ -154,106 +147,3 @@ class GpxParser(Parser):
             self._add_track_point(self._new_track_point)
             self._last_track_point = self._new_track_point
             self._new_track_point = None
-
-
-class GpxParserHandler:
-    """Handler the GPX parser task."""
-
-    def parse(self, filename):
-        try:
-            gpx_parser = GpxParser(filename)
-            parser = XMLParser(target=gpx_parser)
-            with open(filename, 'rb') as file:
-                for data in file:
-                    parser.feed(data)
-                parser.close()
-
-            if not gpx_parser._track:
-                raise Exception("empty track")
-
-            tp = gpx_parser._track.track_points
-            if not tp or len(tp) == 0:
-                raise Exception("empty track")
-
-            return Result(
-                code=Result.OK,
-                track=gpx_parser._track,
-                filename=filename,
-                recorded_with=gpx_parser._recorded_with
-            )
-        except Exception as error:
-            message = f"Error parsing the file {filename}: {error}"
-            pyot_logging.get_logger(__name__).exception(message)
-            return Result(
-                code=Result.ERROR,
-                filename=filename,
-                message=message
-            )
-
-
-class GpxParserHandlerInThread(GObject.GObject):
-    """Handle the GPX parser task into a thread."""
-
-    __gsignals__ = {
-        "end-parse": (GObject.SIGNAL_RUN_FIRST, None, ()),
-    }
-
-    def __init__(self):
-        GObject.GObject.__init__(self)
-        self._filename = None
-        self._callback = None
-
-    def parse(self, filename, callback):
-        """Parse the filename.
-        Arguments:
-        filename -- the filename to be parsed.
-        callback -- a function that accept a dictionary with the
-                    following keys:
-                    - file: path's file.
-                    - track: Track object or None if any error.
-                    - error: message's error or None.
-        """
-        self._filename = filename
-        self._callback = callback
-        thread = threading.Thread(target=self._parse_in_thread)
-        thread.daemon = True
-        thread.start()
-
-    def _parse_in_thread(self):
-        try:
-            gpx_parser = GpxParser(self._filename)
-            parser = XMLParser(target=gpx_parser)
-            with open(self._filename, 'rb') as file:
-                for data in file:
-                    parser.feed(data)
-                parser.close()
-
-            self.emit("end-parse")
-
-            if not gpx_parser._track:
-                raise Exception("empty track")
-
-            tp = gpx_parser._track.track_points
-            if not tp or len(tp) == 0:
-                raise Exception("empty track")
-
-            GLib.idle_add(
-                self._callback,
-                Result(
-                    code=Result.OK,
-                    filename=self._filename,
-                    track=gpx_parser._track,
-                    recorded_with=gpx_parser._recorded_with
-                )
-            )
-        except Exception as error:
-            message = f"Error parsing the file {self._filename}: {error}"
-            pyot_logging.get_logger(__name__).exception(message)
-            GLib.idle_add(
-                self._callback,
-                Result(
-                    code=Result.ERROR,
-                    filename=self._filename,
-                    message=message
-                )
-            )
