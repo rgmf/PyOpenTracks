@@ -25,6 +25,7 @@ class RecordedWith(Enum):
 
     UNKNOWN = 0
     OPENTRACKS = 1
+    GARMIN = 2
 
 
 class Result:

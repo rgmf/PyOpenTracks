@@ -33,20 +33,31 @@ class FileChooserWindow(Gtk.FileChooserDialog):
         self._add_filters()
 
     def _add_filters(self):
-        filter_text = Gtk.FileFilter()
-        filter_text.set_name(_("GPX files"))
-        filter_text.add_mime_type("application/gpx+xml")
-        self.add_filter(filter_text)
+        filter_gpx_fit = Gtk.FileFilter()
+        filter_gpx_fit.set_name(_("GPX and FIT files"))
+        filter_gpx_fit.add_mime_type("application/gpx+xml")
+        filter_gpx_fit.add_pattern("*.fit")
+        self.add_filter(filter_gpx_fit)
 
-        filter_py = Gtk.FileFilter()
-        filter_py.set_name(_("KML files"))
-        filter_py.add_mime_type("application/vnd.google-earth.kml+xml")
-        self.add_filter(filter_py)
+        filter_only_gpx = Gtk.FileFilter()
+        filter_only_gpx.set_name(_("GPX files"))
+        filter_only_gpx.add_mime_type("application/gpx+xml")
+        self.add_filter(filter_only_gpx)
 
-        filter_py = Gtk.FileFilter()
-        filter_py.set_name(_("KMZ files"))
-        filter_py.add_mime_type("application/vnd.google-earth.kmz")
-        self.add_filter(filter_py)
+        filter_only_fit = Gtk.FileFilter()
+        filter_only_fit.set_name(_("FIT files"))
+        filter_only_fit.add_pattern("*.fit")
+        self.add_filter(filter_only_fit)
+
+        # filter_py = Gtk.FileFilter()
+        # filter_py.set_name(_("KML files"))
+        # filter_py.add_mime_type("application/vnd.google-earth.kml+xml")
+        # self.add_filter(filter_py)
+        #
+        # filter_py = Gtk.FileFilter()
+        # filter_py.set_name(_("KMZ files"))
+        # filter_py.add_mime_type("application/vnd.google-earth.kmz")
+        # self.add_filter(filter_py)
 
         filter_any = Gtk.FileFilter()
         filter_any.set_name(_("Any files"))

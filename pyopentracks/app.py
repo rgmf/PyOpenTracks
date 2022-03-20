@@ -21,7 +21,7 @@ from gi.repository import Gtk, Gio, Gdk, GLib
 
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.app_preferences import AppPreferences
-from pyopentracks.io.gpx_parser import GpxParserHandlerInThread
+from pyopentracks.io.import_handler import ParserHandlerInThread
 from pyopentracks.app_window import PyopentracksWindow
 from pyopentracks.views.file_chooser import (
     FileChooserWindow, FolderChooserWindow
@@ -116,7 +116,7 @@ class Application(Gtk.Application):
         cb -- the callback to call after loading.
         """
         self._window.loading(0.5)
-        gpxParserHandle = GpxParserHandlerInThread()
+        gpxParserHandle = ParserHandlerInThread()
         gpxParserHandle.connect("end-parse", self._end_load_file_cb)
         gpxParserHandle.parse(filename, cb)
 
