@@ -127,7 +127,6 @@ class FitParser(Parser):
     def __init__(self, filename_path):
         super().__init__()
         self._filename_path = filename_path
-        self._recorded_with = RecordedWith.UNKNOWN
 
     def _compute_mesg_event(self, mesg: fitparse.records.DataMessage, stopped: bool) -> bool:
         fields = list(filter(lambda field_data: field_data.field and field_data.field.def_num == 1, mesg.fields))

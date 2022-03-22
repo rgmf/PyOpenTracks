@@ -47,10 +47,8 @@ class GpxParser(Parser):
     TAG_HR = "hr"
     TAG_CADENCE = "cad"
 
-    def __init__(self, filename_path):
+    def __init__(self):
         super().__init__()
-        self._filename_path = filename_path
-        self._recorded_with = RecordedWith.UNKNOWN
 
         self._name = "PyOpenTracks"
         self._desc = None

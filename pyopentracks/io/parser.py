@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-
+from pyopentracks.io.result import RecordedWith
 from pyopentracks.utils import logging as pyot_logging
 
 
@@ -43,9 +43,18 @@ class Parser:
         self._num_segments = 0
         self._track_points = []
         self._new_segment = False
+        self._recorded_with = RecordedWith.UNKNOWN
 
     def close(self):
         self._add_current_segment_points()
+
+    @property
+    def track(self):
+        return self._track
+
+    @property
+    def recorded_with(self):
+        return self._recorded_with
 
     def _add_track_point(self, track_point):
         # Check track_point is a good one.

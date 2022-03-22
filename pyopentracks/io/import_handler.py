@@ -21,6 +21,7 @@ import threading
 
 from os import path
 from pathlib import Path
+from typing import List
 from xml.etree.ElementTree import XMLParser
 
 from gi.repository import GLib, GObject
@@ -191,7 +192,7 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
     def __init__(self):
         super().__init__()
         GObject.GObject.__init__(self)
-        self._files_name = []
+        self._files_path: List[Path] = []
         self._callback = None
         self._thread = None
         self._result = {
@@ -205,12 +206,15 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
         if self._thread:
             self._thread.do_run = False
 
-    def import_folder(self, path: str, cb):
-        self._result["folder"] = path
-        p = Path(self._result["folder"])
-        self._files_name = [f for f in p.glob("*.gpx")] # add GPX files
-        self._files_name.extend([f for f in p.glob("*.fit")]) # add FIT files
-        self._result["total"] = len(self._files_name)
+    def import_folder(self, folder_path: str, cb):
+        self._result["folder"] = folder_path
+        path_object = Path(self._result["folder"])
+
+        # Select all GPX and FIT files from path folder.
+        self._files_path = [f for f in path_object.glob("*.gpx")]
+        self._files_path.extend([f for f in path_object.glob("*.fit")])
+
+        self._result["total"] = len(self._files_path)
         self.emit("total-files-to-import", int(self._result["total"]))
         self._callback = cb
 
@@ -219,7 +223,7 @@ class ImportFolderHandler(ImportHandler, GObject.GObject):
 
     def _import_in_thread(self):
         parser = ParserHandler()
-        for f in self._files_name:
+        for f in self._files_path:
             result = parser.parse(str(f))
             self._import_track(result)
             if not getattr(self._thread, "do_run", True):
@@ -273,7 +277,7 @@ class AutoImportHandler(ImportHandler, GObject.GObject):
         self._total_to_import = len(files_to_import)
         self.emit("total-files-to-autoimport", int(self._total_to_import))
         for f in files_to_import:
-            result = parser.parse(f)
+            result = parser.parse(str(f))
             self._import_track(result)
 
     def _import_finished(self, result: Result):
@@ -292,7 +296,7 @@ class AutoImportHandler(ImportHandler, GObject.GObject):
         """Add information about imported file into database.
 
         Arguments:
-        pathfile -- the origial track file that was tried to import.
+        pathfile -- the original track file that was tried to import.
         code -- the Result.code value.
         """
         db = Database()
@@ -310,7 +314,7 @@ class ParserHandler:
     def parse(self, filename):
         try:
             if filename.endswith(".gpx"):
-                parser = GpxParser(filename)
+                parser = GpxParser()
                 xmlparser = XMLParser(target=parser)
                 with open(filename, "rb") as file:
                     for data in file:
@@ -322,18 +326,18 @@ class ParserHandler:
             else:
                 raise Exception(f"invalid file to parse: {filename}")
 
-            if not parser._track:
+            if not parser.track:
                 raise Exception("empty track")
 
-            tp = parser._track.track_points
+            tp = parser.track.track_points
             if not tp or len(tp) == 0:
                 raise Exception("empty track")
 
             return Result(
                 code=Result.OK,
-                track=parser._track,
+                track=parser.track,
                 filename=filename,
-                recorded_with=parser._recorded_with
+                recorded_with=parser.recorded_with
             )
         except Exception as error:
             message = f"Error parsing the file {filename}: {error}"
@@ -376,7 +380,7 @@ class ParserHandlerInThread(GObject.GObject):
     def _parse_in_thread(self):
         try:
             if self._filename.endswith(".gpx"):
-                parser = GpxParser(self._filename)
+                parser = GpxParser()
                 xmlparser = XMLParser(target=parser)
                 with open(self._filename, 'rb') as file:
                     for data in file:
@@ -390,10 +394,10 @@ class ParserHandlerInThread(GObject.GObject):
 
             self.emit("end-parse")
 
-            if not parser._track:
+            if not parser.track:
                 raise Exception("empty track")
 
-            tp = parser._track.track_points
+            tp = parser.track.track_points
             if not tp or len(tp) == 0:
                 raise Exception("empty track")
 
@@ -402,8 +406,8 @@ class ParserHandlerInThread(GObject.GObject):
                 Result(
                     code=Result.OK,
                     filename=self._filename,
-                    track=parser._track,
-                    recorded_with=parser._recorded_with
+                    track=parser.track,
+                    recorded_with=parser.recorded_with
                 )
             )
         except Exception as error:
