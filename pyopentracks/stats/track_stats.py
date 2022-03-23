@@ -178,12 +178,8 @@ class TrackStats:
         """
         for tp in track_points:
             self._new_track_point(tp)
-        self._avg_speed_mps = (
-            self._total_distance_m / (self._total_time_ms / 1000)
-        )
-        self._avg_moving_speed_mps = (
-            self._total_distance_m / (self._moving_time_ms / 1000)
-        )
+        self._avg_speed_mps = self._total_distance_m / (self._total_time_ms / 1000) if self._total_time_ms else 0
+        self._avg_moving_speed_mps = self._total_distance_m / (self._moving_time_ms / 1000) if self._moving_time_ms else 0
 
     def _new_track_point(self, track_point):
         """Compute all stats from new track point.

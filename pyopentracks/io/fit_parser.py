@@ -108,8 +108,10 @@ class FitRecordMessage:
         self._time_ms = values["timestamp"].timestamp() * 1000 if "timestamp" in values else None
         self._speed_mps = values["speed"] if "speed" in values else None
         self._altitude_m = values["altitude"] if "altitude" in values else None
-        self._elevation_gain_m = self._altitude_m - last_altitude if last_altitude is not None and self._altitude_m > last_altitude else 0
-        self._elevation_loss_m = last_altitude - self._altitude_m if last_altitude is not None and self._altitude_m < last_altitude else 0
+        self._elevation_gain_m = self._altitude_m - last_altitude \
+            if last_altitude is not None and self._altitude_m is not None and self._altitude_m > last_altitude else 0
+        self._elevation_loss_m = last_altitude - self._altitude_m \
+            if last_altitude is not None and self._altitude_m is not None and self._altitude_m < last_altitude else 0
         self._heart_rate_bpm = values["heart_rate"] if "heart_rate" in values else None
         self._cadence_rpm = values["cadence"] if "cadence" in values else None
         self._power_w = values["power"] if "power" in values else None
