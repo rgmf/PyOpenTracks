@@ -219,6 +219,21 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         widget = self._layout.get_top_widget()
         widget.foreach(lambda child: widget.remove(child))
 
+    def set_menu_buttons_sensitive(self, sensitive: bool):
+        """Set sensitive attribute for menu/options buttons."""
+        if self._back_btn:
+            self._back_btn.set_sensitive(sensitive)
+        if self._analytic_menu_btn:
+            self._analytic_menu_btn.set_sensitive(sensitive)
+        if self._segments_menu_btn:
+            self._segments_menu_btn.set_sensitive(sensitive)
+        if self._preferences_menu_btn:
+            self._preferences_menu_btn.set_sensitive(sensitive)
+        if self._edit_btn:
+            self._edit_btn.set_sensitive(sensitive)
+        if self._del_btn:
+            self._del_btn.set_sensitive(sensitive)
+
     def on_quit(self):
         self._save_state()
 

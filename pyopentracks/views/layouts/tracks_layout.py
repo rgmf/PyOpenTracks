@@ -109,6 +109,7 @@ class TracksLayout(Gtk.Box, Layout):
                 self._list_store.remove(childiter)
             self._treepath_selected = None
             self._tree_view_widget.set_sensitive(True)
+            self._app_window.set_menu_buttons_sensitive(True)
             self._select_first_row()
 
         def delete_in_thread():
@@ -121,6 +122,7 @@ class TracksLayout(Gtk.Box, Layout):
             GLib.idle_add(deletion_done)
 
         self._tree_view_widget.set_sensitive(False)
+        self._app_window.set_menu_buttons_sensitive(False)
         threading.Thread(target=delete_in_thread, daemon=True).start()
 
     def on_remove(self, widget, treeiter):
