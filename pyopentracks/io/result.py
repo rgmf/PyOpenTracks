@@ -55,6 +55,9 @@ class RecordedWith:
     def is_opentracks(self):
         return self.software.lower() == "opentracks"
 
+    def is_unknown(self):
+        return self.id == 0
+
     @staticmethod
     def unknown():
         return RecordedOptions[0]

@@ -25,6 +25,7 @@ from pyopentracks.utils.utils import SpeedUtils as su
 from pyopentracks.utils.utils import ElevationUtils as eu
 from pyopentracks.utils.utils import SensorUtils as se
 from pyopentracks.utils.utils import TypeActivityUtils as tau
+from pyopentracks.io.result import RecordedOptions, RecordedWith
 
 
 class Track(Model):
@@ -295,12 +296,20 @@ class Track(Model):
         return _("Elevation Loss")
 
     @property
+    def max_hr_bpm(self):
+        return self._maxhr_bpm
+
+    @property
     def max_hr(self):
         return se.hr_to_str(self._maxhr_bpm)
 
     @property
     def max_hr_label(self):
         return _("Max. Heart Rate")
+
+    @property
+    def avg_hr_bpm(self):
+        return self._avghr_bpm
 
     @property
     def avg_hr(self):
@@ -311,12 +320,20 @@ class Track(Model):
         return _("Avg. Heart Rate")
 
     @property
+    def max_cadence_rpm(self):
+        return self._maxcadence_rpm
+
+    @property
     def max_cadence(self):
         return se.cadence_to_str(self._maxcadence_rpm)
 
     @property
     def max_cadence_label(self):
         return _("Max. Cadence")
+
+    @property
+    def avg_cadence_rpm(self):
+        return self._avgcadence_rpm
 
     @property
     def avg_cadence(self):
@@ -327,8 +344,10 @@ class Track(Model):
         return _("Avg. Cadence")
 
     @property
-    def recorded_with(self):
-        return self._recorded_with
+    def recorded_with(self) -> RecordedWith:
+        if self._recorded_with is None or self._recorded_with not in RecordedOptions:
+            return RecordedWith.unknown()
+        return RecordedOptions[self._recorded_with]
 
     @name.setter
     def name(self, name):

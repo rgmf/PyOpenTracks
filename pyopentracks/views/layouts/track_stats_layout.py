@@ -64,24 +64,37 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         self._add_item(self._track.avg_moving_speed_label, self._track.avg_moving_speed, 0, 3, 1, 1)
         # Max. speed
         self._add_item(self._track.max_speed_label, self._track.max_speed, 1, 3, 1, 1)
-        # Max. elevation
-        self._add_item(self._track.max_elevation_label, self._track.max_elevation, 0, 4, 1, 1)
-        # Min. elevation
-        self._add_item(self._track.min_elevation_label, self._track.min_elevation, 1, 4, 1, 1)
-        # Gain. elevation
-        self._add_item(self._track.gain_elevation_label, self._track.gain_elevation, 0, 5, 1, 1)
-        # Loss elevation
-        self._add_item(self._track.loss_elevation_label, self._track.loss_elevation, 1, 5, 1, 1)
-        # Max. heart rate
-        self._add_item(self._track.max_hr_label, self._track.max_hr, 0, 6, 1, 1)
-        # Avg. heart rate
-        self._add_item(self._track.avg_hr_label, self._track.avg_hr, 1, 6, 1, 1)
-        # Max. cadence
-        self._add_item(self._track.max_cadence_label, self._track.max_cadence, 0, 7, 1, 1)
-        # Avg. cadence
-        self._add_item(self._track.avg_cadence_label, self._track.avg_cadence, 1, 7, 1, 1)
 
-        # Loads boxes where map and plot will be
+        top = 4
+        if self._track.max_elevation_m is not None or self._track.min_elevation_m is not None:
+            # Max. elevation
+            self._add_item(self._track.max_elevation_label, self._track.max_elevation, 0, top, 1, 1)
+            # Min. elevation
+            self._add_item(self._track.min_elevation_label, self._track.min_elevation, 1, top, 1, 1)
+            top += 1
+
+        if self._track.gain_elevation_m is not None or self._track.loss_elevation_m is not None:
+            # Gain. elevation
+            self._add_item(self._track.gain_elevation_label, self._track.gain_elevation, 0, top, 1, 1)
+            # Loss elevation
+            self._add_item(self._track.loss_elevation_label, self._track.loss_elevation, 1, top, 1, 1)
+            top += 1
+
+        if self._track.max_hr_bpm is not None or self._track.avg_hr_bpm is not None:
+            # Max. heart rate
+            self._add_item(self._track.max_hr_label, self._track.max_hr, 0, top, 1, 1)
+            # Avg. heart rate
+            self._add_item(self._track.avg_hr_label, self._track.avg_hr, 1, top, 1, 1)
+            top += 1
+
+        if self._track.max_cadence_rpm is not None or self._track.avg_cadence_rpm is not None:
+            # Max. cadence
+            self._add_item(self._track.max_cadence_label, self._track.max_cadence, 0, top, 1, 1)
+            # Avg. cadence
+            self._add_item(self._track.avg_cadence_label, self._track.avg_cadence, 1, top, 1, 1)
+            top += 1
+
+        # Load boxes where map and plot will be
         self._main_widget.attach(Gtk.Label(_("Loading Map...")), 2, 1, 2, 7)
         self._main_widget.attach(Gtk.Label(_("Loading Graph...")), 0, 8, 4, 24)
 
@@ -150,6 +163,15 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
         hbox_date.pack_start(total_time_label, False, True, 0)
 
         vbox.pack_start(hbox_date, False, True, 0)
+
+        # Recorded with
+        if not track.recorded_with.is_unknown():
+            label = track.recorded_with.software
+            label += " " + track.recorded_with.product.model if track.recorded_with.product else ""
+            software_label = Gtk.Label(label=_(f"Recorded with: {label}"), xalign=0.0)
+            software_label.get_style_context().add_class("pyot-p-small")
+
+            vbox.pack_start(software_label, False, True, 0)
 
         hbox.pack_start(vbox, False, True, 0)
 
