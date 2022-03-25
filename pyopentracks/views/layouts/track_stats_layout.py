@@ -105,7 +105,7 @@ class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
             self._on_track_points_end(self._track.track_points)
 
         # Load segments.
-        segments_list_layout = SegmentsListLayout.from_trackid(self._track.id)
+        segments_list_layout = SegmentsListLayout.from_track(self._track)
         if segments_list_layout.get_number_rows() > 0:
             self._main_widget.attach(segments_list_layout, 0, 32, 4, 1)
 

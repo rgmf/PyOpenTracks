@@ -77,23 +77,24 @@ class SegmentsListLayout(Gtk.Box):
         self.get_style_context().add_class("pyot-bg")
 
     @staticmethod
-    def from_trackid(trackid):
+    def from_track(track):
         object = SegmentsListLayout()
         object._combobox_segments.hide()
         object.remove(object._grid_segment_detail)
         object._box_header.remove(object._button_edit)
         object._box_header.remove(object._button_delete)
-        segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(trackid)
+        segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(track.id)
         if not segmentracks:
             return object
 
         object._grid.attach(object._build_header_label(_("Segment Information")), 0, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("Time")), 1, 0, 1, 1)
-        object._grid.attach(object._build_header_label(_("Speed")), 2, 0, 1, 1)
+        object._grid.attach(object._build_header_label(track.speed_label), 2, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("Heart Rate")), 3, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("Cadence")), 4, 0, 1, 1)
 
         for i, st in enumerate(segmentracks):
+            st.track = track
             segment = DatabaseHelper.get_segment_by_id(st.segmentid)
             object._grid.attach(
                 object._build_info_box(

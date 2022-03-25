@@ -228,6 +228,10 @@ class Track(Model):
         return su.mps_to_category_rate(self._avgspeed_mps, self._category)
 
     @property
+    def speed_label(self):
+        return _("Speed") if tau.is_speed(self._category) else _("Pace")
+
+    @property
     def avg_speed_label(self):
         return _("Avg. Speed") if tau.is_speed(self._category) else _("Avg. Pace")
 

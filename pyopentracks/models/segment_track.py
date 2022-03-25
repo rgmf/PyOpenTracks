@@ -151,10 +151,14 @@ class SegmentTrack(Model):
 
     @property
     def maxspeed(self):
+        if self.track is not None:
+            return SpeedUtils.mps_to_category_rate(self._maxspeed, self.track.category)
         return SpeedUtils.mps_to_kph(self._maxspeed)
 
     @property
     def avgspeed(self):
+        if self.track is not None:
+            return SpeedUtils.mps_to_category_rate(self._avgspeed, self.track.category)
         return SpeedUtils.mps_to_kph(self._avgspeed)
 
     @property
