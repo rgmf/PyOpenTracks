@@ -270,43 +270,27 @@ class TestTypeActivityUtils(unittest.TestCase):
 
 class TestTrackPointUtils(unittest.TestCase):
     def test_to_locations(self):
-        tp1 = TrackPoint(0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0)
-        tp2 = TrackPoint(0, 0, 0, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0)
-        tp3 = TrackPoint(0, 0, 0, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0)
-        tp4 = TrackPoint(0, 0, 0, 8, 7, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp1 = TrackPoint(0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp2 = TrackPoint(0, 0, 0, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp3 = TrackPoint(0, 0, 0, 6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp4 = TrackPoint(0, 0, 0, 8, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         self.assertEqual(
             [(loc.latitude, loc.longitude) for loc in TrackPointUtils.to_locations([tp1, tp2, tp3, tp4])],
             [(1.0, 2.0), (3.0, 4.0), (5.0, 6.0), (7.0, 8.0)]
         )
 
     def test_speed(self):
-        tp1 = TrackPoint(
-            0, 0, 0, -73.96592, 40.78395, 0, 0, 0, 0, 0, 0, 0, 0
-        )
-        tp2 = TrackPoint(
-            0, 0, 0, -73.96537, 40.78378, 10000, 0, 0, 0, 0, 0, 0, 0
-        )
+        tp1 = TrackPoint(0, 0, 0, -73.96592, 40.78395, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp2 = TrackPoint(0, 0, 0, -73.96537, 40.78378, 10000, 0, 0, 0, 0, 0, 0, 0, 0)
         self.assertAlmostEqual(TrackPointUtils.speed(tp1, tp2), 5, 2)
 
     def test_extract_dict_values(self):
-        tp1 = TrackPoint(
-            0, 0, 0, -73.96592, 40.78395, 0, 0, 0, 0, 0, 0, 0, 0
-        )
-        tp2 = TrackPoint(
-            0, 0, 0, -73.96537, 40.78378, 10000, 0, 0, 0, 0, 0, 0, 0
-        )
-        tp3 = TrackPoint(
-            0, 0, 0, -73.96537, 40.78378, 20000, 0, 0, 0, 0, 0, 0, 0
-        )
-        tp4 = TrackPoint(
-            0, 0, 0, -73.96592, 40.78395, 30000, 0, 0, 0, 0, 0, 0, 0
-        )
-        tp5 = TrackPoint(
-            0, 0, 0, -73.96592, 40.78395, 40000, 0, 0, 0, 0, 0, 0, 0
-        )
-        tp6 = TrackPoint(
-            0, 0, 0, -73.96537, 40.78378, 50000, 0, 0, 0, 0, 0, 0, 0
-        )
+        tp1 = TrackPoint(0, 0, 0, -73.96592, 40.78395, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp2 = TrackPoint(0, 0, 0, -73.96537, 40.78378, 10000, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp3 = TrackPoint(0, 0, 0, -73.96537, 40.78378, 20000, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp4 = TrackPoint(0, 0, 0, -73.96592, 40.78395, 30000, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp5 = TrackPoint(0, 0, 0, -73.96592, 40.78395, 40000, 0, 0, 0, 0, 0, 0, 0, 0)
+        tp6 = TrackPoint(0, 0, 0, -73.96537, 40.78378, 50000, 0, 0, 0, 0, 0, 0, 0, 0)
         tpoints = [tp1, tp2, tp3, tp4, tp5, tp6]
         dict_list = TrackPointUtils.extract_dict_values(tpoints, 50)
         self.assertEqual(len(dict_list), 4)

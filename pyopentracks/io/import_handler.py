@@ -133,16 +133,10 @@ class ImportHandler:
             code = Result.OK
             message = _("Track imported")
 
-        if (
-            code == Result.OK and
-            recorded_with == RecordedWith.OPENTRACKS and
-            self._opentracks_gain_loss_correction
-        ):
+        if code == Result.OK and recorded_with.is_opentracks() and self._opentracks_gain_loss_correction:
             res_gain_loss_filter = GainLossFilter(trackid).run()
             if res_gain_loss_filter is None:
-                message = (
-                    f"Error filtering gain and loss for the file {filename}"
-                )
+                message = f"Error filtering gain and loss for the file {filename}"
                 pyot_logging.get_logger(__name__).error(message)
 
         return Result(

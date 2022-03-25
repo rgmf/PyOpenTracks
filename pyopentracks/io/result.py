@@ -17,15 +17,80 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from enum import Enum
+from dataclasses import dataclass
 
 
-class RecordedWith(Enum):
-    """Enum with recorded devices possibilities."""
+@dataclass
+class FitSdkProduct:
+    # Manufacturer's name
+    manufacturer: str
+    # Value's name
+    value_name: str
+    # Value
+    value: int
+    # Model's description
+    model: str
+    # Has trusted barometer
+    barometer: bool = False
 
-    UNKNOWN = 0
-    OPENTRACKS = 1
-    GARMIN = 2
+    def has(self, product: any):
+        """Return True if product is value_name or value."""
+        if type(product) == str:
+            return self.value_name == product
+        elif type(product) == int:
+            return self.value == product
+        else:
+            return False
+
+
+@dataclass
+class RecordedWith:
+    # Unique ID for this recorded option
+    id: int
+    # Software's name
+    software: str
+    # Product value (from FIT SDK). It can be str or int
+    product: FitSdkProduct = None
+
+    def is_opentracks(self):
+        return self.software.lower() == "opentracks"
+
+    @staticmethod
+    def unknown():
+        return RecordedOptions[0]
+
+    @staticmethod
+    def from_software(software: str):
+        items = list(filter(lambda i: i.software.lower() == software.lower(), RecordedOptions.values()))
+        if len(items) > 0:
+            return items[0]
+        else:
+            return RecordedWith.unknown()
+
+    @staticmethod
+    def from_device(manufacturer: str, product: any):
+        items = list(
+            filter(
+                lambda i:
+                i.product is not None and \
+                i.product.manufacturer.lower() == manufacturer.lower() and \
+                i.product.has(product),
+                RecordedOptions.values()
+            )
+        )
+        if len(items) > 0:
+            return items[0]
+        else:
+            return RecordedWith.unknown()
+
+
+RecordedOptions = {
+    0: RecordedWith(0, "Unknown"),
+    1: RecordedWith(1, "OpenTracks"),
+    2: RecordedWith(2, "Garmin"),
+    3: RecordedWith(3, "Garmin", FitSdkProduct("Garmin", "edge520", 2067, "Edge 520", True)),
+    4: RecordedWith(4, "Garmin", FitSdkProduct("Garmin", "edge530", 3121, "Edge 530", True))
+}
 
 
 class Result:
@@ -69,11 +134,10 @@ class Result:
 
     @property
     def message(self):
-        """Return the message if any. Otherwise return empty string."""
+        """Return the message if any. Otherwise, return empty string."""
         return self._message if self._message is not None else ""
 
     @property
     def recorded_with(self):
         """Return RecordedWith enumeration value for recorded_with."""
-        return RecordedWith.UNKNOWN if self._recorded_with is None\
-          else self._recorded_with
+        return RecordedOptions[0] if self._recorded_with is None else self._recorded_with

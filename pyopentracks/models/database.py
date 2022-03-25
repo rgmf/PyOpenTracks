@@ -108,7 +108,6 @@ class Database:
                 )
         return []
 
-
     def get_segment_by_id(self, _id):
         """Return Segment object from _id.
 
@@ -269,7 +268,7 @@ class Database:
         return []
 
     def get_existed_tracks(self, uuid, start, end):
-        """"Look for a Track from arguments.
+        """Look for a Track from arguments.
 
         Look for a track that has the same uuid or has the same start and
         end time.

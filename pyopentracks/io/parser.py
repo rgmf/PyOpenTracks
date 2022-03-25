@@ -43,7 +43,7 @@ class Parser:
         self._num_segments = 0
         self._track_points = []
         self._new_segment = False
-        self._recorded_with = RecordedWith.UNKNOWN
+        self._recorded_with: RecordedWith = RecordedWith.unknown()
 
     def close(self):
         self._add_current_segment_points()

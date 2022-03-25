@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from os import path
-
 from .model import Model
 from pyopentracks.utils.utils import DateTimeUtils as dtu
 from pyopentracks.utils.utils import TimeUtils as tu
@@ -52,6 +50,7 @@ class Track(Model):
         self._avghr_bpm = args[18]
         self._maxcadence_rpm = args[19]
         self._avgcadence_rpm = args[20]
+        self._recorded_with = args[21]
 
         self._track_points = None
 
@@ -83,7 +82,7 @@ class Track(Model):
         """Returns the query for inserting a Track register."""
         return """
         INSERT INTO tracks VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -140,7 +139,8 @@ class Track(Model):
             self._maxhr_bpm,
             self._avghr_bpm,
             self._maxcadence_rpm,
-            self._avgcadence_rpm
+            self._avgcadence_rpm,
+            self._recorded_with
         )
 
     def bulk_insert_fields(self, fk_value):
@@ -326,6 +326,10 @@ class Track(Model):
     def avg_cadence_label(self):
         return _("Avg. Cadence")
 
+    @property
+    def recorded_with(self):
+        return self._recorded_with
+
     @name.setter
     def name(self, name):
         self._name = name
@@ -357,3 +361,7 @@ class Track(Model):
     @track_points.setter
     def track_points(self, track_points):
         self._track_points = track_points
+
+    @recorded_with.setter
+    def recorded_with(self, recorded_with):
+        self._recorded_with = recorded_with
