@@ -72,7 +72,7 @@ class GpxParser(Parser):
                     key == "schemaLocation" and
                     "http://opentracksapp.com/xmlschemas/v1" in v
                 ):
-                    self._recorded_with = RecordedWith.OPENTRACKS
+                    self._recorded_with = RecordedWith.from_software("OpenTracks")
             self._tag = tag
         if tag == GpxParser.TAG_METADATA:
             self._tag = tag
@@ -103,7 +103,7 @@ class GpxParser(Parser):
         self._track = Track(
             None, self._uuid, self._name, self._desc, self._type,
             None, None, None, None, None, None, None, None, None, None, None,
-            None, None, None, None, None
+            None, None, None, None, None, self._recorded_with.id
         )
         self._track.track_points = self._track_points
         track_stats = TrackStats()
@@ -138,6 +138,8 @@ class GpxParser(Parser):
         elif tag == GpxParser.TAG_CADENCE:
             self._new_track_point.cadence_rpm = self._data
         elif tag == GpxParser.TAG_TRKPT:
+            if not self._new_track_point.time_ms:
+                raise Exception("there are track points without time tag")
             if not self._new_track_point.speed_mps:
                 self._new_track_point.speed_mps = tpu.speed(
                     self._last_track_point, self._new_track_point

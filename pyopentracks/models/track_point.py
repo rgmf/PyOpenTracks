@@ -37,13 +37,14 @@ class TrackPoint(Model):
         self._heart_rate_bpm = args[10] if args else None
         self._cadence_rpm = args[11] if args else None
         self._power_w = args[12] if args else None
+        self._temperature = args[13] if args else None
 
     @property
     def insert_query(self):
         """Returns the query for inserting a TrackPoint register."""
         return """
         INSERT INTO trackpoints VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -86,7 +87,8 @@ class TrackPoint(Model):
             self._elevation_loss_m,
             self._heart_rate_bpm,
             self._cadence_rpm,
-            self._power_w
+            self._power_w,
+            self._temperature
         )
 
     def bulk_insert_fields(self, fk_value):
@@ -105,7 +107,8 @@ class TrackPoint(Model):
             self._elevation_loss_m,
             self._heart_rate_bpm,
             self._cadence_rpm,
-            self._power_w
+            self._power_w,
+            self._temperature
         )
 
     @property
@@ -185,6 +188,10 @@ class TrackPoint(Model):
     def speed_mps(self):
         return self._speed_mps
 
+    @property
+    def temperature(self):
+        return self._temperature
+
     @segment.setter
     def segment(self, num_segment):
         self._numsegment = num_segment
@@ -224,3 +231,7 @@ class TrackPoint(Model):
     @cadence_rpm.setter
     def cadence_rpm(self, cadence):
         self._cadence_rpm = cadence
+
+    @temperature.setter
+    def temperature(self, temperature):
+        self._temperature = temperature

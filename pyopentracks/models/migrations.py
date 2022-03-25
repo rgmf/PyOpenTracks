@@ -63,7 +63,8 @@ class Migration:
                 maxhr FLOAT,
                 avghr FLOAT,
                 maxcadence FLOAT,
-                avgcadence FLOAT
+                avgcadence FLOAT,
+                recorded_with INTEGER
             );
         """
         self._db.execute(query)
@@ -85,6 +86,7 @@ class Migration:
                 heartrate FLOAT,
                 cadence FLOAT,
                 power FLOAT,
+                temperature FLOAT,
                 FOREIGN KEY (trackid) REFERENCES tracks (_id) ON UPDATE CASCADE ON DELETE CASCADE
             );
         """

@@ -80,17 +80,22 @@ class FitSportMessage:
 
     def __init__(self, fitfile):
         self._name = "unknown"
+        self._category = "unknown"
 
         messages = list(fitfile.get_messages("sport"))
         sport = messages[0] if len(messages) > 0 else None
         if sport:
-            field_data = list(filter(lambda fd: fd.field and fd.field.def_num == 0, sport.fields))
-            if field_data:
-                self._name = field_data[0].value
+            values = sport.get_values()
+            self._name = values["name"] if "name" in values else "unknown"
+            self._category = values["sport"] if "sport" in values else "unknown"
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def category(self):
-        return self._name
+        return self._category
 
 
 class FitRecordMessage:
@@ -115,13 +120,14 @@ class FitRecordMessage:
         self._heart_rate_bpm = values["heart_rate"] if "heart_rate" in values else None
         self._cadence_rpm = values["cadence"] if "cadence" in values else None
         self._power_w = values["power"] if "power" in values else None
+        self._temperature = values["temperature"] if "temperature" else None
 
     @property
     def track_point(self):
         return TrackPoint(
             None, self._numsegment, None, self._longitude, self._latitude, self._time_ms, self._speed_mps,
             self._altitude_m, self._elevation_gain_m, self._elevation_loss_m,
-            self._heart_rate_bpm, self._cadence_rpm, self._power_w
+            self._heart_rate_bpm, self._cadence_rpm, self._power_w, self._temperature
         )
 
 
@@ -149,14 +155,18 @@ class FitParser(Parser):
     def parse(self):
         fitfile = fitparse.FitFile(self._filename_path)
         file_id = FitFileIdMessage(fitfile)
-        if file_id.manufacturer == "garmin":
-            self._recorded_with = RecordedWith.GARMIN
+        if hasattr(file_id, "manufacturer"):
+            if hasattr(file_id, "product"):
+                self._recorded_with = RecordedWith.from_device(file_id.manufacturer, file_id.product)
+            else:
+                self._recorded_with = RecordedWith.from_software(file_id.manufacturer)
 
         sport = FitSportMessage(fitfile)
         self._track = Track(
-            None, None, sport.category, None, sport.category,
+            None, None, sport.name, None, sport.category,
             None, None, None, None, None, None, None, None,
-            None, None, None, None, None, None, None, None
+            None, None, None, None, None, None, None, None,
+            self._recorded_with.id
         )
         self._track.category = sport.category
 
