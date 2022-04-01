@@ -30,7 +30,6 @@ from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.io.gpx_parser import GpxParser
 from pyopentracks.io.fit_parser import FitParser
 from pyopentracks.io.result import Result
-from pyopentracks.io.result import RecordedWith
 from pyopentracks.models.database import Database
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.auto_import import AutoImport
