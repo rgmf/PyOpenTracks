@@ -85,6 +85,7 @@ class SegmentsListLayout(Gtk.Box):
         object._box_header.remove(object._button_delete)
         segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(track.id)
         if not segmentracks:
+            object._grid.attach(Gtk.Label(_("There are not segments for this track")), 0, 0, 1, 1)
             return object
 
         object._grid.attach(object._build_header_label(_("Segment Information")), 0, 0, 1, 1)

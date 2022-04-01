@@ -81,14 +81,13 @@ class MapSegment(Champlain.MarkerLayer, GObject.GObject):
         self._marker_end = None
         self._track_points = []
 
-
-    def get_track_points(self):
+    @property
+    def track_points(self):
         return self._track_points
 
+
 class SegmentMarker(Champlain.Label):
-    """
-    It's a Champlain.Label with a TrackPoint's object.
-    """
+    """It's a Champlain.Label with a TrackPoint's object."""
 
     def __init__(self):
         super().__init__()

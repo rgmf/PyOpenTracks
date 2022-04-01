@@ -137,6 +137,23 @@
             <property name="position">6</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkButton" id="_analytic_btn">
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <child>
+              <object class="GtkImage" id="_edit_menu_image1">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="icon-name">paper-symbolic</property>
+                <property name="icon_size">1</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="position">7</property>
+          </packing>
+        </child>
       </object>
     </child>
   </template>

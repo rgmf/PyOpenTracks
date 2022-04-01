@@ -19,8 +19,10 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Gio
 
+from pyopentracks.views.layouts.notebook_layout import NotebookLayout
 from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
 from pyopentracks.views.layouts.greeter_layout import GreeterLayout
+from pyopentracks.views.layouts.track_summary_layout import TrackSummaryLayout
 from pyopentracks.views.layouts.tracks_layout import TracksLayout
 from pyopentracks.views.layouts.info_layout import InfoLayout
 from pyopentracks.views.dialogs import MessageDialogError
@@ -35,6 +37,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
     _edit_btn: Gtk.Button = Gtk.Template.Child()
     _del_btn: Gtk.Button = Gtk.Template.Child()
+    _analytic_btn: Gtk.Button = Gtk.Template.Child()
 
     _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
     _preferences_menu_btn: Gtk.Button = Gtk.Template.Child()
@@ -126,6 +129,14 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             "handler_id": handler_id
         })
 
+    def connect_button_analytic(self, action_cb, *args):
+        self._analytic_btn.show()
+        handler_id = self._analytic_btn.connect("clicked", action_cb, *args)
+        self._action_buttons_handlers.append({
+            "widget": self._analytic_btn,
+            "handler_id": handler_id
+        })
+
     def disconnect_action_buttons(self):
         for dict_item in self._action_buttons_handlers:
             dict_item["widget"].disconnect(dict_item["handler_id"])
@@ -149,14 +160,19 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
                 title=_("Error opening track file")
             ).show()
         else:
-            layout = TrackStatsLayout(track)
-            layout.load_data()
-            self.show_layout(layout)
+            notebook_layout = NotebookLayout()
+            layout = TrackSummaryLayout(track)
+            layout.build()
+            notebook_layout.append(layout, _("Track Opened"))
+            self.show_layout(notebook_layout)
             self._edit_btn.hide()
             self._del_btn.hide()
+            self._analytic_btn.hide()
             self._back_btn.show()
             self._analytic_menu_btn.hide()
             self._preferences_menu_btn.hide()
+            self._segments_menu_btn.hide()
+            self._primary_menu_btn.hide()
 
     def load_tracks(self, tracks):
         """Load all tracks in the corresponding layout.
@@ -164,6 +180,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         Arguments:
         tracks -- a list of Track objects.
         """
+        self._primary_menu_btn.show()
         self._preferences_menu_btn.show()
         if tracks and len(tracks) > 0:
             self._analytic_menu_btn.show()
@@ -182,6 +199,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._preferences_menu_btn.hide()
         self._edit_btn.hide()
         self._del_btn.hide()
+        self._analytic_btn.hide()
+        self._primary_menu_btn.hide()
 
     def loading(self, total):
         """Handle a progress bar on the top of the loaded Layout.

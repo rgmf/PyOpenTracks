@@ -21,6 +21,7 @@ import threading
 
 from gi.repository import Gtk, GLib, GdkPixbuf
 
+from pyopentracks.app_track_analytic import AppTrackAnalytic
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
@@ -200,6 +201,17 @@ class TracksLayout(Gtk.Box, Layout):
         else:
             self._select_row(self._tree_model_filter.get_path(treeiter), force=True)
 
+    def on_analytic(self, widget, treeiter):
+        """Callback to open analytic for the treeiter item.
+
+        Arguments:
+        widget   -- the Gtk.Widget that trigger this callback.
+        treeiter -- the Gtk.TreeIter that can be used to access to the node in
+                    the Gtk.TreeView through the model.
+        """
+        track = DatabaseHelper.get_track_by_id(self._tree_model_filter.get_value(treeiter, 0))
+        self._app_window.load_app(AppTrackAnalytic(track))
+
     def _on_correction_done(self, results):
         if results is None:
             self._app_window.clean_top_widget()
@@ -255,6 +267,7 @@ class TracksLayout(Gtk.Box, Layout):
         self._app_window.disconnect_action_buttons()
         self._app_window.connect_button_del(self.on_remove, treeiter)
         self._app_window.connect_button_edit(self.on_edit, treeiter)
+        self._app_window.connect_button_analytic(self.on_analytic, treeiter)
 
     def _show_message(self, msg):
         label = Gtk.Label(label=msg)
@@ -310,6 +323,10 @@ class TracksLayout(Gtk.Box, Layout):
             )
             self._app_window.connect_button_edit(
                 self.on_edit,
+                self._tree_model_filter.get_iter(treepath_list[0])
+            )
+            self._app_window.connect_button_analytic(
+                self.on_analytic,
                 self._tree_model_filter.get_iter(treepath_list[0])
             )
         else:

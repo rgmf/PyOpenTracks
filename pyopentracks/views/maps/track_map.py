@@ -22,8 +22,7 @@ GtkClutter.init([])  # Must be initialized before importing those:
 from gi.repository import Champlain, GtkChamplain, Pango
 
 from pyopentracks.views.maps.base_map import BaseMap
-from pyopentracks.views.maps.map_segment import MapSegment
-from pyopentracks.utils.utils import LocationUtils, TrackPointUtils
+from pyopentracks.utils.utils import TrackPointUtils
 from pyopentracks.models.location import Location
 
 
@@ -36,12 +35,6 @@ class TrackMap(BaseMap):
     def __init__(self):
         super().__init__()
 
-        self._begin = None
-        self._end = None
-        self._segment = MapSegment()
-        self._view.add_layer(self._segment)
-
-        self._view.connect("button-release-event", self._mouse_click_cb, self._view)
         self._layer_marker = None
         self._marker = None
         self._init_location_marker()
@@ -62,23 +55,6 @@ class TrackMap(BaseMap):
         self._layer_marker.add_marker(self._marker)
         self._view.add_layer(self._layer_marker)
         self._layer_marker.hide()
-
-    def _mouse_click_cb(self, actor, event, view):
-        # Only segments if there are track points and they are in the database (they're all have id).
-        if not self._track_points or not list(filter(lambda tp: tp.id is not None, self._track_points)):
-            return False
-        x, y = event.x, event.y
-        lon, lat = view.x_to_longitude(x), view.y_to_latitude(y)
-
-        filter_tp = list(
-            filter(
-                lambda tp: LocationUtils.distance_between(tp.latitude, tp.longitude, lat, lon) < 5, self._track_points
-            )
-        )
-        if filter_tp:
-            self._segment.add_track_point(filter_tp[0])
-
-        return True
 
     def add_polyline(self, track_points):
         if not track_points:
@@ -106,9 +82,3 @@ class TrackMap(BaseMap):
         self._layer_marker.show()
         self._marker.set_location(location.latitude, location.longitude)
         self._marker.set_text(text)
-
-    def get_segment(self):
-        return self._segment
-
-    def clear_segment(self):
-        self._segment.clear()

@@ -23,7 +23,7 @@ gi.require_version('GtkChamplain', '0.12')
 gi.require_version('GtkClutter', '1.0')
 from gi.repository import GtkClutter, Clutter
 GtkClutter.init([])  # Must be initialized before importing those:
-from gi.repository import GtkChamplain, Champlain, Pango, Gtk
+from gi.repository import GtkChamplain, Champlain, Gtk
 
 
 class BaseMap(Gtk.VBox):
@@ -79,9 +79,9 @@ class BaseMap(Gtk.VBox):
         bbox.pack_end(button, False, False, 0)
 
         self.pack_start(bbox, expand=False, fill=False, padding=0)
-        self.pack_start(self._embed, expand=False, fill=False, padding=0)
+        self.pack_start(self._embed, expand=True, fill=True, padding=0)
 
-        self._embed.set_size_request(640, 480)
+        #self._embed.set_size_request(640, 480)
 
     def _zoom_in(self, widget):
         self._view.zoom_in()

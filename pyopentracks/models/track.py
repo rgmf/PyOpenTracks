@@ -55,6 +55,13 @@ class Track(Model):
 
         self._track_points = None
 
+    @staticmethod
+    def from_stats(ts):
+        """"Creates a Track from TrackStats."""
+        track = Track(*([None] * 22))
+        track.add_track_stats(ts)
+        return track
+
     def add_track_stats(self, ts):
         """Add TrackStats object and complete track data.
 

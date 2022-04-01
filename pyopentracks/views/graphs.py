@@ -260,14 +260,13 @@ class LinePlot:
     def __init__(self):
         self._figure = Figure()
         self._figure.subplots()
-
         self._canvas = FigureCanvas(self._figure)
 
     def add_values(self, values):
         """Add values to the LinePlot object.
 
         Arguments:
-        values - A list with a dictionary with ditance, elevation,
+        values - A list with a dictionary with distance, elevation,
                  heart rate and location information:
                  {
                    "distance": <value in km>,

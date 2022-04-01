@@ -33,38 +33,7 @@ from pyopentracks.views.layouts.calendar_layout import CalendarLayout
 from pyopentracks.views.layouts.process_view import ProcessView
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_layout.ui")
-class AnalyticLayout(Gtk.Notebook):
-    """Gtk.Notebook with analytic data."""
-
-    __gtype_name__ = "AnalyticLayout"
-
-    def __init__(self):
-        """Init."""
-        super().__init__()
-
-    def append(self, layout: Gtk.Widget, label: str):
-        """Add a new tab to the notebook.
-
-        Every tab contains a scrolled window that contains the layout.
-
-        Arguments:
-        layout -- the widget that will contained into the scrolled window.
-        label -- the tab's label.
-        """
-        scrolled_win = Gtk.ScrolledWindow()
-        viewport = Gtk.Viewport()
-        viewport.add(layout)
-        scrolled_win.add(viewport)
-
-        label_widget = Gtk.Label(label)
-        self.append_page(scrolled_win, label_widget)
-        self.show_all()
-
-
-@Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_summary_sport_layout.ui"
-)
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_summary_sport_layout.ui")
 class SummarySport(Gtk.Box):
     """Gtk.Box with total, averages and maximum stats for a sport.
 
@@ -159,9 +128,7 @@ class AggregatedStats(Gtk.VBox):
             self.pack_start(SummarySport(aggregated), False, False, 0)
 
 
-@Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui"
-)
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui")
 class AggregatedStatsMonth(Gtk.Box):
     """Gtk.Box with years combo.
 
@@ -198,9 +165,7 @@ class AggregatedStatsMonth(Gtk.Box):
             self.pack_start(self._months_stack, False, False, 0)
 
 
-@Gtk.Template(
-    resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui"
-)
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui")
 class AnalyticMonthsStack(Gtk.Box):
     """Gtk.Box with Gtk.StackSwitcher with months.
 

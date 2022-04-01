@@ -17,24 +17,32 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from pyopentracks.views.layouts.analytic_layout import (
-    AggregatedStatsYear, AggregatedStatsMonth, AggregatedStats
-)
 from pyopentracks.app_external import AppExternal
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
+from pyopentracks.views.layouts.track_analytic_layout import TrackAnalyticLayout
+from pyopentracks.views.layouts.track_segments_layout import TrackSegmentsLayout
+from pyopentracks.views.layouts.track_summary_layout import TrackSummaryLayout
 
 
-class AppAnalytic(AppExternal):
+class AppTrackAnalytic(AppExternal):
     """Handler of Analytics App.
 
     This is the controller of the analytic's views.
     """
 
-    def __init__(self):
+    def __init__(self, track):
+        summary_layout = TrackSummaryLayout(track)
+        segments_layout = TrackSegmentsLayout(track)
+        analytic_layout = TrackAnalyticLayout(track)
+
         self._layout = NotebookLayout()
-        self._layout.append(AggregatedStatsMonth(), _("Monthly Aggregated Stats"))
-        self._layout.append(AggregatedStatsYear(), _("Yearly Aggregated Stats"))
-        self._layout.append(AggregatedStats(), _("All Aggregated Stats"))
+        self._layout.append(summary_layout, _("Summary"))
+        self._layout.append(segments_layout, _("Segments"))
+        self._layout.append(analytic_layout, _("Analytic"))
+
+        summary_layout.build()
+        segments_layout.build()
+        analytic_layout.build()
 
     def get_layout(self):
         return self._layout
