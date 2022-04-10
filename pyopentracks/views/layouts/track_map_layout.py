@@ -17,9 +17,12 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import List
+
 from gi.repository import Gtk, GObject
 
 from pyopentracks.models.database_helper import DatabaseHelper
+from pyopentracks.models.location import Location
 from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.maps.interactive_track_map import InteractiveTrackMap
 from pyopentracks.views.maps.track_map import TrackMap
@@ -76,6 +79,9 @@ class TrackMapLayout(Gtk.Box, GObject.GObject):
         self.pack_start(scrolled_window, False, True, 0)
         self.show_all()
 
+    def highlight(self, locations: List[Location]):
+        self._map.add_highlight_polyline(locations)
+
     def set_location_marker(self, location, tag):
         """Show a marker in the location with the tag."""
         self._map.set_location_marker(location, tag)
@@ -97,16 +103,3 @@ class TrackMapLayout(Gtk.Box, GObject.GObject):
         track_point_end_id -- end's segment TrackPoint's id property.
         """
         self.emit("segment-selected", track_point_begin_id, track_point_end_id)
-
-        # stats = TrackStats()
-        # stats.compute(segment._track_points)
-        #
-        # create_segment = CreateSegmentLayout()
-        # self.pack_start(create_segment, False, True, 0)
-        # create_segment.connect("destroy", lambda w: self._map.clear_segment())
-        # create_segment.connect(
-        #     "track-stats-segment-ok",
-        #     lambda widget, name, distance, gain, loss:
-        #     DatabaseHelper.create_segment(name, distance, gain, loss, self._map.get_segment().get_track_points())
-        # )
-        # create_segment.set_stats(stats)

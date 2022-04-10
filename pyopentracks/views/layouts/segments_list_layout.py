@@ -17,11 +17,12 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
 from dataclasses import dataclass
 from typing import List
 
+from pyopentracks.utils.utils import DateUtils
 from pyopentracks.views.dialogs import (
     QuestionDialog,
     MessageDialogError,
@@ -35,8 +36,12 @@ from pyopentracks.views.maps.base_map import BaseMap
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segments_list_layout.ui")
-class SegmentsListLayout(Gtk.Box):
+class SegmentsListLayout(Gtk.Box, GObject.GObject):
     __gtype_name__ = "SegmentsListLayout"
+
+    __gsignals__ = {
+        "segment-track-selected": (GObject.SIGNAL_RUN_FIRST, None, (int, int,))
+    }
 
     _box_header: Gtk.Box = Gtk.Template.Child()
     _title_label: Gtk.Label = Gtk.Template.Child()
@@ -56,6 +61,7 @@ class SegmentsListLayout(Gtk.Box):
 
     def __init__(self):
         super().__init__()
+        GObject.GObject.__init__(self)
 
         self._data_rows = 0
         self._map = None
@@ -93,13 +99,17 @@ class SegmentsListLayout(Gtk.Box):
         object._grid.attach(object._build_header_label(track.speed_label), 2, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("Heart Rate")), 3, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("Cadence")), 4, 0, 1, 1)
+        object._grid.attach(object._build_header_label(_("All Times PR")), 5, 0, 1, 1)
+        object._grid.attach(object._build_header_label(str(DateUtils.get_today().year) + " PR"), 6, 0, 1, 1)
 
         for i, st in enumerate(segmentracks):
+            all_times_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms)
+            year_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms, DateUtils.get_today().year)
             st.track = track
             segment = DatabaseHelper.get_segment_by_id(st.segmentid)
             object._grid.attach(
                 object._build_info_box(
-                    segment.name, segment.distance, segment.gain, segment.slope
+                    segment.id, st.id, segment.name, segment.distance, segment.gain, segment.slope
                 ),
                 0, i + 1, 1, 1
             )
@@ -116,6 +126,8 @@ class SegmentsListLayout(Gtk.Box):
                 object._build_box_2((_("Avg.:"), st.avgcadence), (_("Max.:"), st.maxcadence)),
                 4, i + 1, 1, 1
             )
+            object._grid.attach(object._build_pr_box(all_times_pr), 5, i + 1, 1, 1)
+            object._grid.attach(object._build_pr_box(year_pr), 6, i + 1, 1, 1)
             object._data_rows = object._data_rows + 1
         return object
 
@@ -271,12 +283,15 @@ class SegmentsListLayout(Gtk.Box):
         lbl.set_margin_left(margin_left)
         return lbl
 
-    def _build_info_box(self, name, distance, gain, slope):
+    def _build_info_box(self, segment_id, segment_track_id, name, distance, gain, slope):
         """Builds a box with information: name, distance, gain and slope values."""
         vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
         vbox.get_style_context().add_class("pyot-stats-bg-color")
         vbox.set_homogeneous(False)
-        vbox.pack_start(Gtk.Label(label=name, xalign=0.0, yalign=0.0), True, True, 0)
+        btn_with_name = Gtk.Button(name)
+        btn_with_name.set_relief(Gtk.ReliefStyle.NONE)
+        btn_with_name.connect("clicked", lambda w: self.emit("segment-track-selected", segment_id, segment_track_id))
+        vbox.pack_start(btn_with_name, True, True, 0)
 
         hbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
         hbox.pack_start(Gtk.Label(label=distance, xalign=0.0, yalign=0.0), True, True, 0)
@@ -329,6 +344,22 @@ class SegmentsListLayout(Gtk.Box):
 
         return vbox
 
+    def _build_pr_box(self, segment_track_record):
+        if segment_track_record is None:
+            return Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/gold-medal.svg")
+        elif segment_track_record.ranking == 2:
+            return Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/silver-medal.svg")
+        elif segment_track_record.ranking == 3:
+            return Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/bronze-medal.svg")
+        else:
+            vbox = Gtk.Box(spacing=5, orientation=Gtk.Orientation.VERTICAL)
+            best_time_label = Gtk.Label(segment_track_record.best_time)
+            ranking_label = Gtk.Label(segment_track_record.ranking)
+            ranking_label.get_style_context().add_class("pyot-h2")
+            vbox.pack_start(best_time_label, True, True, 0)
+            vbox.pack_start(ranking_label, True, True, 0)
+            return vbox
+
     def _button_delete_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()
         if iter_item is None:
@@ -357,7 +388,6 @@ class SegmentsListLayout(Gtk.Box):
         self._segments_list_store.clear()
 
         self._on_data_ready(self._data_loading())
-        #ProcessView(self._on_data_ready, self._data_loading, None).start()
 
     def _button_edit_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()

@@ -134,6 +134,10 @@ class SegmentTrack(Model):
         return None
 
     @property
+    def id(self):
+        return self._id
+
+    @property
     def segmentid(self):
         return self._segmentid
 
@@ -144,6 +148,10 @@ class SegmentTrack(Model):
     @property
     def track(self):
         return self._track
+
+    @property
+    def time_ms(self):
+        return self._time
 
     @property
     def time(self):

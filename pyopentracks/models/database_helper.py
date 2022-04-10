@@ -202,3 +202,8 @@ class DatabaseHelper:
     def get_tracks_in_day(y: int, m: int, d: int):
         db = Database()
         return db.get_tracks_between(DateTimeUtils.begin_of_day(y, m, d), DateTimeUtils.end_of_day(y, m, d))
+
+    @staticmethod
+    def get_segment_track_record(segmentid, time, year=None):
+        db = Database()
+        return db.get_segment_track_record(segmentid, time)
