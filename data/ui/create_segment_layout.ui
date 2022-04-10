@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <template class="TrackStatsSegmentLayout" parent="GtkBox">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
+    <property name="can-focus">False</property>
+    <property name="halign">center</property>
+    <property name="margin-start">20</property>
+    <property name="margin-end">20</property>
+    <property name="margin-top">20</property>
+    <property name="margin-bottom">20</property>
     <property name="orientation">vertical</property>
     <property name="spacing">20</property>
     <child>
       <object class="GtkLabel" id="_title_label">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <property name="label" translatable="yes">Title</property>
       </object>
       <packing>
@@ -22,8 +27,8 @@
     <child>
       <object class="GtkEntry" id="_name_entry">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="placeholder_text" translatable="yes">Type Segment's Name</property>
+        <property name="can-focus">True</property>
+        <property name="placeholder-text" translatable="yes">Type Segment's Name</property>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -34,18 +39,18 @@
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <property name="spacing">10</property>
         <property name="homogeneous">True</property>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can-focus">False</property>
             <property name="spacing">5</property>
             <child>
               <object class="GtkImage" id="_distance_img">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <property name="stock">gtk-missing-image</property>
               </object>
               <packing>
@@ -57,7 +62,7 @@
             <child>
               <object class="GtkLabel" id="_distance_label">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <property name="label" translatable="yes">label</property>
               </object>
               <packing>
@@ -76,12 +81,12 @@
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can-focus">False</property>
             <property name="spacing">5</property>
             <child>
               <object class="GtkImage" id="_gain_img">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <property name="stock">gtk-missing-image</property>
               </object>
               <packing>
@@ -93,7 +98,7 @@
             <child>
               <object class="GtkLabel" id="_gain_label">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <property name="label" translatable="yes">label</property>
               </object>
               <packing>
@@ -112,12 +117,12 @@
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can-focus">False</property>
             <property name="spacing">5</property>
             <child>
               <object class="GtkImage" id="_loss_img">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <property name="stock">gtk-missing-image</property>
               </object>
               <packing>
@@ -129,7 +134,7 @@
             <child>
               <object class="GtkLabel" id="_loss_label">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can-focus">False</property>
                 <property name="label" translatable="yes">label</property>
               </object>
               <packing>
@@ -155,15 +160,15 @@
     <child>
       <object class="GtkButtonBox">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can-focus">False</property>
         <property name="spacing">10</property>
-        <property name="layout_style">end</property>
+        <property name="layout-style">end</property>
         <child>
           <object class="GtkButton" id="_left_button">
             <property name="label" translatable="yes">button</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -175,8 +180,8 @@
           <object class="GtkButton" id="_right_button">
             <property name="label" translatable="yes">button</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
           </object>
           <packing>
             <property name="expand">True</property>

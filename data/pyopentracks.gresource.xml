@@ -51,5 +51,9 @@
     <file>icons/run_black_48dp.svg</file>
     <file>icons/unknown_black_48dp.svg</file>
     <file>icons/walk_black_48dp.svg</file>
+
+    <file>icons/gold-medal.svg</file>
+    <file>icons/silver-medal.svg</file>
+    <file>icons/bronze-medal.svg</file>
   </gresource>
 </gresources>

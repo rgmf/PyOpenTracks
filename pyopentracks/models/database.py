@@ -20,6 +20,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 import sqlite3
 from os import path
 
+from pyopentracks.models.segment_track_record import SegmentTrackRecord
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.settings import xdg_data_home
 from pyopentracks.models.track import Track
@@ -166,6 +167,36 @@ class Database:
                     f"Error: [SQL] Couldn't execute the query: {error}"
                 )
         return []
+
+    def get_segment_track_record(self, segmentid, time, year=None):
+        """It gets the ranking for the segment's id according to the time.
+
+        Arguments:
+        segmentid -- segment's id.
+        time -- time of the segment track to analyze.
+        year -- (optional) filter by year if any.
+
+        Returns:
+        A SegmentTrackRecord object.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                optional_where = "" if year is None else f"AND strftime('%Y', t.starttime / 1000, 'unixepoch')='{year}'"
+                query = f"""
+                    SELECT st._id segmenttrackid, COUNT(*) + 1 ranking, MIN(st.time) best_time 
+                    FROM segmentracks st, tracks t
+                    WHERE st.segmentid=? AND st.trackid=t._id AND st.time<? {optional_where}   
+                    GROUP BY st.segmentid                        
+                    ORDER BY time ASC
+                """
+                tuple_result = conn.execute(query, (segmentid, time)).fetchone()
+                if tuple_result:
+                    return SegmentTrackRecord(*tuple_result)
+            except Exception as error:
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
+        return None
 
     def get_tracks(self):
         """Get all tracks from database.

@@ -19,6 +19,8 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
+from pyopentracks.models.database_helper import DatabaseHelper
+from pyopentracks.models.location import Location
 from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
 from pyopentracks.views.layouts.track_map_layout import TrackMapLayout
 
@@ -34,6 +36,7 @@ class TrackSegmentsLayout(Gtk.Box):
         self.get_style_context().add_class("pyot-bg")
         self._track = track
         self._segments_layout = SegmentsListLayout.from_track(track)
+        self._segments_layout.connect("segment-track-selected", self._segment_track_selected)
         self._map_layout = TrackMapLayout()
 
     def build(self):
@@ -41,3 +44,8 @@ class TrackSegmentsLayout(Gtk.Box):
         self.pack_start(self._map_layout, True, True, 0)
         self._map_layout.add_polyline_from_trackid(self._track.id)
         self.show_all()
+
+    def _segment_track_selected(self, widget, segment_id, segment_track_id):
+        self._map_layout.highlight(
+            [Location(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment_id)]
+        )

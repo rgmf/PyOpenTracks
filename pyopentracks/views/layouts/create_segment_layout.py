@@ -63,6 +63,7 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
         self._stats = None
 
         self._title_label.set_text(_("Create New Segment"))
+        self._title_label.get_style_context().add_class("pyot-h3")
 
         self._name_entry.set_placeholder_text(_("Type Segment's Name"))
         self._name_entry.connect(
@@ -75,11 +76,15 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
         self._loss_img.set_from_resource("/es/rgmf/pyopentracks/icons/down-symbolic.svg")
 
         self._left_button.set_label(_("Cancel"))
-        self._left_button.connect("clicked", lambda btn: self.destroy())
+        self._left_button.connect("clicked", self._left_button_clicked_cb)
 
         self._right_button.set_label(_("Create"))
         self._right_button.set_sensitive(False)
         self._right_button.connect("clicked", self._right_button_clicked_cb)
+
+    def _left_button_clicked_cb(self, button):
+        self.emit("track-stats-segment-cancel")
+        self.destroy()
 
     def _right_button_clicked_cb(self, button):
         self.emit(

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
 
 from gi.repository import GtkClutter, Clutter
 GtkClutter.init([])  # Must be initialized before importing those:
@@ -37,6 +38,7 @@ class TrackMap(BaseMap):
 
         self._layer_marker = None
         self._marker = None
+        self._layer_highlight_polyline = None
         self._init_location_marker()
 
         self._track_points = []
@@ -65,9 +67,10 @@ class TrackMap(BaseMap):
             self._append_point(tp.latitude, tp.longitude)
         self._view.add_layer(self._layer_polyline)
 
-        x_coordinates, y_coordinates = zip(
-            *[(loc.latitude, loc.longitude) for loc in TrackPointUtils.to_locations(track_points)]
-        )
+        self._center_and_zoom(TrackPointUtils.to_locations(track_points), 10)
+
+    def _center_and_zoom(self, locations: List[Location], zoom: int):
+        x_coordinates, y_coordinates = zip(*[(loc.latitude, loc.longitude) for loc in locations])
         # bbox = self._view.get_bounding_box()
         bbox = Champlain.BoundingBox.new()
         bbox.left = min(y_coordinates)
@@ -76,7 +79,23 @@ class TrackMap(BaseMap):
         bbox.top = max(x_coordinates)
 
         self._view.ensure_visible(bbox, False)
-        self._view.set_zoom_level(10)
+        self._view.set_zoom_level(zoom)
+
+    def add_highlight_polyline(self, locations: List[Location]):
+        """Highlight the locations on the map."""
+        if self._layer_highlight_polyline is not None:
+            self._layer_highlight_polyline.remove_all()
+
+        self._layer_highlight_polyline = Champlain.PathLayer()
+        self._layer_highlight_polyline.set_stroke_color(Clutter.Color.new(0, 0, 0, 255))
+        self._layer_highlight_polyline.set_stroke_width(8)
+
+        for loc in locations:
+            coord = Champlain.Coordinate.new_full(loc.latitude, loc.longitude)
+            self._layer_highlight_polyline.add_node(coord)
+        self._view.add_layer(self._layer_highlight_polyline)
+
+        self._center_and_zoom(locations, 14)
 
     def set_location_marker(self, location: Location, text: str):
         self._layer_marker.show()

@@ -42,6 +42,7 @@ class TrackAnalyticLayout(Gtk.Box):
     _create_button: Gtk.Button = Gtk.Template.Child()
     _clear_button: Gtk.Button = Gtk.Template.Child()
     _create_box: Gtk.Box = Gtk.Template.Child()
+    _create_frame: Gtk.Frame = Gtk.Template.Child()
     _content_box: Gtk.Box = Gtk.Template.Child()
 
     def __init__(self, track):
@@ -70,15 +71,14 @@ class TrackAnalyticLayout(Gtk.Box):
         self._create_box.hide()
         self._button_box.hide()
         self._map_layout.reset()
+        self._reset_stats()
+
+    def _reset_stats(self):
         for child in self._content_box.get_children():
             if isinstance(child, TrackSummaryStatsLayout) or isinstance(child, FigureCanvas):
                 self._content_box.remove(child)
 
     def _create_button_clicked(self, widget):
-        def cancel(w):
-            self._button_box.show()
-            self._create_box.hide()
-
         if self._stats is None or self._track_points is None:
             self._reset()
             pyot_logging.get_logger(__name__).error(
@@ -86,22 +86,29 @@ class TrackAnalyticLayout(Gtk.Box):
             )
             return
 
-        for child in self._create_box.get_children():
-            self._create_box.remove(child)
+        for child in self._create_frame.get_children():
+            self._create_frame.remove(child)
 
         self._button_box.hide()
+        self._create_box.show()
 
         create_segment = CreateSegmentLayout()
-        self._create_box.pack_start(create_segment, False, True, 0)
-        create_segment.connect("track-stats-segment-cancel", cancel)
+        # self._create_box.pack_start(create_segment, False, True, 0)
+        self._create_frame.add(create_segment)
+        create_segment.connect("track-stats-segment-cancel", self._cancel_segment)
         create_segment.connect("track-stats-segment-ok", self._create_segment)
         create_segment.set_stats(self._stats)
+
+    def _cancel_segment(self, widget):
+        self._button_box.show()
+        self._create_box.hide()
 
     def _create_segment(self, widget, name, distance, gain, loss):
         DatabaseHelper.create_segment(name, distance, gain, loss, self._track_points)
         self._reset()
 
     def _segment_selected(self, map_layout: TrackMapLayout, track_point_id_begin: int, track_point_id_end: int):
+        self._reset_stats()
         self._button_box.show()
 
         self._track_points = map_layout.get_segment().track_points
