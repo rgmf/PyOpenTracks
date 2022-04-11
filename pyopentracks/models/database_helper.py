@@ -206,4 +206,4 @@ class DatabaseHelper:
     @staticmethod
     def get_segment_track_record(segmentid, time, year=None):
         db = Database()
-        return db.get_segment_track_record(segmentid, time)
+        return db.get_segment_track_record(segmentid, time, year)
