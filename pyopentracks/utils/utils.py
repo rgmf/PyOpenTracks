@@ -70,6 +70,11 @@ class DateTimeUtils:
         weekday, num_days = monthrange(year, month)
         return datetime(year, month, num_days, 23, 59, 59).timestamp() * 1000
 
+    @staticmethod
+    def date_from_timestamp(timestamp: int) -> namedtuple:
+        dt = datetime.fromtimestamp(timestamp / 1000)
+        TodayResult = namedtuple("TodayResult", "year month day")
+        return TodayResult(dt.year, dt.month, dt.day)
 
 class DateUtils:
     @staticmethod

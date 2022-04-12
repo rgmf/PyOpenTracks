@@ -22,7 +22,7 @@ from gi.repository import Gtk, GObject
 from dataclasses import dataclass
 from typing import List
 
-from pyopentracks.utils.utils import DateUtils
+from pyopentracks.utils.utils import DateTimeUtils
 from pyopentracks.views.dialogs import (
     QuestionDialog,
     MessageDialogError,
@@ -84,6 +84,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
 
     @staticmethod
     def from_track(track):
+        track_year = DateTimeUtils.date_from_timestamp(track.start_time_ms).year
         object = SegmentsListLayout()
         object._combobox_segments.hide()
         object.remove(object._grid_segment_detail)
@@ -100,11 +101,11 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         object._grid.attach(object._build_header_label(_("Heart Rate")), 3, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("Cadence")), 4, 0, 1, 1)
         object._grid.attach(object._build_header_label(_("All Times PR")), 5, 0, 1, 1)
-        object._grid.attach(object._build_header_label(str(DateUtils.get_today().year) + " PR"), 6, 0, 1, 1)
+        object._grid.attach(object._build_header_label(str(track_year) + " PR"), 6, 0, 1, 1)
 
         for i, st in enumerate(segmentracks):
             all_times_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms)
-            year_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms, DateUtils.get_today().year)
+            year_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms, track_year)
             st.track = track
             segment = DatabaseHelper.get_segment_by_id(st.segmentid)
             object._grid.attach(
