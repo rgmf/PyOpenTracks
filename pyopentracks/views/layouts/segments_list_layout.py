@@ -348,18 +348,22 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
     def _build_pr_box(self, segment_track_record):
         if segment_track_record is None:
             return Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/gold-medal.svg")
-        elif segment_track_record.ranking == 2:
-            return Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/silver-medal.svg")
+
+        if segment_track_record.ranking == 2:
+            widget = Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/silver-medal.svg")
         elif segment_track_record.ranking == 3:
-            return Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/bronze-medal.svg")
+            widget = Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/bronze-medal.svg")
         else:
-            vbox = Gtk.Box(spacing=5, orientation=Gtk.Orientation.VERTICAL)
-            best_time_label = Gtk.Label(segment_track_record.best_time)
-            ranking_label = Gtk.Label(segment_track_record.ranking)
-            ranking_label.get_style_context().add_class("pyot-h2")
-            vbox.pack_start(best_time_label, True, True, 0)
-            vbox.pack_start(ranking_label, True, True, 0)
-            return vbox
+            widget = Gtk.Label(segment_track_record.ranking)
+            widget.get_style_context().add_class("pyot-h2")
+
+        vbox = Gtk.Box(spacing=5, orientation=Gtk.Orientation.VERTICAL)
+        best_time_label = Gtk.Label(segment_track_record.best_time)
+
+        vbox.pack_start(best_time_label, True, True, 0)
+        vbox.pack_start(widget, True, True, 0)
+
+        return vbox
 
     def _button_delete_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()

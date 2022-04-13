@@ -18,6 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from pyopentracks.app_external import AppExternal
+from pyopentracks.observers.data_update_observer import DataUpdateSubscription
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
 from pyopentracks.views.layouts.track_analytic_layout import TrackAnalyticLayout
 from pyopentracks.views.layouts.track_segments_layout import TrackSegmentsLayout
@@ -33,7 +34,10 @@ class AppTrackAnalytic(AppExternal):
     def __init__(self, track):
         summary_layout = TrackSummaryLayout(track)
         segments_layout = TrackSegmentsLayout(track)
-        analytic_layout = TrackAnalyticLayout(track)
+        analytic_layout = TrackAnalyticLayout(track, self.segment_created_notify)
+
+        self._subscriptions = DataUpdateSubscription()
+        self._subscriptions.attach(segments_layout)
 
         self._layout = NotebookLayout()
         self._layout.append(summary_layout, _("Summary"))
@@ -46,3 +50,6 @@ class AppTrackAnalytic(AppExternal):
 
     def get_layout(self):
         return self._layout
+
+    def segment_created_notify(self):
+        self._subscriptions.notify()

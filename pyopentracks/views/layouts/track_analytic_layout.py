@@ -45,10 +45,11 @@ class TrackAnalyticLayout(Gtk.Box):
     _create_frame: Gtk.Frame = Gtk.Template.Child()
     _content_box: Gtk.Box = Gtk.Template.Child()
 
-    def __init__(self, track):
+    def __init__(self, track, new_segment_created_cb=None):
         super().__init__()
         self.get_style_context().add_class("pyot-bg")
         self._track = track
+        self._new_segment_created_cb = new_segment_created_cb
         self._stats = None
         self._track_points = None
         self._map_layout = TrackMapLayout(interactive=True)
@@ -106,6 +107,8 @@ class TrackAnalyticLayout(Gtk.Box):
     def _create_segment(self, widget, name, distance, gain, loss):
         DatabaseHelper.create_segment(name, distance, gain, loss, self._track_points)
         self._reset()
+        if self._new_segment_created_cb is not None:
+            self._new_segment_created_cb()
 
     def _segment_selected(self, map_layout: TrackMapLayout, track_point_id_begin: int, track_point_id_end: int):
         self._reset_stats()
