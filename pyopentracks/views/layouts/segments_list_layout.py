@@ -224,7 +224,9 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         )
 
         self._map = BaseMap()
-        self._map.add_polyline([(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(data.segment.id)])
+        self._map.add_polyline(
+            [(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(data.segment.id)]
+        )
         self._grid_segment_detail.attach(self._map, 2, 0, 4, 5)
 
         top = 0

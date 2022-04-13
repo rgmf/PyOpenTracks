@@ -54,7 +54,10 @@ class TrackSegmentsLayout(Gtk.Box, DataUpdateObserver):
     def build(self):
         self._scrolled_window.add(self._segments_layout)
         self._content_box.pack_start(self._map_layout, True, True, 0)
-        self._map_layout.add_polyline_from_trackid(self._track.id)
+        if self._track.track_points:
+            self._map_layout.add_polyline_from_points(self._track.track_points)
+        else:
+            self._map_layout.add_polyline_from_trackid(self._track.id)
         self.show_all()
 
     def data_updated_notified(self):

@@ -18,8 +18,10 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from pyopentracks.app_external import AppExternal
+from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.observers.data_update_observer import DataUpdateSubscription
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
+from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.layouts.track_analytic_layout import TrackAnalyticLayout
 from pyopentracks.views.layouts.track_segments_layout import TrackSegmentsLayout
 from pyopentracks.views.layouts.track_summary_layout import TrackSummaryLayout
@@ -32,14 +34,21 @@ class AppTrackAnalytic(AppExternal):
     """
 
     def __init__(self, track):
-        summary_layout = TrackSummaryLayout(track)
-        segments_layout = TrackSegmentsLayout(track)
-        analytic_layout = TrackAnalyticLayout(track, self.segment_created_notify)
+        self._layout = NotebookLayout()
+        self._track = track
+        if not self._track.track_points:
+            ProcessView(self._on_track_points_ready, DatabaseHelper.get_track_points, (self._track.id,)).start()
+        else:
+            self._build()
+
+    def _build(self):
+        summary_layout = TrackSummaryLayout(self._track)
+        segments_layout = TrackSegmentsLayout(self._track)
+        analytic_layout = TrackAnalyticLayout(self._track, self.segment_created_notify)
 
         self._subscriptions = DataUpdateSubscription()
         self._subscriptions.attach(segments_layout)
 
-        self._layout = NotebookLayout()
         self._layout.append(summary_layout, _("Summary"))
         self._layout.append(segments_layout, _("Segments"))
         self._layout.append(analytic_layout, _("Analytic"))
@@ -47,6 +56,10 @@ class AppTrackAnalytic(AppExternal):
         summary_layout.build()
         segments_layout.build()
         analytic_layout.build()
+
+    def _on_track_points_ready(self, track_points):
+        self._track.track_points = track_points
+        self._build()
 
     def get_layout(self):
         return self._layout
