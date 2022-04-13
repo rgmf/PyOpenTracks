@@ -17,19 +17,68 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from abc import abstractmethod
 from typing import List
 
 from gi.repository import Gtk, GObject
 
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.location import Location
+from pyopentracks.models.segment_point import SegmentPoint
+from pyopentracks.models.track_point import TrackPoint
 from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.views.maps.base_map import BaseMap
 from pyopentracks.views.maps.interactive_track_map import InteractiveTrackMap
 from pyopentracks.views.maps.track_map import TrackMap
 
 
-class TrackMapLayout(Gtk.Box, GObject.GObject):
-    """A Gtk.VBox with a map with track points.
+class MapLayout(Gtk.Box):
+    """Base MapLayout.
+
+    This class is used to add a champlain's map in a Gtk widget.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self._map = self._build_map()
+
+        self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.set_margin_start(20)
+        self.set_margin_end(20)
+        self.set_margin_top(20)
+        self.set_margin_bottom(20)
+        self.pack_start(Gtk.Label(_("Loading map...")), False, True, 0)
+
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.add(self._map)
+        self.pack_start(scrolled_window, False, True, 0)
+
+        self.show_all()
+
+    @abstractmethod
+    def _build_map(self) -> BaseMap:
+        pass
+
+    @abstractmethod
+    def add_polyline_from_points(self, points) -> None:
+        pass
+
+
+class SegmentMapLayout(MapLayout):
+    """A MapLayout with a segment's polyline."""
+
+    def __init__(self):
+        super().__init__()
+
+    def _build_map(self) -> BaseMap:
+        return BaseMap()
+
+    def add_polyline_from_points(self, points: List[SegmentPoint]) -> None:
+        self._map.add_polyline([(p.latitude, p.longitude) for p in points])
+
+
+class TrackMapLayout(MapLayout):
+    """A MapLayout with a map with track points.
 
     When you create the map a label with a loading message is shown
     until you add the polyline.
@@ -40,44 +89,18 @@ class TrackMapLayout(Gtk.Box, GObject.GObject):
     segment-selected -- this signal will be emitted when user select a segment.
     """
 
-    __gsignals__ = {
-        "segment-selected": (GObject.SIGNAL_RUN_FIRST, None, (int, int))
-    }
-
-    def __init__(self, interactive=False):
+    def __init__(self):
         super().__init__()
-        GObject.GObject.__init__(self)
 
-        if not interactive:
-            self._map = TrackMap()
-        else:
-            self._map = InteractiveTrackMap()
-            self._map.get_segment().connect("segment-ready", self._segment_ready_cb)
+    def _build_map(self) -> BaseMap:
+        return TrackMap()
 
-        self._is_interactive_map = interactive
-
-        self.set_orientation(Gtk.Orientation.VERTICAL)
-        self.set_margin_start(20)
-        self.set_margin_end(20)
-        self.set_margin_top(20)
-        self.set_margin_bottom(20)
-        self.pack_start(Gtk.Label(_("Loading map...")), False, True, 0)
-
-        self.show_all()
+    def add_polyline_from_points(self, points: List[TrackPoint]) -> None:
+        self._map.add_polyline(points)
 
     def add_polyline_from_trackid(self, trackid):
         """Load track points from track's id."""
         ProcessView(self.add_polyline_from_points, DatabaseHelper.get_track_points, (trackid,)).start()
-
-    def add_polyline_from_points(self, track_points):
-        """Add a polyline to the map using track_points."""
-        self._map.add_polyline(track_points)
-        for child in self.get_children():
-            self.remove(child)
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.add(self._map)
-        self.pack_start(scrolled_window, False, True, 0)
-        self.show_all()
 
     def highlight(self, locations: List[Location]):
         self._map.add_highlight_polyline(locations)
@@ -86,13 +109,34 @@ class TrackMapLayout(Gtk.Box, GObject.GObject):
         """Show a marker in the location with the tag."""
         self._map.set_location_marker(location, tag)
 
+
+class TrackInteractiveMapLayout(MapLayout, GObject.GObject):
+    """It's a MapLayout with interactive feature.
+
+    It offers to the users the possibility of select a segment.
+    """
+
+    __gsignals__ = {
+        "segment-selected": (GObject.SIGNAL_RUN_FIRST, None, (int, int))
+    }
+
+    def __init__(self):
+        super().__init__()
+        GObject.GObject.__init__(self)
+
+    def _build_map(self) -> BaseMap:
+        map = InteractiveTrackMap()
+        map.get_segment().connect("segment-ready", self._segment_ready_cb)
+        return map
+
+    def add_polyline_from_points(self, points: List[TrackPoint]) -> None:
+        self._map.add_polyline(points)
+
     def get_segment(self):
-        """Return the segment if it's ant interactive map. Otherwise, return None."""
-        return None if not self._is_interactive_map else self._map.get_segment()
+        return self._map.get_segment()
 
     def reset(self):
-        if self._is_interactive_map:
-            self._map.clear_segment()
+        self._map.clear_segment()
 
     def _segment_ready_cb(self, segment, track_point_begin_id, track_point_end_id):
         """Call back executed when a MapSegment is selected and ready.
