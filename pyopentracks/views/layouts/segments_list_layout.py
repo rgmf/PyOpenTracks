@@ -32,6 +32,7 @@ from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.segment_track import SegmentTrack
 from pyopentracks.models.segment import Segment
 from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.views.layouts.track_map_layout import SegmentMapLayout
 from pyopentracks.views.maps.base_map import BaseMap
 
 
@@ -49,7 +50,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
     _button_delete: Gtk.Button = Gtk.Template.Child()
     _button_edit: Gtk.Button = Gtk.Template.Child()
     _segments_list_store: Gtk.ListStore = Gtk.Template.Child()
-    _grid_segment_detail: Gtk.Grid = Gtk.Template.Child()
+    _box_segment_detail: Gtk.Box = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
 
 
@@ -78,7 +79,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         self._title_label.set_line_wrap(True)
         self._title_label.get_style_context().add_class("pyot-h2")
 
-        self._grid_segment_detail.get_style_context().add_class("pyot-stats-bg-color")
+        self._box_segment_detail.get_style_context().add_class("pyot-stats-bg-color")
 
         self.get_style_context().add_class("pyot-bg")
 
@@ -87,7 +88,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         track_year = DateTimeUtils.date_from_timestamp(track.start_time_ms).year
         object = SegmentsListLayout()
         object._combobox_segments.hide()
-        object.remove(object._grid_segment_detail)
+        object.remove(object._box_segment_detail)
         object._box_header.remove(object._button_edit)
         object._box_header.remove(object._button_delete)
         segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(track.id)
@@ -172,8 +173,8 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
     def _on_data_ready(self, data: SegmentData):
         for w in self._grid.get_children():
             self._grid.remove(w)
-        for w in self._grid_segment_detail.get_children():
-            self._grid_segment_detail.remove(w)
+        for w in self._box_segment_detail.get_children():
+            self._box_segment_detail.remove(w)
 
         if not data:
             self._show_info_no_data()
@@ -182,52 +183,59 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         self._button_delete.set_sensitive(True)
         self._button_edit.set_sensitive(True)
 
-        self._grid_segment_detail.attach(
+        grid = Gtk.Grid()
+        grid.attach(
             self._build_header_label(_("Name:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 0, 1, 1
         )
         self._label_segment_name = self._build_header_label(
             data.segment.name, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20
         )
-        self._grid_segment_detail.attach(self._label_segment_name, 1, 0, 1, 1)
-        self._grid_segment_detail.attach(
+        grid.attach(self._label_segment_name, 1, 0, 1, 1)
+        grid.attach(
             self._build_header_label(_("Distance:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 1, 1, 1
         )
-        self._grid_segment_detail.attach(
+        grid.attach(
             self._build_header_label(data.segment.distance, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 1, 1, 1
         )
-        self._grid_segment_detail.attach(
+        grid.attach(
             self._build_header_label(_("Elevation Gain:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 2, 1, 1
         )
-        self._grid_segment_detail.attach(
+        grid.attach(
             self._build_header_label(data.segment.gain, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 2, 1, 1
         )
-        self._grid_segment_detail.attach(
+        grid.attach(
             self._build_header_label(_("Elevation Loss:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 3, 1, 1
         )
-        self._grid_segment_detail.attach(
+        grid.attach(
             self._build_header_label(data.segment.loss, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 3, 1, 1
         )
-        self._grid_segment_detail.attach(
+        grid.attach(
             self._build_header_label(_("Slope:"), xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             0, 4, 1, 1
         )
-        self._grid_segment_detail.attach(
+        grid.attach(
             self._build_header_label(data.segment.slope, xalign=0.0, margin_top=20, margin_bottom=10, margin_left=20),
             1, 4, 1, 1
         )
 
-        self._map = BaseMap()
-        self._map.add_polyline(
-            [(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(data.segment.id)]
-        )
-        self._grid_segment_detail.attach(self._map, 2, 0, 4, 5)
+        self._box_segment_detail.pack_start(grid, False, True, 0)
+
+        # scrolled_window = Gtk.ScrolledWindow()
+        # self._map = BaseMap()
+        # self._map.add_polyline(
+        #     [(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(data.segment.id)]
+        # )
+        # scrolled_window.add(self._map)
+        map_layout = SegmentMapLayout()
+        map_layout.add_polyline_from_points(DatabaseHelper.get_segment_points(data.segment.id))
+        self._box_segment_detail.pack_start(map_layout, False, True, 0)
 
         top = 0
 

@@ -28,11 +28,8 @@ from pyopentracks.models.location import Location
 
 
 class TrackMap(BaseMap):
-    """
-    A TrackMap is a BaseMap with an only polyline and a marker that can be move around the polyline.
+    """A TrackMap is a BaseMap with an only polyline and a marker that can be moved around the polyline."""
 
-    Also, it has the option of select a MapSegment.
-    """
     def __init__(self):
         super().__init__()
 

@@ -42,7 +42,7 @@ class MapSegment(Champlain.MarkerLayer, GObject.GObject):
         self._track_points = []
 
     def add_track_point(self, trackpoint):
-        """Add the TrackPoint trackpoint.
+        """Add the TrackPoint.
 
         Arguments:
         trackpoint -- TrackPoint's object.

@@ -37,7 +37,7 @@ class InteractiveTrackMap(TrackMap):
         self._view.connect("button-release-event", self._mouse_click_cb, self._view)
 
     def _mouse_click_cb(self, actor, event, view):
-        # Only segments if there are track points and they are in the database (they're all have id).
+        # Only segments if there are track points, and they are in the database (they're all have id).
         if not self._track_points or not list(filter(lambda tp: tp.id is not None, self._track_points)):
             return False
         x, y = event.x, event.y

@@ -29,7 +29,7 @@ from gi.repository import GtkChamplain, Champlain, Gtk
 class BaseMap(Gtk.VBox):
     """
     Map with libchamplain library with controls to: zoom in/out and change map's source.
-    It offers the possility of draw a path line.
+    It offers the possibility of draw a path line.
     """
 
     def __init__(self):
@@ -117,7 +117,7 @@ class BaseMap(Gtk.VBox):
     def add_polyline(self, points_tuple):
         """
         Arguments:
-        points_tuble -- list of (latitude, longitude) tuples.
+        points_tuple -- list of (latitude, longitude) tuples.
         """
         if not points_tuple:
             return

@@ -30,7 +30,7 @@ from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.utils.utils import TrackPointUtils
 from pyopentracks.views.graphs import LinePlot
 from pyopentracks.views.layouts.create_segment_layout import CreateSegmentLayout
-from pyopentracks.views.layouts.track_map_layout import TrackMapLayout
+from pyopentracks.views.layouts.track_map_layout import TrackInteractiveMapLayout
 from pyopentracks.views.layouts.track_summary_layout import TrackSummaryStatsLayout
 
 
@@ -52,7 +52,7 @@ class TrackAnalyticLayout(Gtk.Box):
         self._new_segment_created_cb = new_segment_created_cb
         self._stats = None
         self._track_points = None
-        self._map_layout = TrackMapLayout(interactive=True)
+        self._map_layout = TrackInteractiveMapLayout()
         self._map_layout.connect("segment-selected", self._segment_selected)
         self._clear_button.set_label(_("Clear segment"))
         self._clear_button.connect("clicked", self._clear_button_clicked)
@@ -113,7 +113,7 @@ class TrackAnalyticLayout(Gtk.Box):
         if self._new_segment_created_cb is not None:
             self._new_segment_created_cb()
 
-    def _segment_selected(self, map_layout: TrackMapLayout, track_point_id_begin: int, track_point_id_end: int):
+    def _segment_selected(self, map_layout: TrackInteractiveMapLayout, track_point_id_begin: int, track_point_id_end: int):
         self._reset_stats()
         self._button_box.show()
 
