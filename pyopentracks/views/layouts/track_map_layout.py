@@ -47,7 +47,6 @@ class MapLayout(Gtk.Box):
         self.set_margin_end(20)
         self.set_margin_top(20)
         self.set_margin_bottom(20)
-        self.pack_start(Gtk.Label(_("Loading map...")), False, True, 0)
 
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.add(self._map)
