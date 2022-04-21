@@ -24,7 +24,7 @@ import fitparse
 
 from pyopentracks.models.track import Track
 from pyopentracks.models.track_point import TrackPoint
-
+from pyopentracks.utils.utils import TimeUtils
 from pyopentracks.io.parser import Parser
 from pyopentracks.io.result import RecordedWith
 from pyopentracks.stats.track_stats import TrackStats
@@ -110,7 +110,7 @@ class FitRecordMessage:
         self._latitude = values["position_lat"] / FitRecordMessage.DIV_LAT_LON if "position_lat" in values else None
         self._longitude = values["position_long"] / FitRecordMessage.DIV_LAT_LON if "position_long" in values else None
         self._distance = values["distance"] if "distance" in values else None
-        self._time_ms = values["timestamp"].timestamp() * 1000 if "timestamp" in values else None
+        self._time_ms = TimeUtils.dt_to_aware_locale_ms(values["timestamp"]) if "timestamp" in values else None
         self._speed_mps = values["speed"] if "speed" in values else None
         self._altitude_m = values["altitude"] if "altitude" in values else None
         self._elevation_gain_m = self._altitude_m - last_altitude \

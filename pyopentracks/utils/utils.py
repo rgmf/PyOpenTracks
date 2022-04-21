@@ -26,6 +26,7 @@ from math import radians, sin, cos, asin, sqrt
 from typing import List
 
 from dateutil.parser import isoparse
+from dateutil.tz import tzlocal
 from datetime import datetime, timedelta, date, timezone
 from calendar import monthrange
 from locale import setlocale, LC_ALL
@@ -168,7 +169,20 @@ class TimeUtils:
         Returns:
         datetime string in ISO 8601 format.
         """
-        return datetime.fromtimestamp(millis / 1000.0, tz=datetime.now(timezone.utc).astimezone().tzinfo).isoformat(timespec="milliseconds")
+        return datetime.fromtimestamp(
+            millis / 1000.0, tz=datetime.now(timezone.utc).astimezone().tzinfo
+        ).isoformat(timespec="milliseconds")
+
+    @staticmethod
+    def dt_to_aware_locale_ms(dt: datetime):
+        """From datetime to milliseconds taken time zone account.
+
+        This function can be used to convert a UTC datetime to millis
+        adding the local offset. So you'll have aware time zone datetime millis.
+        """
+        local_time_zone = tzlocal()
+        offset_timedelta = local_time_zone.utcoffset(dt)
+        return (dt.timestamp() + offset_timedelta.seconds) * 1000
 
 
 class DistanceUtils:

@@ -24,7 +24,8 @@ class TestAggregatedStats(MockDB):
         maxcadence=None,
         avgcadence=None,
         starttime_str=None,
-        endtime_str=None
+        endtime_str=None,
+        recorded_with="PyOpenTracksTests"
     ):
         eight_hours_ms = 8 * 60 * 60 * 1000
         time_now_ms = datetime.timestamp(datetime.now()) * 1000
@@ -37,7 +38,7 @@ class TestAggregatedStats(MockDB):
             None, None, f"Track {time_now_ms}", "Track Description", category,
             starttime_ms, stoptime_ms, distance_m, time_ms, movingtime_ms,
             avgspeed_mps, avgmovingspeed_mps, maxspeed_mps,
-            0, 0, gain_m, loss_m, maxhr, avghr, maxcadence, avgcadence
+            0, 0, gain_m, loss_m, maxhr, avghr, maxcadence, avgcadence, recorded_with
         )
 
     def test_aggregated_stats_empty(self):

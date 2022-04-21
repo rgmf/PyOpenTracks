@@ -166,6 +166,19 @@ class TestTimeUtils(unittest.TestCase):
         self.assertEqual(TimeUtils.ms_to_str(time_ms, True), "10h\n30min")
         self.assertEqual(TimeUtils.ms_to_str(time_ms, False), "10:30:15")
 
+    def test_dt_to_aware_locale_ms(self):
+        # Winter time
+        dt_utc = datetime(2020, 1, 1, 7, 0, 0)
+        ms = TimeUtils.dt_to_aware_locale_ms(dt_utc)
+        dt_local = datetime.fromtimestamp(ms / 1000)
+        self.assertEqual(dt_utc.hour + 1, dt_local.hour)
+
+        # Summer time
+        dt_utc = datetime(2020, 8, 1, 7, 0, 0)
+        ms = TimeUtils.dt_to_aware_locale_ms(dt_utc)
+        dt_local = datetime.fromtimestamp(ms / 1000)
+        self.assertEqual(dt_utc.hour + 2, dt_local.hour)
+
 
 class TestDistanceUtils(unittest.TestCase):
     def test_m_to_str(self):

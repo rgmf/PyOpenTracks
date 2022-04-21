@@ -2,7 +2,7 @@ import os
 
 from mock_db import MockDB
 
-from pyopentracks.io.gpx_parser import GpxParserHandler
+from pyopentracks.io.import_handler import ParserHandler
 from pyopentracks.io.result import Result
 from pyopentracks.io.export_handler import ExportTrack
 from pyopentracks.models.database_helper import DatabaseHelper
@@ -46,7 +46,7 @@ class TestImportExport(MockDB):
         """
         def import_file(filename):
             with self.mock_db_config:
-                parser = GpxParserHandler()
+                parser = ParserHandler()
                 result = parser.parse(filename)
                 self.assertTrue(result.code is Result.OK)
                 self.assertTrue(result.track is not None)
@@ -102,7 +102,7 @@ class TestImportExport(MockDB):
         """
         def import_file(filename):
             with self.mock_db_config:
-                parser = GpxParserHandler()
+                parser = ParserHandler()
                 result = parser.parse(filename)
                 self.assertTrue(result.code is Result.OK)
                 self.assertTrue(result.track is not None)
@@ -160,7 +160,7 @@ class TestImportExport(MockDB):
         """
         def import_file(filename):
             with self.mock_db_config:
-                parser = GpxParserHandler()
+                parser = ParserHandler()
                 result = parser.parse(filename)
                 self.assertTrue(result.code is Result.OK)
                 self.assertTrue(result.track is not None)
@@ -214,7 +214,7 @@ class TestImportExport(MockDB):
         """
         def import_file(filename):
             with self.mock_db_config:
-                parser = GpxParserHandler()
+                parser = ParserHandler()
                 result = parser.parse(filename)
                 self.assertTrue(result.code is Result.OK)
                 self.assertTrue(result.track is not None)
@@ -270,6 +270,6 @@ class TestImportExport(MockDB):
             os.path.dirname(os.path.realpath(__file__)),
             "assets/malformed_gpx_with_two_points_same_time.gpx"
         )
-        parser = GpxParserHandler()
+        parser = ParserHandler()
         result = parser.parse(filename)
         self.assertTrue(result.code is Result.ERROR)

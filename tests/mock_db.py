@@ -87,7 +87,7 @@ class MockDB(unittest.TestCase):
             lon = from_lon_to_lon
             for i in range(num_tp):
                 tp = TrackPoint(
-                    None, 1, trackid, lon, lat, 0, 0, 0, 0, 0, 0, 0, 0
+                    None, 1, trackid, lon, lat, 0, 0, 0, 0, 0, 0, 0, 0, 0
                 )
 
                 lat = min(lat + distance_between_tp / (1852 * 60), 90)

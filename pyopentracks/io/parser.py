@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+
 from pyopentracks.io.result import RecordedWith
 from pyopentracks.utils import logging as pyot_logging
 
@@ -64,18 +65,12 @@ class Parser:
             return
         if not track_point.time_ms:
             return
-        if not self._is_valid_location(
-            track_point.latitude, track_point.longitude
-        ):
+        if not self._is_valid_location(track_point.latitude, track_point.longitude):
             return
 
-        # When a track_point is not moving and it's in the middle of a segment
+        # When a track_point is not moving, and it's in the middle of a segment
         # or a new segment has to be created then finishes the current segment.
-        if (
-            (not self._is_moving(track_point.speed) and
-             self._current_segment_track_points) or
-            self._new_segment
-        ):
+        if (not self._is_moving(track_point.speed) and self._current_segment_track_points) or self._new_segment:
             self._add_current_segment_points()
             self._new_segment = False
 
