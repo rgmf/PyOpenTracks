@@ -16,66 +16,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-
+from abc import abstractmethod
 from parser import ParserError
+from typing import List
 
 from pyopentracks.utils import logging as pyot_logging
-from pyopentracks.utils.utils import LocationUtils
+from pyopentracks.utils.utils import LocationUtils, TimeUtils, SensorUtils, ElevationUtils, DistanceUtils, SpeedUtils, \
+    TypeActivityUtils
 
 
 class TrackStats:
-
-    class SensorNormalization:
-        def __init__(self):
-            self._max = None
-            self._prev = None
-            self._prev_time_ms = None
-            self._total_time_s = 0
-            self._total = 0
-
-        def add(self, value: str, time_ms: float):
-            if value is None:
-                self.reset()
-                return
-            value = float(value)
-
-            self._max = self._compute_max(value)
-
-            if self._prev_time_ms is None:
-                self._prev_time_ms = time_ms
-                self._prev = value
-                return
-
-            elapsed_time_s = (time_ms - self._prev_time_ms) / 1000
-            self._total_time_s = self._total_time_s + elapsed_time_s
-            self._total = self._total + (value * elapsed_time_s)
-
-            self._prev_time_ms = time_ms
-
-        def reset(self):
-            self._prev_time_ms = None
-
-        @property
-        def avg(self):
-            if self._total == 0 and self._total_time_s == 0:
-                return None
-            return round(self._total / self._total_time_s)
-
-        @property
-        def max(self):
-            if self._max:
-                return round(self._max)
-            return None
-
-        def _compute_max(self, new_value):
-            if new_value is None:
-                return self._max
-            if self._max is None:
-                return new_value
-            if new_value > self._max:
-                return new_value
-            else:
-                return self._max
 
     def __init__(self):
         self._segment = None
@@ -99,8 +49,8 @@ class TrackStats:
         self._gain_elevation_m = None
         self._loss_elevation_m = None
 
-        self._hr = TrackStats.SensorNormalization()
-        self._cadence = TrackStats.SensorNormalization()
+        self._hr = SensorNormalization()
+        self._cadence = SensorNormalization()
 
     @property
     def start_time(self):
@@ -117,6 +67,10 @@ class TrackStats:
     @property
     def moving_time(self):
         return self._moving_time_ms
+
+    @property
+    def moving_time_str(self):
+        return TimeUtils.ms_to_str(self._moving_time_ms)
 
     @property
     def total_distance(self):
@@ -147,16 +101,32 @@ class TrackStats:
         return self._gain_elevation_m
 
     @property
+    def gain_elevation_str(self):
+        return ElevationUtils.elevation_to_str(self._gain_elevation_m)
+
+    @property
     def loss_elevation(self):
         return self._loss_elevation_m
+
+    @property
+    def loss_elevation_str(self):
+        return ElevationUtils.elevation_to_str(self._loss_elevation_m)
 
     @property
     def max_hr(self):
         return self._hr.max
 
     @property
+    def max_hr_str(self):
+        return SensorUtils.hr_to_str(self._hr.max)
+
+    @property
     def avg_hr(self):
         return self._hr.avg
+
+    @property
+    def avg_hr_str(self):
+        return SensorUtils.hr_to_str(self._hr.avg)
 
     @property
     def max_cadence(self):
@@ -291,3 +261,241 @@ class TrackStats:
                 if self._loss_elevation_m is not None
                 else loss
             )
+
+
+class Interval:
+
+    def __init__(self, category: str):
+        self._category = category
+
+        self.distance_m = 0
+        self.time_ms = 0
+
+        self.avg_speed = 0
+        self.max_speed = MaxSpeedNormalization.from_category(category)
+
+        self.max_altitude = None
+        self.min_altitude = None
+        self.gain_elevation = None
+        self.loss_elevation = None
+
+        self.hr = SensorNormalization()
+        self.cadence = SensorNormalization()
+
+    @property
+    def distance_str(self):
+        return DistanceUtils.m_to_str(self.distance_m)
+
+    @property
+    def time_str(self):
+        return TimeUtils.ms_to_str(self.time_ms)
+
+    @property
+    def avg_speed_str(self):
+        return SpeedUtils.mps_to_category_rate(self.avg_speed, self._category)
+
+    @property
+    def max_speed_str(self):
+        return SpeedUtils.mps_to_category_rate(self.max_speed.value_mps, self._category)
+
+    @property
+    def max_altitude_str(self):
+        return ElevationUtils.elevation_to_str(self.max_altitude)
+
+    @property
+    def min_altitude_str(self):
+        return ElevationUtils.elevation_to_str(self.min_altitude)
+
+    @property
+    def gain_elevation_str(self):
+        return ElevationUtils.elevation_to_str(self.gain_elevation)
+
+    @property
+    def loss_elevation_str(self):
+        return ElevationUtils.elevation_to_str(self.loss_elevation)
+
+    @property
+    def avg_hr_str(self):
+        return SensorUtils.hr_to_str(self.hr.avg)
+
+    @property
+    def max_hr_str(self):
+        return SensorUtils.hr_to_str(self.hr.max)
+
+    @property
+    def avg_cadence_str(self):
+        return SensorUtils.hr_to_str(self.cadence.avg)
+
+    @property
+    def max_cadence_str(self):
+        return SensorUtils.hr_to_str(self.cadence.max)
+
+
+class IntervalStats:
+
+    def __init__(self, category: str, distance_interval: float):
+        """Create the interval stats class using an interval of distance_interval meters."""
+        self._intervals: List[Interval] = []
+        self._category: str = category
+        self._distance_interval_m: float = distance_interval
+
+    @property
+    def intervals(self):
+        return self._intervals
+
+    def compute(self, track_points):
+        interval = Interval(self._category)
+        last_tp = track_points[0]
+        for tp in track_points:
+            interval.distance_m += LocationUtils.distance_between(
+                last_tp.latitude, last_tp.longitude, tp.latitude, tp.longitude
+            )
+            interval.time_ms += (tp.time_ms - last_tp.time_ms)
+            interval.hr.add(tp.heart_rate, tp.time_ms)
+            interval.cadence.add(tp.cadence, tp.time_ms)
+            interval.max_speed.add(interval.distance_m, interval.time_ms)
+            interval.gain_elevation = interval.gain_elevation + tp.elevation_gain if \
+                interval.gain_elevation is not None else tp.elevation_gain
+            interval.loss_elevation = interval.loss_elevation + tp.elevation_loss if \
+                interval.loss_elevation is not None else tp.elevation_loss
+            last_tp = tp
+
+            if interval.distance_m >= self._distance_interval_m:
+                adjust_factor = self._distance_interval_m / interval.distance_m
+                accum_distance_m = interval.distance_m - self._distance_interval_m
+                accum_time_ms = interval.time_ms - (interval.time_ms * adjust_factor)
+
+                interval.distance_m *= adjust_factor
+                interval.time_ms *= adjust_factor
+
+                interval.avg_speed = interval.distance_m / (interval.time_ms / 1000)
+
+                interval.distance_m = (len(self._intervals) + 1) * interval.distance_m
+
+                self._intervals.append(interval)
+
+                interval = Interval(self._category)
+                interval.distance_m = accum_distance_m
+                interval.time_ms = accum_time_ms
+
+        if interval.distance_m > 10:
+            interval.avg_speed = interval.distance_m / (interval.time_ms / 1000)
+            interval.distance_m = len(self._intervals) * self._distance_interval_m + interval.distance_m
+            self._intervals.append(interval)
+
+
+class MaxSpeedNormalization:
+
+    def __init__(self):
+        self.value_mps = 0
+
+    @abstractmethod
+    def add(self, distance_m, time_ms):
+        pass
+
+    @staticmethod
+    def from_category(category: str):
+        if TypeActivityUtils.is_speed(category):
+            return MaxSpeedNormalizationNoFilter()
+        else:
+            return MaxSpeedNormalizationWithMinDistance()
+
+
+class MaxSpeedNormalizationNoFilter(MaxSpeedNormalization):
+
+    def __init__(self):
+        super().__init__()
+        self._last_distance_m = 0
+        self._last_time_ms = 0
+
+    def add(self, distance_m, time_ms):
+        d = distance_m - self._last_distance_m
+        t = time_ms - self._last_time_ms
+        if t > 0:
+            speed_mps = d / (t / 1000)
+
+            self._last_distance_m = distance_m
+            self._last_time_ms = time_ms
+
+            if speed_mps > self.value_mps:
+                self.value_mps = speed_mps
+
+
+class MaxSpeedNormalizationWithMinDistance(MaxSpeedNormalization):
+
+    MIN_DISTANCE_M = 50
+
+    def __init__(self):
+        super().__init__()
+        self._last_distance_m = 0
+        self._last_time_ms = 0
+        self._accum_distance_m = 0
+        self._accum_time_ms = 0
+
+    def add(self, distance_m, time_ms):
+        self._accum_distance_m += (distance_m - self._last_distance_m)
+        self._accum_time_ms += (time_ms - self._last_time_ms)
+
+        self._last_distance_m = distance_m
+        self._last_time_ms = time_ms
+
+        if self._accum_distance_m >= MaxSpeedNormalizationWithMinDistance.MIN_DISTANCE_M:
+            avg_speed_mps = self._accum_distance_m / (self._accum_time_ms / 1000)
+            if avg_speed_mps > self.value_mps:
+                self.value_mps = avg_speed_mps
+            self._accum_distance_m = 0
+            self._accum_time_ms = 0
+
+
+class SensorNormalization:
+
+    def __init__(self):
+        self._max = None
+        self._prev = None
+        self._prev_time_ms = None
+        self._total_time_s = 0
+        self._total = 0
+
+    def add(self, value: str, time_ms: float):
+        if value is None:
+            self.reset()
+            return
+        value = float(value)
+
+        self._max = self._compute_max(value)
+
+        if self._prev_time_ms is None:
+            self._prev_time_ms = time_ms
+            self._prev = value
+            return
+
+        elapsed_time_s = (time_ms - self._prev_time_ms) / 1000
+        self._total_time_s = self._total_time_s + elapsed_time_s
+        self._total = self._total + (value * elapsed_time_s)
+
+        self._prev_time_ms = time_ms
+
+    def reset(self):
+        self._prev_time_ms = None
+
+    @property
+    def avg(self):
+        if self._total == 0 and self._total_time_s == 0:
+            return None
+        return round(self._total / self._total_time_s)
+
+    @property
+    def max(self):
+        if self._max:
+            return round(self._max)
+        return None
+
+    def _compute_max(self, new_value):
+        if new_value is None:
+            return self._max
+        if self._max is None:
+            return new_value
+        if new_value > self._max:
+            return new_value
+        else:
+            return self._max

@@ -34,9 +34,9 @@ from pyopentracks.views.layouts.track_map_layout import TrackInteractiveMapLayou
 from pyopentracks.views.layouts.track_summary_layout import TrackSummaryStatsLayout
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_analytic_layout.ui")
-class TrackAnalyticLayout(Gtk.Box):
-    __gtype_name__ = "TrackAnalyticLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_map_analytic_layout.ui")
+class TrackMapAnalyticLayout(Gtk.Box):
+    __gtype_name__ = "TrackMapAnalyticLayout"
 
     _button_box: Gtk.ButtonBox = Gtk.Template.Child()
     _create_button: Gtk.Button = Gtk.Template.Child()

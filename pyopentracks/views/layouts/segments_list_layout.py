@@ -33,7 +33,6 @@ from pyopentracks.models.segment_track import SegmentTrack
 from pyopentracks.models.segment import Segment
 from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.layouts.track_map_layout import SegmentMapLayout
-from pyopentracks.views.maps.base_map import BaseMap
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segments_list_layout.ui")
