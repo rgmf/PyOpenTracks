@@ -7,8 +7,10 @@
     <file>ui/greeter_layout.ui</file>
     <file>ui/tracks_layout.ui</file>
     <file>ui/track_summary_layout.ui</file>
-    <file>ui/track_analytic_layout.ui</file>
+    <file>ui/track_data_analytic_layout.ui</file>
+    <file>ui/track_map_analytic_layout.ui</file>
     <file>ui/track_segments_layout.ui</file>
+    <file>ui/track_intervals_layout.ui</file>
 
     <file>ui/notebook_layout.ui</file>
 

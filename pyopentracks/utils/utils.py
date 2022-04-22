@@ -439,7 +439,7 @@ class LocationUtils:
 
 class SensorUtils:
     @staticmethod
-    def hr_to_str(hr_bpm: str) -> str:
+    def hr_to_str(hr_bpm: int) -> str:
         """From float representation heart rate to heart rate.
 
         Arguments:
@@ -448,9 +448,7 @@ class SensorUtils:
         Returns:
         An string representing the heart rate.
         """
-        return (
-            str(int(hr_bpm)) + " bpm" if hr_bpm is not None else "-"
-        )
+        return str(hr_bpm) + " bpm" if hr_bpm is not None else "-"
 
     @staticmethod
     def cadence_to_str(cadence_rpm) -> str:
@@ -462,9 +460,7 @@ class SensorUtils:
         Returns:
         An string representing the cadence.
         """
-        return (
-            str(int(cadence_rpm)) + " rpm" if cadence_rpm is not None else "-"
-        )
+        return str(int(cadence_rpm)) + " rpm" if cadence_rpm is not None else "-"
 
 
 class StatsUtils:

@@ -98,13 +98,71 @@ class FitSportMessage:
         return self._category
 
 
+class GainLossManager:
+    """Smooth the elevation gain and loss noise."""
+
+    # Ignore differences of DIFF_THRESHOLD between two consecutive altitudes.
+    DIFF_THRESHOLD = 5
+    # Elevation accumulation threshold to add gain or loss.
+    ACCUM_THRESHOLD = 0.5
+
+    def __init__(self):
+        self._last_altitude = None
+
+        self._gain_accum = 0
+        self._gain = 0
+        self._loss_accum = 0
+        self._loss = 0
+
+        self._total_gain = 0
+        self._total_loss = 0
+
+    def add(self, altitude):
+        if self._last_altitude is None:
+            self._last_altitude = altitude
+            return
+
+        if altitude is None:
+            return
+
+        diff = abs(self._last_altitude - altitude)
+
+        if diff > GainLossManager.DIFF_THRESHOLD:
+            self._last_altitude = altitude
+            self._gain_accum = self._loss_accum = 0
+            return
+
+        if self._last_altitude < altitude:
+            self._gain_accum += diff
+            self._loss_accum = 0
+            if self._gain_accum > GainLossManager.ACCUM_THRESHOLD:
+                self._gain += self._gain_accum
+                self._gain_accum = 0
+        elif self._last_altitude > altitude:
+            self._loss_accum += diff
+            self._gain_accum = 0
+            if self._loss_accum > GainLossManager.ACCUM_THRESHOLD:
+                self._loss += self._loss_accum
+                self._loss_accum = 0
+        else:
+            self._gain_accum = self._loss_accum = 0
+
+        self._last_altitude = altitude
+
+    def get_and_reset(self):
+        gain, loss = self._gain, self._loss
+        self._gain = self._loss = 0
+        self._total_gain += gain
+        self._total_loss += loss
+        return gain, loss
+
 class FitRecordMessage:
     """FIT record data message information."""
 
     # Read https://gis.stackexchange.com/questions/371656/garmin-fit-coodinate-system
     DIV_LAT_LON = pow(2, 32) / 360
 
-    def __init__(self, record: fitparse.records.DataMessage, numsegment: int, last_altitude: float):
+    def __init__(self, record: fitparse.records.DataMessage, numsegment: int, last_altitude: float, manager: GainLossManager):
         values = record.get_values()
         self._numsegment = numsegment
         self._latitude = values["position_lat"] / FitRecordMessage.DIV_LAT_LON if "position_lat" in values else None
@@ -113,10 +171,7 @@ class FitRecordMessage:
         self._time_ms = TimeUtils.dt_to_aware_locale_ms(values["timestamp"]) if "timestamp" in values else None
         self._speed_mps = values["speed"] if "speed" in values else None
         self._altitude_m = values["altitude"] if "altitude" in values else None
-        self._elevation_gain_m = self._altitude_m - last_altitude \
-            if last_altitude is not None and self._altitude_m is not None and self._altitude_m > last_altitude else 0
-        self._elevation_loss_m = last_altitude - self._altitude_m \
-            if last_altitude is not None and self._altitude_m is not None and self._altitude_m < last_altitude else 0
+        self._elevation_gain_m, self._elevation_loss_m = manager.get_and_reset()
         self._heart_rate_bpm = values["heart_rate"] if "heart_rate" in values else None
         self._cadence_rpm = values["cadence"] if "cadence" in values else None
         self._power_w = values["power"] if "power" in values else None
@@ -172,11 +227,13 @@ class FitParser(Parser):
 
         last_altitude = None
         stopped = False
+        manager = GainLossManager()
         for mesg in [m for m in fitfile.messages if m.name in ("record", "event")]:
             if mesg.name == "record" and not stopped:
-                fit_record_message = FitRecordMessage(mesg, self._num_segments, last_altitude)
+                fit_record_message = FitRecordMessage(mesg, self._num_segments, last_altitude, manager)
                 self._add_track_point(fit_record_message.track_point)
                 last_altitude = fit_record_message.track_point.altitude
+                manager.add(last_altitude)
             elif mesg.name == "event":
                 stopped = self._compute_mesg_event(mesg, stopped)
 

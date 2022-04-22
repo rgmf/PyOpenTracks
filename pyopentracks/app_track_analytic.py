@@ -22,7 +22,8 @@ from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.observers.data_update_observer import DataUpdateSubscription
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
 from pyopentracks.views.layouts.process_view import ProcessView
-from pyopentracks.views.layouts.track_analytic_layout import TrackAnalyticLayout
+from pyopentracks.views.layouts.track_data_analytic_layout import TrackDataAnalyticLayout
+from pyopentracks.views.layouts.track_map_analytic_layout import TrackMapAnalyticLayout
 from pyopentracks.views.layouts.track_segments_layout import TrackSegmentsLayout
 from pyopentracks.views.layouts.track_summary_layout import TrackSummaryLayout
 
@@ -43,19 +44,22 @@ class AppTrackAnalytic(AppExternal):
 
     def _build(self):
         summary_layout = TrackSummaryLayout(self._track)
+        data_analytic_layout = TrackDataAnalyticLayout(self._track)
         segments_layout = TrackSegmentsLayout(self._track)
-        analytic_layout = TrackAnalyticLayout(self._track, self.segment_created_notify)
+        map_analytic_layout = TrackMapAnalyticLayout(self._track, self.segment_created_notify)
 
         self._subscriptions = DataUpdateSubscription()
         self._subscriptions.attach(segments_layout)
 
         self._layout.append(summary_layout, _("Summary"))
+        self._layout.append(data_analytic_layout, _("Data Analytic"))
         self._layout.append(segments_layout, _("Segments"))
-        self._layout.append(analytic_layout, _("Analytic"))
+        self._layout.append(map_analytic_layout, _("Map Analytic"))
 
         summary_layout.build()
+        data_analytic_layout.build()
         segments_layout.build()
-        analytic_layout.build()
+        map_analytic_layout.build()
 
     def _on_track_points_ready(self, track_points):
         self._track.track_points = track_points
