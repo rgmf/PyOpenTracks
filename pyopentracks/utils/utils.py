@@ -448,7 +448,7 @@ class SensorUtils:
         Returns:
         An string representing the heart rate.
         """
-        return str(hr_bpm) + " bpm" if hr_bpm is not None else "-"
+        return str(int(hr_bpm)) + " bpm" if hr_bpm is not None else "-"
 
     @staticmethod
     def cadence_to_str(cadence_rpm) -> str:
