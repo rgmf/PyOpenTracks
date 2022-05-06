@@ -32,6 +32,10 @@
     font-size: 1em;
 }
 
+.pyot-p-danger {
+    color: red;
+}
+
 .pyot-stats-bg-color {
     padding: 20px;
     background-color: #fefefe;

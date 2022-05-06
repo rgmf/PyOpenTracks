@@ -11,6 +11,7 @@
     <file>ui/track_map_analytic_layout.ui</file>
     <file>ui/track_segments_layout.ui</file>
     <file>ui/track_intervals_layout.ui</file>
+    <file>ui/track_zones_layout.ui</file>
 
     <file>ui/notebook_layout.ui</file>
 
@@ -28,6 +29,7 @@
     <file>ui/menu.ui</file>
 
     <file>ui/preferences_layout.ui</file>
+    <file>ui/preferences_zones_layout.ui</file>
     <file>ui/preferences_import_layout.ui</file>
     <file>ui/preferences_opentracks_layout.ui</file>
 
@@ -47,6 +49,7 @@
     <file>icons/entry-clear-symbolic.svg</file>
     <file>icons/paper-symbolic.svg</file>
     <file>icons/refresh-symbolic.svg</file>
+    <file>icons/checkmark-small-symbolic.svg</file>
 
     <file>icons/bike_black_48dp.svg</file>
     <file>icons/drive_car_black_48dp.svg</file>
@@ -57,5 +60,7 @@
     <file>icons/gold-medal.svg</file>
     <file>icons/silver-medal.svg</file>
     <file>icons/bronze-medal.svg</file>
+
+    <file>icons/percentage-symbol.svg</file>
   </gresource>
 </gresources>

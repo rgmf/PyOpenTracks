@@ -16,8 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
 
 from pyopentracks.app_external import AppExternal
+from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.observers.data_update_observer import DataUpdateSubscription
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
@@ -37,6 +39,8 @@ class AppTrackAnalytic(AppExternal):
     def __init__(self, track):
         self._layout = NotebookLayout()
         self._track = track
+        self._preferences = AppPreferences()
+
         if not self._track.track_points:
             ProcessView(self._on_track_points_ready, DatabaseHelper.get_track_points, (self._track.id,)).start()
         else:
@@ -44,7 +48,7 @@ class AppTrackAnalytic(AppExternal):
 
     def _build(self):
         summary_layout = TrackSummaryLayout(self._track)
-        data_analytic_layout = TrackDataAnalyticLayout(self._track)
+        data_analytic_layout = TrackDataAnalyticLayout(self._track, self._preferences)
         segments_layout = TrackSegmentsLayout(self._track)
         map_analytic_layout = TrackMapAnalyticLayout(self._track, self.segment_created_notify)
 

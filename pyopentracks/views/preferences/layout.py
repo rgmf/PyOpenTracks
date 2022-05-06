@@ -21,6 +21,7 @@ from gi.repository import Gtk
 
 from pyopentracks.views.preferences.import_layout import PreferencesImportLayout
 from pyopentracks.views.preferences.opentracks_layout import PreferencesOpenTracksLayout
+from pyopentracks.views.preferences.zones_layout import PreferencesZonesLayout
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/preferences_layout.ui")
@@ -33,6 +34,7 @@ class PreferencesLayout(Gtk.Paned):
         super().__init__()
 
         self._layouts = [
+            {"key": _("Training Zones"), "layout": PreferencesZonesLayout},
             {"key": _("Import"), "layout": PreferencesImportLayout},
             {"key": "OpenTracks", "layout": PreferencesOpenTracksLayout},
         ]
