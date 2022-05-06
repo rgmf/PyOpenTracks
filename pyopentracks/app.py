@@ -144,6 +144,9 @@ class Application(Gtk.Application):
     def get_pref(self, pref):
         return self._preferences.get_pref(pref)
 
+    def get_pref_default(self, pref):
+        return self._preferences.get_default(pref)
+
     def set_pref(self, pref, newvalue):
         self._preferences.set_pref(pref, newvalue)
         if pref == AppPreferences.AUTO_IMPORT_FOLDER:

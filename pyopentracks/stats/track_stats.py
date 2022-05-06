@@ -384,6 +384,51 @@ class IntervalStats:
             self._intervals.append(interval)
 
 
+class HrZonesStats:
+
+    def __init__(self, zones: List[int]):
+        """Class to compute stats on heart rate zones.
+
+        Arguments:
+        zones -- list of integers with heart rate zones.
+        """
+        self._zones = zones
+        self._stats = {}
+        self._total_time = 0
+        for i, zone in enumerate(self._zones):
+            self._stats[i] = 0
+
+    def compute(self, track_points):
+        if track_points is None or len(track_points) == 0:
+            return
+
+        last_zone = -1
+        last_tp = track_points[0]
+        for tp in track_points:
+            is_same_segment = last_tp.segment == tp.segment
+            if last_zone > -1 and is_same_segment:
+                self._stats[last_zone] += (tp.time_ms - last_tp.time_ms)
+            if is_same_segment:
+                self._total_time += (tp.time_ms - last_tp.time_ms)
+            last_zone = self._get_zone_idx(tp.heart_rate)
+            last_tp = tp
+
+        return self._stats
+
+    @property
+    def total_time(self):
+        return self._total_time
+
+    def _get_zone_idx(self, hr):
+        if not hr:
+            return -1
+        idx = -1
+        for value in self._zones:
+            if hr < value:
+                return idx
+            idx += 1
+        return idx
+
 class MaxSpeedNormalization:
 
     def __init__(self):

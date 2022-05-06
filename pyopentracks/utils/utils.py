@@ -439,7 +439,7 @@ class LocationUtils:
 
 class SensorUtils:
     @staticmethod
-    def hr_to_str(hr_bpm: int) -> str:
+    def hr_to_str(hr_bpm: float) -> str:
         """From float representation heart rate to heart rate.
 
         Arguments:
@@ -451,7 +451,7 @@ class SensorUtils:
         return str(int(hr_bpm)) + " bpm" if hr_bpm is not None else "-"
 
     @staticmethod
-    def cadence_to_str(cadence_rpm) -> str:
+    def cadence_to_str(cadence_rpm: float) -> str:
         """From float representation cadence to cadence string.
 
         Arguments:
@@ -462,6 +462,10 @@ class SensorUtils:
         """
         return str(int(cadence_rpm)) + " rpm" if cadence_rpm is not None else "-"
 
+    @staticmethod
+    def round_to_int(value: float) -> int:
+        return round(value)
+
 
 class StatsUtils:
     @staticmethod
@@ -470,3 +474,20 @@ class StatsUtils:
         if current_year == year:
             return round(num / current_month, 2)
         return round(num / 12, 2)
+
+
+class ZonesUtils:
+    @staticmethod
+    def description_hr_zone(zone_code: str) -> str:
+        if zone_code.lower() == "z1":
+            return "Warm Up"
+        elif zone_code.lower() == "z2":
+            return "Endurance"
+        elif zone_code.lower() == "z3":
+            return "Tempo"
+        elif zone_code.lower() == "z4":
+            return "Threshold"
+        elif zone_code.lower() == "z5":
+            return "VO2Max"
+        else:
+            return "Unknown"

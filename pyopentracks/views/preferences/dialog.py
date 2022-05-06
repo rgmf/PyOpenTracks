@@ -51,6 +51,9 @@ class PreferencesDialog(Gtk.Dialog):
             return self._preferences[pref]
         return self._app.get_pref(pref)
 
+    def get_default(self, pref):
+        return self._app.get_pref_default(pref)
+
     def set_pref(self, pref, value):
         self._preferences[pref] = value
 

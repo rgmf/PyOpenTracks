@@ -16,8 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
 
 from gi.repository import Gio
+
+from pyopentracks.utils import logging as pyot_logging
 
 
 class AppPreferences:
@@ -27,14 +30,14 @@ class AppPreferences:
     WIN_STATE_HEIGHT = 3
     WIN_STATE_IS_MAXIMIZED = 4
     OPENTRACKS_GAIN_LOSS_FILTER = 5
+    HEART_RATE_MAX = 6
+    HEART_RATE_ZONES = 7
 
     _settings: Gio.Settings = None
 
     def __init__(self):
         self._settings = Gio.Settings.new("es.rgmf.pyopentracks")
-        self._settings.connect(
-            "changed::trackspath", self._on_settings_folder_changed
-        )
+        self._settings.connect("changed::trackspath", self._on_settings_folder_changed)
 
     def get_pref(self, pref):
         if pref == AppPreferences.DB_VERSION:
@@ -49,6 +52,10 @@ class AppPreferences:
             return self._settings.get_boolean("win-state-is-mamixmized")
         elif pref == AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER:
             return self._settings.get_boolean("opentracks-gain-loss-filter")
+        elif pref == AppPreferences.HEART_RATE_MAX:
+            return self._settings.get_int("heart-rate-max")
+        elif pref == AppPreferences.HEART_RATE_ZONES:
+            return self._get_zones()
 
     def set_pref(self, pref, new_value):
         if pref == AppPreferences.DB_VERSION:
@@ -63,6 +70,28 @@ class AppPreferences:
             self._settings.set_boolean("win-state-is-mamixmized", new_value)
         elif pref == AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER:
             self._settings.set_boolean("opentracks-gain-loss-filter", new_value)
+        elif pref == AppPreferences.HEART_RATE_MAX:
+            self._settings.set_int("heart-rate-max", new_value)
+        elif pref == AppPreferences.HEART_RATE_ZONES:
+            self._set_zones(new_value)
+
+    def get_default(self, pref):
+        if pref == AppPreferences.DB_VERSION:
+            self._settings.get_default_value("dbversion")
+        elif pref == AppPreferences.AUTO_IMPORT_FOLDER:
+            self._settings.get_default_value("trackspath")
+        elif pref == AppPreferences.WIN_STATE_WIDTH:
+            self._settings.get_default_value("win-state-width")
+        elif pref == AppPreferences.WIN_STATE_HEIGHT:
+            self._settings.get_default_value("win-state-height")
+        elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
+            self._settings.get_default_value("win-state-is-mamixmized")
+        elif pref == AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER:
+            self._settings.get_default_value("opentracks-gain-loss-filter")
+        elif pref == AppPreferences.HEART_RATE_MAX:
+            self._settings.get_default_value("heart-rate-max")
+        elif pref == AppPreferences.HEART_RATE_ZONES:
+            self._settings.get_default_value("heart-rate-zones")
 
     def _on_settings_folder_changed(self, settings, key):
         #self._load_folder()
@@ -72,3 +101,24 @@ class AppPreferences:
         #     self._settings.set_string("trackspath", dialog.get_filename())
         # dialog.destroy()
         pass
+
+    def _get_zones(self):
+        """Convert comma-separated zones to a list of integers with all percentages."""
+        zones = self._settings.get_string("heart-rate-zones")
+        try:
+            zones_list = list(map(lambda z: int(z), zones.split(',')))
+            if len(zones_list) != 6:
+                raise Exception(f"There are too many zones: {len(zones_list)}. They have should be 6.")
+        except Exception as error:
+            pyot_logging.get_logger(__name__).exception(str(error))
+            zones_list = list(map(lambda z: int(z), self._settings.get_default_value("heart-rate-zones")))
+        return zones_list
+
+    def _set_zones(self, new_value: List[int]):
+        """Convert the list of numbers to comma-separated string of those numbers.
+
+        It checks that new_value is an array of integer items, it has 6 items, and it's ordered.
+        """
+        if type(new_value) is not list or len(new_value) != 6 or sorted(new_value) != new_value:
+            return
+        self._settings.set_string("heart-rate-zones", ",".join(map(lambda n: str(n), new_value)))

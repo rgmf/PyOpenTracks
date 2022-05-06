@@ -16,6 +16,16 @@
       <summary>OpenTracks gain and loss filtering</summary>
       <description>PyOpenTracks can filter and improve barometric values of elevation gain and loss when tracks were recorded with OpenTracks.</description>
     </key>
+    <key name="heart-rate-max" type="i">
+      <default>-1</default>
+      <summary>Training heart rate maximum</summary>
+      <description>PyOpenTracks can use maximum heart rate to show heart rate zones.</description>
+    </key>
+    <key name="heart-rate-zones" type="s">
+      <default>'50,60,70,80,90,100'</default>
+      <summary>Training heart rate maximum</summary>
+      <description>PyOpenTracks can use maximum heart rate to show heart rate zones.</description>
+    </key>
     <key name="win-state-width" type="i">
       <default>800</default>
       <summary>Window's width</summary>
