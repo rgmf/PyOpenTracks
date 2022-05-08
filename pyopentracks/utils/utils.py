@@ -477,6 +477,14 @@ class StatsUtils:
 
 
 class ZonesUtils:
+    _colors = {
+        "z1": "#a6a6a6",
+        "z2": "#3b97f3",
+        "z3": "#82c91e",
+        "z4": "#f98925",
+        "z5": "#d32020",
+    }
+
     @staticmethod
     def description_hr_zone(zone_code: str) -> str:
         if zone_code.lower() == "z1":
@@ -491,3 +499,17 @@ class ZonesUtils:
             return "VO2Max"
         else:
             return "Unknown"
+
+
+    @staticmethod
+    def get_color(zone_code: str) -> str:
+        if zone_code.lower() == "z5":
+            return ZonesUtils._colors["z5"]
+        elif zone_code.lower() == "z4":
+            return ZonesUtils._colors["z4"]
+        elif zone_code.lower() == "z3":
+            return ZonesUtils._colors["z3"]
+        elif zone_code.lower() == "z2":
+            return ZonesUtils._colors["z2"]
+        else:
+            return ZonesUtils._colors["z1"]

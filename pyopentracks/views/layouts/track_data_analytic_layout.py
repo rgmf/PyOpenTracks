@@ -23,6 +23,7 @@ from gi.repository import Gtk
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.stats.track_stats import IntervalStats, HrZonesStats
 from pyopentracks.utils.utils import TypeActivityUtils, SensorUtils, TimeUtils, ZonesUtils
+from pyopentracks.views.graphs import BarsChart
 
 
 def build_box(value):
@@ -168,17 +169,35 @@ class TrackZonesLayout(Gtk.Box):
         hr_zones_stats = HrZonesStats(zones)
         stats = hr_zones_stats.compute(track_points)
         total_time = hr_zones_stats.total_time
+        bars_result = {}
         for idx, value in stats.items():
             hr_bottom = str(zones[idx])
             hr_top = str(_("MAX")) if len(zones) == idx + 1 else str(zones[idx + 1])
             zone_code = "Z" + str(idx + 1)
+            description_zone = ZonesUtils.description_hr_zone(zone_code)
+            percentage = SensorUtils.round_to_int(value / total_time * 100)
+
+            bars_result[zone_code] = percentage
 
             self._zones_grid.attach(build_box(zone_code), 0, idx + 1, 1, 1)
-            self._zones_grid.attach(build_box(ZonesUtils.description_hr_zone(zone_code)), 1, idx + 1, 1, 1)
+            self._zones_grid.attach(build_box(description_zone), 1, idx + 1, 1, 1)
             self._zones_grid.attach(build_box(hr_bottom), 2, idx + 1, 1, 1)
             self._zones_grid.attach(build_box(hr_top), 3, idx + 1, 1, 1)
             self._zones_grid.attach(build_box(TimeUtils.ms_to_str(value)), 4, idx + 1, 1, 1)
-            self._zones_grid.attach(
-                build_box(str(SensorUtils.round_to_int(value / total_time * 100))),
-                5, idx + 1, 1, 1
-            )
+            self._zones_grid.attach(build_box(str(percentage)), 5, idx + 1, 1, 1)
+
+        chart = BarsChart(
+            results=bars_result,
+            colors=list(
+                map(lambda zc: ZonesUtils.get_color(zc), bars_result.keys())
+            ),
+            cb_annotate=lambda v: str(v) + "%"
+        )
+        chart_box = Gtk.Box()
+        chart_box.set_margin_left(10)
+        chart_box.set_margin_right(10)
+        chart_box.get_style_context().add_class("pyot-stats-bg-color")
+        chart_box.pack_start(chart.get_canvas(), True, True, 10)
+        self.pack_start(chart_box, False, False, 0)
+        chart_box.show_all()
+        chart.draw_and_show()
