@@ -24,6 +24,7 @@ from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.stats.track_stats import IntervalStats, HrZonesStats
 from pyopentracks.utils.utils import TypeActivityUtils, SensorUtils, TimeUtils, ZonesUtils
 from pyopentracks.views.graphs import BarsChart
+from pyopentracks.views.layouts.process_view import ProcessView
 
 
 def build_box(value):
@@ -118,10 +119,16 @@ class TrackIntervalsLayout(Gtk.Box):
             return
         interval_m = self._intervals_list_store[iter_item][0]
 
-        top = 1
+        ProcessView(self._on_data_ready, self._data_loading, (interval_m,)).start()
+
+    def _data_loading(self, interval_m):
         interval_stats = IntervalStats(self._category, interval_m)
         interval_stats.compute(self._track_points)
-        for interval in interval_stats.intervals:
+        return interval_stats.intervals
+
+    def _on_data_ready(self, intervals):
+        top = 1
+        for interval in intervals:
             self._intervals_grid.attach(build_box(interval.distance_str), 0, top, 1, 1)
             self._intervals_grid.attach(build_box(interval.time_str), 1, top, 1, 1)
             self._intervals_grid.attach(build_box(interval.avg_speed_str), 2, top, 1, 1)
@@ -146,8 +153,15 @@ class TrackZonesLayout(Gtk.Box):
     def __init__(self, track_points, hr_max: int, hr_zones: List[int]):
         super().__init__()
 
+        self._track_points = track_points
         self._hr_max = hr_max
         self._hr_percentage_zones: List[int] = hr_zones
+        self._hr_bpm_zones: List[int] = list(
+            map(
+                lambda percentage:
+                SensorUtils.round_to_int(percentage / 100 * self._hr_max), self._hr_percentage_zones[0:-1]
+            )
+        )
 
         self._title_label.set_text(_("Heart Rate Zones"))
         self._title_label.get_style_context().add_class("pyot-h3")
@@ -163,16 +177,21 @@ class TrackZonesLayout(Gtk.Box):
         self._zones_grid.attach(Gtk.Label(_("Time")), 4, 0, 1, 1)
         self._zones_grid.attach(Gtk.Label(_("%")), 5, 0, 1, 1)
 
-        zones = list(
-            map(lambda percentage: SensorUtils.round_to_int(percentage / 100 * hr_max), self._hr_percentage_zones[0:-1])
-        )
-        hr_zones_stats = HrZonesStats(zones)
-        stats = hr_zones_stats.compute(track_points)
+        ProcessView(self._on_data_ready, self._data_loading, None).start()
+
+    def _data_loading(self):
+        hr_zones_stats = HrZonesStats(self._hr_bpm_zones)
+        stats = hr_zones_stats.compute(self._track_points)
         total_time = hr_zones_stats.total_time
+
+        return stats, total_time
+
+    def _on_data_ready(self, data: tuple):
+        stats, total_time = data
         bars_result = {}
         for idx, value in stats.items():
-            hr_bottom = str(zones[idx])
-            hr_top = str(_("MAX")) if len(zones) == idx + 1 else str(zones[idx + 1])
+            hr_bottom = str(self._hr_bpm_zones[idx])
+            hr_top = str(_("MAX")) if len(self._hr_bpm_zones) == idx + 1 else str(self._hr_bpm_zones[idx + 1])
             zone_code = "Z" + str(idx + 1)
             description_zone = ZonesUtils.description_hr_zone(zone_code)
             percentage = SensorUtils.round_to_int(value / total_time * 100)
@@ -199,5 +218,6 @@ class TrackZonesLayout(Gtk.Box):
         chart_box.get_style_context().add_class("pyot-stats-bg-color")
         chart_box.pack_start(chart.get_canvas(), True, True, 10)
         self.pack_start(chart_box, False, False, 0)
-        chart_box.show_all()
         chart.draw_and_show()
+
+        self.show_all()
