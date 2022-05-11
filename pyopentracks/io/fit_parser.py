@@ -47,7 +47,7 @@ class FitFileIdMessage:
             raise Exception("FIT file doesn't have a 'file_id' message")
 
         fields = [field_data for field_data in file_id.fields]
-        if not list(filter(lambda field_data: field_data.field and field_data.field.def_num == 0, fields)):
+        if not list(filter(lambda field_data: field_data.field and field_data.field.def_num == 0 and field_data.value and field_data.value == "activity", fields)):
             raise Exception("It's not an 'activity' FIT file")
 
         self._data: List[FitFileIdData] = []
