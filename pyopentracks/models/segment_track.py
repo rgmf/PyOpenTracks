@@ -146,6 +146,14 @@ class SegmentTrack(Model):
         return self._trackid
 
     @property
+    def track_point_id_start(self):
+        return self._trackpointid_start
+
+    @property
+    def track_point_id_end(self):
+        return self._trackpointid_end
+
+    @property
     def track(self):
         return self._track
 

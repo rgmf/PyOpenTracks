@@ -162,7 +162,7 @@ class FitRecordMessage:
     # Read https://gis.stackexchange.com/questions/371656/garmin-fit-coodinate-system
     DIV_LAT_LON = pow(2, 32) / 360
 
-    def __init__(self, record: fitparse.records.DataMessage, numsegment: int, last_altitude: float, manager: GainLossManager):
+    def __init__(self, record: fitparse.records.DataMessage, numsegment: int, manager: GainLossManager):
         values = record.get_values()
         self._numsegment = numsegment
         self._latitude = values["position_lat"] / FitRecordMessage.DIV_LAT_LON if "position_lat" in values else None
@@ -225,12 +225,11 @@ class FitParser(Parser):
         )
         self._track.category = sport.category
 
-        last_altitude = None
         stopped = False
         manager = GainLossManager()
         for mesg in [m for m in fitfile.messages if m.name in ("record", "event")]:
             if mesg.name == "record" and not stopped:
-                fit_record_message = FitRecordMessage(mesg, self._num_segments, last_altitude, manager)
+                fit_record_message = FitRecordMessage(mesg, self._num_segments, manager)
                 self._add_track_point(fit_record_message.track_point)
                 last_altitude = fit_record_message.track_point.altitude
                 manager.add(last_altitude)

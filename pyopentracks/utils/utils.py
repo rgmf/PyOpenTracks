@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-
+import os.path
 import time
 
 from gi.repository import GdkPixbuf
@@ -436,6 +436,14 @@ class LocationUtils:
         a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
         return 2 * 6371 * asin(sqrt(a)) * 1000
 
+    @staticmethod
+    def degrees_to_semicircles(latitude, longitude):
+        return latitude * (pow(2, 31) / 180), longitude * (pow(2, 31) / 180)
+
+    @staticmethod
+    def semicircles_to_degrees(latitude, longitude):
+        return latitude * (180 / pow(2, 31)), longitude * (180 / pow(2, 31))
+
 
 class SensorUtils:
     @staticmethod
@@ -513,3 +521,17 @@ class ZonesUtils:
             return ZonesUtils._colors["z2"]
         else:
             return ZonesUtils._colors["z1"]
+
+
+class SanitizeFile:
+    @staticmethod
+    def fit_file(path: str) -> str:
+        """Get an expected fit file path and return a sanitized fit file."""
+        if not path:
+            return "noname.fit"
+
+        root, ext = os.path.splitext(path)
+        if not ext or ext != ".fit":
+            return root + ".fit"
+        else:
+            return path

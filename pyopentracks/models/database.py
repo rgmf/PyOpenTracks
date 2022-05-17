@@ -413,11 +413,13 @@ class Database:
                 )
         return []
 
-    def get_track_points(self, trackid):
+    def get_track_points(self, trackid, from_trackpoint_id=None, to_trackpoint_id=None):
         """Get all track points from track identified by trackid.
 
         Arguments:
         trackid -- Track's id.
+        from_trackpoint_id -- initial track point.
+        to_trackpoint_Id -- end track point.
 
         Return:
         list of all TrackPoint objects that hast the Track identified
@@ -425,7 +427,12 @@ class Database:
         """
         with sqlite3.connect(self._db_file) as conn:
             try:
-                query = "SELECT * FROM trackpoints WHERE trackid=? ORDER BY _id ASC"
+                extra_where = ""
+                if from_trackpoint_id is not None:
+                    extra_where += f" AND _id >= {from_trackpoint_id} "
+                if to_trackpoint_id is not None:
+                    extra_where += f" AND _id <= {to_trackpoint_id} "
+                query = f"SELECT * FROM trackpoints WHERE trackid=? {extra_where} ORDER BY _id ASC"
                 trackpoints = conn.execute(query, (trackid,)).fetchall()
                 if trackpoints:
                     return [TrackPoint(*tp) for tp in trackpoints]

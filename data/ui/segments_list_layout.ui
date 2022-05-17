@@ -59,6 +59,21 @@
           </packing>
         </child>
         <child>
+          <object class="GtkButton" id="_button_export">
+            <property name="label" translatable="yes">button</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="valign">center</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack-type">end</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkButton" id="_button_delete">
             <property name="label">gtk-delete</property>
             <property name="visible">True</property>
@@ -71,7 +86,7 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="pack-type">end</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
@@ -87,7 +102,7 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="pack-type">end</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </object>
