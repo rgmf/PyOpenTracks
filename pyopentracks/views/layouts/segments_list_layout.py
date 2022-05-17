@@ -22,7 +22,8 @@ from gi.repository import Gtk, GObject
 from dataclasses import dataclass
 from typing import List
 
-from pyopentracks.utils.utils import DateTimeUtils
+from pyopentracks.tasks.fit_segment import FitSegment
+from pyopentracks.utils.utils import DateTimeUtils, SanitizeFile
 from pyopentracks.views.dialogs import (
     QuestionDialog,
     MessageDialogError,
@@ -31,6 +32,7 @@ from pyopentracks.views.dialogs import (
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.segment_track import SegmentTrack
 from pyopentracks.models.segment import Segment
+from pyopentracks.views.file_chooser import ExportSegmentChooserWindow
 from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.layouts.track_map_layout import SegmentMapLayout
 
@@ -48,6 +50,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
     _combobox_segments: Gtk.ComboBox = Gtk.Template.Child()
     _button_delete: Gtk.Button = Gtk.Template.Child()
     _button_edit: Gtk.Button = Gtk.Template.Child()
+    _button_export: Gtk.Button = Gtk.Template.Child()
     _segments_list_store: Gtk.ListStore = Gtk.Template.Child()
     _box_segment_detail: Gtk.Box = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
@@ -66,11 +69,15 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         self._data_rows = 0
         self._map = None
 
+        self._button_export.set_label(_("Export to FIT"))
+
         self._button_delete.connect("clicked", self._button_delete_clicked_cb)
         self._button_edit.connect("clicked", self._button_edit_clicked_cb)
+        self._button_export.connect("clicked", self._button_export_clicked_cb)
 
         self._button_delete.set_sensitive(False)
         self._button_edit.set_sensitive(False)
+        self._button_export.set_sensitive(False)
 
         self._label_segment_name = None
 
@@ -181,6 +188,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
 
         self._button_delete.set_sensitive(True)
         self._button_edit.set_sensitive(True)
+        self._button_export.set_sensitive(True)
 
         grid = Gtk.Grid()
         grid.attach(
@@ -399,6 +407,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         self._title_label.set_text(_("Loading segments..."))
         self._button_delete.set_sensitive(False)
         self._button_edit.set_sensitive(False)
+        self._button_export.set_sensitive(False)
         self._segments_list_store.clear()
 
         self._on_data_ready(self._data_loading())
@@ -418,3 +427,17 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
             if self._label_segment_name:
                 self._label_segment_name.set_label(segment.name)
             DatabaseHelper.update(segment)
+
+    def _button_export_clicked_cb(self, btn):
+        iter_item = self._combobox_segments.get_active_iter()
+        if iter_item is None:
+            return
+
+        segment = DatabaseHelper.get_segment_by_id(self._segments_list_store[iter_item][0])
+        fit_segment = FitSegment(segment).compute_binary()
+        dialog = ExportSegmentChooserWindow(current_name=SanitizeFile.fit_file(segment.name))
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            with open(SanitizeFile.fit_file(dialog.get_filename()), "wb") as fd:
+                fd.write(fit_segment)
+        dialog.destroy()

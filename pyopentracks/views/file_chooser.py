@@ -76,3 +76,18 @@ class FolderChooserWindow(Gtk.FileChooserDialog):
             Gtk.STOCK_OPEN,
             Gtk.ResponseType.OK,
         )
+
+
+class ExportSegmentChooserWindow(Gtk.FileChooserDialog):
+    def __init__(self, current_name=_("Untitled.fit"), *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.set_title(_("Export Segment FIT File..."))
+        self.set_action(Gtk.FileChooserAction.SAVE)
+        self.set_current_name(current_name)
+        self.set_do_overwrite_confirmation(True)
+        self.add_buttons(
+            Gtk.STOCK_CANCEL,
+            Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_SAVE_AS,
+            Gtk.ResponseType.OK,
+        )

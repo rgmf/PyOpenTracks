@@ -83,3 +83,7 @@ class SegmentPoint(Model):
     @property
     def longitude(self):
         return self._longitude
+
+    @property
+    def altitude(self):
+        return self._altitude

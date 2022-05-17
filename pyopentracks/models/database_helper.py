@@ -37,9 +37,9 @@ class DatabaseHelper:
         return db.get_tracks()
 
     @staticmethod
-    def get_track_points(trackid):
+    def get_track_points(trackid, from_trackpoint_id=None, to_trackpoint_id=None):
         db = Database()
-        return db.get_track_points(trackid)
+        return db.get_track_points(trackid, from_trackpoint_id, to_trackpoint_id)
 
     @staticmethod
     def get_aggregated_stats(date_from=None, date_to=None, order_by_categories=False):
