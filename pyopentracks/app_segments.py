@@ -29,7 +29,9 @@ class AppSegments(AppExternal):
 
     def __init__(self):
         self._layout = NotebookLayout()
-        self._layout.append(SegmentsListLayout.from_segments(), _("Segment's List"))
+        segments_list_layout = SegmentsListLayout()
+        segments_list_layout.build()
+        self._layout.append(segments_list_layout, _("Segment's List"))
 
     def get_layout(self):
         return self._layout

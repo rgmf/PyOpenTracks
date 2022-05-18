@@ -22,7 +22,7 @@ from gi.repository import Gtk
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.location import Location
 from pyopentracks.observers.data_update_observer import DataUpdateObserver
-from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
+from pyopentracks.views.layouts.segments_track_layout import SegmentsTrackLayout
 from pyopentracks.views.layouts.track_map_layout import TrackMapLayout
 
 
@@ -47,7 +47,8 @@ class TrackSegmentsLayout(Gtk.Box, DataUpdateObserver):
         )
         self._refresh_button.connect("clicked", self._refresh)
 
-        self._segments_layout = SegmentsListLayout.from_track(track)
+        self._segments_layout = SegmentsTrackLayout(track)
+        self._segments_layout.build()
         self._segments_layout.connect("segment-track-selected", self._segment_track_selected)
         self._map_layout = TrackMapLayout()
 
@@ -68,7 +69,8 @@ class TrackSegmentsLayout(Gtk.Box, DataUpdateObserver):
     def _refresh(self, button):
         before_update_rows = self._segments_layout.get_number_rows()
 
-        self._segments_layout = SegmentsListLayout.from_track(self._track)
+        self._segments_layout = SegmentsTrackLayout(self._track)
+        self._segments_layout.build()
         self._segments_layout.connect("segment-track-selected", self._segment_track_selected)
 
         after_update_rows = self._segments_layout.get_number_rows()
