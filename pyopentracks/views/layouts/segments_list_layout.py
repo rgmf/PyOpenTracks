@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import List
 
 from pyopentracks.tasks.fit_segment import FitSegment
-from pyopentracks.utils.utils import DateTimeUtils, SanitizeFile
+from pyopentracks.utils.utils import SanitizeFile
 from pyopentracks.views.dialogs import (
     QuestionDialog,
     MessageDialogError,
@@ -41,10 +41,6 @@ from pyopentracks.views.layouts.track_map_layout import SegmentMapLayout
 class SegmentsListLayout(Gtk.Box, GObject.GObject):
     __gtype_name__ = "SegmentsListLayout"
 
-    __gsignals__ = {
-        "segment-track-selected": (GObject.SIGNAL_RUN_FIRST, None, (int, int,))
-    }
-
     _box_header: Gtk.Box = Gtk.Template.Child()
     _title_label: Gtk.Label = Gtk.Template.Child()
     _combobox_segments: Gtk.ComboBox = Gtk.Template.Child()
@@ -53,14 +49,13 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
     _button_export: Gtk.Button = Gtk.Template.Child()
     _segments_list_store: Gtk.ListStore = Gtk.Template.Child()
     _box_segment_detail: Gtk.Box = Gtk.Template.Child()
+    _box_map: Gtk.Box = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
-
 
     @dataclass
     class SegmentData:
         segment: Segment
         segment_tracks: List[SegmentTrack]
-
 
     def __init__(self):
         super().__init__()
@@ -75,10 +70,6 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         self._button_edit.connect("clicked", self._button_edit_clicked_cb)
         self._button_export.connect("clicked", self._button_export_clicked_cb)
 
-        self._button_delete.set_sensitive(False)
-        self._button_edit.set_sensitive(False)
-        self._button_export.set_sensitive(False)
-
         self._label_segment_name = None
 
         self._title_label.set_text(_("Segments"))
@@ -89,62 +80,10 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
 
         self.get_style_context().add_class("pyot-bg")
 
-    @staticmethod
-    def from_track(track):
-        track_year = DateTimeUtils.date_from_timestamp(track.start_time_ms).year
-        object = SegmentsListLayout()
-        object._combobox_segments.hide()
-        object.remove(object._box_segment_detail)
-        object._box_header.remove(object._button_edit)
-        object._box_header.remove(object._button_delete)
-        segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(track.id)
-        if not segmentracks:
-            object._grid.attach(Gtk.Label(_("There are not segments for this track")), 0, 0, 1, 1)
-            return object
+        self._title_label.set_text(_("Loading segments..."))
 
-        object._grid.attach(object._build_header_label(_("Segment Information")), 0, 0, 1, 1)
-        object._grid.attach(object._build_header_label(_("Time")), 1, 0, 1, 1)
-        object._grid.attach(object._build_header_label(track.speed_label), 2, 0, 1, 1)
-        object._grid.attach(object._build_header_label(_("Heart Rate")), 3, 0, 1, 1)
-        object._grid.attach(object._build_header_label(_("Cadence")), 4, 0, 1, 1)
-        object._grid.attach(object._build_header_label(_("All Times PR")), 5, 0, 1, 1)
-        object._grid.attach(object._build_header_label(str(track_year) + " PR"), 6, 0, 1, 1)
-
-        for i, st in enumerate(segmentracks):
-            all_times_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms)
-            year_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms, track_year)
-            st.track = track
-            segment = DatabaseHelper.get_segment_by_id(st.segmentid)
-            object._grid.attach(
-                object._build_info_box(
-                    segment.id, st.id, segment.name, segment.distance, segment.gain, segment.slope
-                ),
-                0, i + 1, 1, 1
-            )
-            object._grid.attach(object._build_box(st.time), 1, i + 1, 1, 1)
-            object._grid.attach(
-                object._build_box_2((_("Avg.:"), st.avgspeed), (_("Max.:"), st.maxspeed)),
-                2, i + 1, 1, 1
-            )
-            object._grid.attach(
-                object._build_box_2((_("Avg.:"), st.avghr), (_("Max.:"), st.maxhr)),
-                3, i + 1, 1, 1
-            )
-            object._grid.attach(
-                object._build_box_2((_("Avg.:"), st.avgcadence), (_("Max.:"), st.maxcadence)),
-                4, i + 1, 1, 1
-            )
-            object._grid.attach(object._build_pr_box(all_times_pr), 5, i + 1, 1, 1)
-            object._grid.attach(object._build_pr_box(year_pr), 6, i + 1, 1, 1)
-            object._data_rows = object._data_rows + 1
-        return object
-
-    @staticmethod
-    def from_segments():
-        object = SegmentsListLayout()
-        object._title_label.set_text(_("Loading segments..."))
-        ProcessView(object._on_data_ready, object._data_loading, None).start()
-        return object
+    def build(self):
+        ProcessView(self._on_data_ready, self._data_loading, None).start()
 
     def _on_segment_changed(self, combo):
         iter_item = combo.get_active_iter()
@@ -181,6 +120,8 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
             self._grid.remove(w)
         for w in self._box_segment_detail.get_children():
             self._box_segment_detail.remove(w)
+        for w in self._box_map.get_children():
+            self._box_map.remove(w)
 
         if not data:
             self._show_info_no_data()
@@ -242,7 +183,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         # scrolled_window.add(self._map)
         map_layout = SegmentMapLayout()
         map_layout.add_polyline_from_points(DatabaseHelper.get_segment_points(data.segment.id))
-        self._box_segment_detail.pack_start(map_layout, False, True, 0)
+        self._box_map.pack_start(map_layout, True, True, 0)
 
         top = 0
 
@@ -301,25 +242,6 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         lbl.set_margin_left(margin_left)
         return lbl
 
-    def _build_info_box(self, segment_id, segment_track_id, name, distance, gain, slope):
-        """Builds a box with information: name, distance, gain and slope values."""
-        vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
-        vbox.get_style_context().add_class("pyot-stats-bg-color")
-        vbox.set_homogeneous(False)
-        btn_with_name = Gtk.Button(name)
-        btn_with_name.set_relief(Gtk.ReliefStyle.NONE)
-        btn_with_name.connect("clicked", lambda w: self.emit("segment-track-selected", segment_id, segment_track_id))
-        vbox.pack_start(btn_with_name, True, True, 0)
-
-        hbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
-        hbox.pack_start(Gtk.Label(label=distance, xalign=0.0, yalign=0.0), True, True, 0)
-        hbox.pack_start(Gtk.Label(label=gain, xalign=0.0, yalign=0.0), True, True, 0)
-        hbox.pack_start(Gtk.Label(label=slope, xalign=0.0, yalign=0.0), True, True, 0)
-
-        vbox.pack_start(hbox, True, True, 0)
-
-        return vbox
-
     def _build_track_box(self, track):
         vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
         vbox.get_style_context().add_class("pyot-stats-bg-color")
@@ -337,50 +259,6 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         box.set_homogeneous(False)
         box.pack_start(Gtk.Label(label=value, xalign=0.0, yalign=0.0), True, True, 0)
         return box
-
-    def _build_box_2(self, value1: tuple, value2: tuple):
-        """Builds a box with two values.
-
-        Arguments:
-        value1 - tuple with label and value.
-        value2 - tuple with label and value.
-        """
-        vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
-        vbox.get_style_context().add_class("pyot-stats-bg-color")
-        vbox.set_homogeneous(False)
-
-        hbox1 = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
-        hbox1.pack_start(Gtk.Label(label=value1[0], xalign=0.0, yalign=0.0), True, True, 0)
-        hbox1.pack_start(Gtk.Label(label=value1[1], xalign=0.0, yalign=0.0), True, True, 0)
-
-        hbox2 = Gtk.Box(spacing=10, orientation=Gtk.Orientation.HORIZONTAL)
-        hbox2.pack_start(Gtk.Label(label=value2[0], xalign=0.0, yalign=0.0), True, True, 0)
-        hbox2.pack_start(Gtk.Label(label=value2[1], xalign=0.0, yalign=0.0), True, True, 0)
-
-        vbox.pack_start(hbox1, True, True, 0)
-        vbox.pack_start(hbox2, True, True, 0)
-
-        return vbox
-
-    def _build_pr_box(self, segment_track_record):
-        if segment_track_record is None:
-            return Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/gold-medal.svg")
-
-        if segment_track_record.ranking == 2:
-            widget = Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/silver-medal.svg")
-        elif segment_track_record.ranking == 3:
-            widget = Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/bronze-medal.svg")
-        else:
-            widget = Gtk.Label(segment_track_record.ranking)
-            widget.get_style_context().add_class("pyot-h2")
-
-        vbox = Gtk.Box(spacing=5, orientation=Gtk.Orientation.VERTICAL)
-        best_time_label = Gtk.Label(segment_track_record.best_time)
-
-        vbox.pack_start(best_time_label, True, True, 0)
-        vbox.pack_start(widget, True, True, 0)
-
-        return vbox
 
     def _button_delete_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()
