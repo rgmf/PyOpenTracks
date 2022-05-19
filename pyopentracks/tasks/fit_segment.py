@@ -40,7 +40,7 @@ class FitSegment:
         """Compute the segment and return FIT binary segment encoded."""
         segment_points = DatabaseHelper.get_segment_points(self._segment.id)
         track_points = self._track_points_from_leader(len(segment_points))
-        start_time_ms = track_points[0] if track_points else None
+        start_time_ms = track_points[0].time_ms if track_points else None
         last_leader_time = None if start_time_ms is None else int(start_time_ms / 1000)
 
         fit_segment_points: List[FitSegmentPoint] = []
