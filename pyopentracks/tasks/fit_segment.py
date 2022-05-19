@@ -38,27 +38,9 @@ class FitSegment:
 
     def compute_binary(self):
         """Compute the segment and return FIT binary segment encoded."""
-        # segment_points = [
-        #     FitSegmentPoint(0, 455582573, -13430747, int(0.0), int(191.0)),
-        #     FitSegmentPoint(1, 455584858, -13430222, int(21.0), int(190.0)),
-        #     FitSegmentPoint(2, 455587908, -13429417, int(50.0), int(189.0)),
-        #     FitSegmentPoint(3, 455589714, -13428943, int(67.0), int(189.0)),
-        #     FitSegmentPoint(4, 455592878, -13428111, int(97.0), int(189.0)),
-        #     FitSegmentPoint(5, 455594361, -13427681, int(112.0), int(190.0)),
-        #     FitSegmentPoint(6, 455595069, -13427502, int(118.0), int(191.0)),
-        #     FitSegmentPoint(7, 455596439, -13427207, int(131.0), int(192.0)),
-        #     FitSegmentPoint(8, 455597817, -13426884, int(144.0), int(193.0)),
-        #     FitSegmentPoint(9, 455598503, -13426723, int(151.0), int(193.0)),
-        #     FitSegmentPoint(10, 455599197, -13426570, int(157.0), int(194.0)),
-        #     FitSegmentPoint(11, 455601584, -13426060, int(180.0), int(195.0)),
-        #     FitSegmentPoint(12, 455604335, -13425409, int(206.0), int(195.0)),
-        # ]
-        #
-        # encoder = FitSegmentEncoder("Nombre", SPORT["cycling"], segment_points)
-        # return encoder.end_and_get()
-
         segment_points = DatabaseHelper.get_segment_points(self._segment.id)
-        track_points, start_time_ms = self._info_from_leader()
+        track_points = self._track_points_from_leader(len(segment_points))
+        start_time_ms = track_points[0] if track_points else None
         last_leader_time = None if start_time_ms is None else int(start_time_ms / 1000)
 
         fit_segment_points: List[FitSegmentPoint] = []
@@ -97,13 +79,17 @@ class FitSegment:
             )
         return encoder.end_and_get()
 
-    def _info_from_leader(self):
+    def _track_points_from_leader(self, max_points: int):
         """Get from database the best segment.
+
+        Arguments:
+        max_points -- number of maximum points track_points array will have, so track_points to be returned
+                      will be extended or decreased if needed.
 
         Return:
         track_points -- list of track points from track with best time in the segment.
-        start_time_ms -- time in milliseconds from the first track point.
         """
+        track_points = []
         segment_tracks = DatabaseHelper.get_segment_tracks_by_segmentid(self._segment.id, False)
         if segment_tracks:
             track_points = DatabaseHelper.get_track_points(
@@ -111,8 +97,13 @@ class FitSegment:
                 from_trackpoint_id=segment_tracks[0].track_point_id_start,
                 to_trackpoint_id=segment_tracks[0].track_point_id_end
             )
-            start_time_ms = track_points[0].time_ms
-        else:
-            track_points = []
-            start_time_ms = None
-        return track_points, start_time_ms
+            extra = len(track_points) - max_points
+            if extra > 0:
+                # Decrease track_points to achieve as near as possible max points.
+                delete_jump = round(len(track_points) / extra)
+                del(track_points[::delete_jump])
+            elif extra < 0:
+                # Extend track_points repeating items as much as needed to reach nearly max_points.
+                repeat = int(max_points / len(track_points))
+                track_points = [tp for tp in track_points for _ in range(repeat)]
+        return track_points
