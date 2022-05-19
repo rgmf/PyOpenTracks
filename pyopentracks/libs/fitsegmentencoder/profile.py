@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with fit-segment-encoder. If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
@@ -217,6 +218,12 @@ FIT_MESSAGES = {
                 name="name",
                 type=Type(FIT_BASE_TYPES["string"], 7, "7s"),
                 value=b"Segment"  # default's name
+            ),
+            Field(
+                number=1,
+                name="uuid",
+                type=Type(FIT_BASE_TYPES["string"], 36, "36s"),
+                value=str(uuid.uuid4()).encode(encoding="utf-8")
             ),
             Field(
                 number=2,
