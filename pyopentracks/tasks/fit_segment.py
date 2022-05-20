@@ -18,10 +18,9 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
 
-from pyopentracks.libs.fitsegmentencoder.definitions import SPORT, SEGMENT_LEADERBOARD_TYPE
+from pyopentracks.libs.fitsegmentencoder.definitions import SPORT
 from pyopentracks.models.database_helper import DatabaseHelper
-from pyopentracks.libs.fitsegmentencoder.fit_encoder import SegmentPoint as FitSegmentPoint, FitSegmentEncoder, \
-    SegmentLeader
+from pyopentracks.libs.fitsegmentencoder.fit_encoder import SegmentPoint as FitSegmentPoint, FitSegmentEncoder
 from pyopentracks.utils.utils import LocationUtils
 
 
@@ -39,6 +38,8 @@ class FitSegment:
     def compute_binary(self):
         """Compute the segment and return FIT binary segment encoded."""
         segment_points = DatabaseHelper.get_segment_points(self._segment.id)
+        if not segment_points:
+            return b""
         track_points = self._track_points_from_leader(len(segment_points))
         start_time_ms = track_points[0].time_ms if track_points else None
         last_leader_time = None if start_time_ms is None else int(start_time_ms / 1000)
@@ -64,19 +65,13 @@ class FitSegment:
 
             fit_segment_points.append(fit_segment_point)
             last_point = sp
+
         encoder = FitSegmentEncoder(
             name=self._segment.name,
             sport=SPORT["cycling"] if self._sport is None else self._sport,
             segment_points=fit_segment_points
         )
-        if last_leader_time is not None:
-            encoder.add_leader(
-                SegmentLeader(
-                    type=SEGMENT_LEADERBOARD_TYPE["personal_best"],
-                    segment_time=last_leader_time,
-                    name="PR"
-                )
-            )
+
         return encoder.end_and_get()
 
     def _track_points_from_leader(self, max_points: int):

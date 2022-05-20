@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from struct import pack
 from typing import List
 
-from .definitions import MANUFACTURER, PRODUCT
+from .definitions import MANUFACTURER, PRODUCT, SEGMENT_LEADERBOARD_TYPE
 from .profile import Record, get_message, Crc
 
 
@@ -98,7 +98,7 @@ class AscentDescentManager:
 @dataclass
 class SegmentLeader:
     type: int
-    segment_time: int
+    segment_time: int = None
     name: str = None
     activity_id: int = None
     activity_id_string: str = None
@@ -132,7 +132,8 @@ class FitSegmentEncoder:
     - One file_id message with type=segment, time_created, manufacturer, product and other fields.
     - One file_creator.
     - One segment_id message with name, sport and enabled=True.
-    - One or two segment_leaderboard_entry messages with information about overall and/or personal_best data.
+    - One segment_leaderboard_entry messages with information about personal_best data, only if there are leader_time
+      in segment_point messages.
     - One segment_lap message.
     - Several segment_point messages.
     """
@@ -145,6 +146,7 @@ class FitSegmentEncoder:
         self._segment_points = segment_points
 
         self._leaders: List[SegmentLeader] = []
+        self._segment_pr_leader = SegmentLeader(type=SEGMENT_LEADERBOARD_TYPE["personal_best"], name="PR")
 
         manager = AscentDescentManager()
 
@@ -155,6 +157,7 @@ class FitSegmentEncoder:
             manager.add(sp.altitude)
             self._encode_message_segment_point(sp, idx)
         self._encode_message_segment_lap(manager)
+        self._encode_message_segment_leaderboard_entry()
 
     def _encode_message_file_id(self):
         """Encode the file_id message of type=segment."""
@@ -194,6 +197,8 @@ class FitSegmentEncoder:
         self._bytes.segment_lap = record.bytes
 
     def _encode_message_segment_point(self, sp: SegmentPoint, idx: int):
+        self._segment_pr_leader.segment_time = sp.leader_time
+
         message = get_message("segment_point")
         message.set_field_value("message_index", idx)
         message.set_field_value("position_lat", sp.latitude)
@@ -208,7 +213,10 @@ class FitSegmentEncoder:
     def _data_bytes(self):
         return self._bytes.get()
 
-    def add_leader(self, leader: SegmentLeader):
+    def _encode_message_segment_leaderboard_entry(self):
+        if self._segment_pr_leader.segment_time is None:
+            return
+        leader = self._segment_pr_leader
         message = get_message("segment_leaderboard_entry")
         message.set_field_value("message_index", len(self._leaders))
         message.set_field_value("type", leader.type)
