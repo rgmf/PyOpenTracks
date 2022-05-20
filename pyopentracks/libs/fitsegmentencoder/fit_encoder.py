@@ -175,7 +175,7 @@ class FitSegmentEncoder:
     def _encode_message_segment_id(self):
         message = get_message("segment_id")
         message.set_field_value("uuid", str(uuid.uuid4()).encode(encoding="utf-8"))
-        message.set_field_value("name", self._name.encode(encoding="utf-8"))
+        message.set_field_value("name", (self._name + "\0").encode(encoding="utf-8"))
         message.set_field_value("sport", self._sport)
         record = Record(message)
         self._bytes.segment_id = record.bytes
@@ -222,7 +222,7 @@ class FitSegmentEncoder:
         message.set_field_value("type", leader.type)
         message.set_field_value("segment_time", leader.segment_time)
         if leader.name:
-            message.set_field_value("name", leader.name.encode(encoding="utf-8"))
+            message.set_field_value("name", (leader.name + "\0").encode(encoding="utf-8"))
         if leader.activity_id:
             message.set_field_value("activity_id", leader.activity_id)
         if leader.activity_id_string:
