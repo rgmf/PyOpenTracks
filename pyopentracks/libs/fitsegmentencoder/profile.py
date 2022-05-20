@@ -70,6 +70,8 @@ class Message:
             return
         field = fields[0]
         field.value = value
+        if value is None:
+            return
         if field.type.is_string():
             field.type.size = len(value)
             field.type.format = str(len(value)) + "s"
