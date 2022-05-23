@@ -32,6 +32,7 @@ class AppPreferences:
     OPENTRACKS_GAIN_LOSS_FILTER = 5
     HEART_RATE_MAX = 6
     HEART_RATE_ZONES = 7
+    LAST_FOLDER = 8
 
     _settings: Gio.Settings = None
 
@@ -56,6 +57,8 @@ class AppPreferences:
             return self._settings.get_int("heart-rate-max")
         elif pref == AppPreferences.HEART_RATE_ZONES:
             return self._get_zones()
+        elif pref == AppPreferences.LAST_FOLDER:
+            return self._settings.get_string("last-folder")
 
     def set_pref(self, pref, new_value):
         if pref == AppPreferences.DB_VERSION:
@@ -74,6 +77,8 @@ class AppPreferences:
             self._settings.set_int("heart-rate-max", new_value)
         elif pref == AppPreferences.HEART_RATE_ZONES:
             self._set_zones(new_value)
+        elif pref == AppPreferences.LAST_FOLDER:
+            self._settings.set_string("last-folder", new_value)
 
     def get_default(self, pref):
         if pref == AppPreferences.DB_VERSION:
@@ -92,6 +97,8 @@ class AppPreferences:
             self._settings.get_default_value("heart-rate-max")
         elif pref == AppPreferences.HEART_RATE_ZONES:
             self._settings.get_default_value("heart-rate-zones")
+        elif pref == AppPreferences.LAST_FOLDER:
+            self._settings.get_default_value("last-folder")
 
     def _on_settings_folder_changed(self, settings, key):
         #self._load_folder()

@@ -11,6 +11,11 @@
       <summary>Track's Path</summary>
       <description>Select a directory where PyOpenTracks will load all tracks from.</description>
     </key>
+    <key name="last-folder" type="s">
+      <default>''</default>
+      <summary>Last Open Folder Path</summary>
+      <description>Last open or visited folder to import, save, open...</description>
+    </key>
     <key name="opentracks-gain-loss-filter" type="b">
       <default>true</default>
       <summary>OpenTracks gain and loss filtering</summary>
