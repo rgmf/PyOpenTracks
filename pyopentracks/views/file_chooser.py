@@ -19,8 +19,31 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
+from pyopentracks.app_preferences import AppPreferences
 
-class FileChooserWindow(Gtk.FileChooserDialog):
+
+class CustomFileChooserDialog(Gtk.FileChooserDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._preferences = AppPreferences()
+        self._current_folder = self._preferences.get_pref(AppPreferences.LAST_FOLDER)
+        self.set_current_folder(self._current_folder)
+
+    def run(self):
+        response = super().run()
+        if response == Gtk.ResponseType.OK:
+            self._preferences.set_pref(
+                AppPreferences.LAST_FOLDER,
+                "" if self.get_current_folder() is None else self.get_current_folder()
+            )
+        return response
+
+    @property
+    def current_folder(self):
+        return self._current_folder
+
+
+class FileChooserWindow(CustomFileChooserDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_title(_("Select a track file"))
@@ -65,7 +88,7 @@ class FileChooserWindow(Gtk.FileChooserDialog):
         self.add_filter(filter_any)
 
 
-class FolderChooserWindow(Gtk.FileChooserDialog):
+class FolderChooserWindow(CustomFileChooserDialog):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_title(_("Select a folder"))
@@ -78,7 +101,7 @@ class FolderChooserWindow(Gtk.FileChooserDialog):
         )
 
 
-class ExportSegmentChooserWindow(Gtk.FileChooserDialog):
+class ExportSegmentChooserWindow(CustomFileChooserDialog):
     def __init__(self, current_name=_("Untitled.fit"), *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_title(_("Export Segment FIT File..."))
