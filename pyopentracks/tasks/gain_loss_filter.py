@@ -35,7 +35,7 @@ class DoingStatus(Enum):
 class GainLossFilter:
     """Filter elevation gain and loss to correct errors.
 
-    Every trackpoint can has an elevation gain and an elevation loss in case
+    Every trackpoint can have an elevation gain and an elevation loss in case
     track was recorded with OpenTracks.
 
     These values can be inaccurate because the barometric sensor on
