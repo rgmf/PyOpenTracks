@@ -16,6 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
+
+from pyopentracks.app_interfaces import Action
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
 from pyopentracks.views.layouts.segments_list_layout import SegmentsListLayout
 from pyopentracks.app_external import AppExternal
@@ -28,6 +31,7 @@ class AppSegments(AppExternal):
     """
 
     def __init__(self):
+        super().__init__()
         self._layout = NotebookLayout()
         segments_list_layout = SegmentsListLayout()
         segments_list_layout.build()
@@ -35,3 +39,9 @@ class AppSegments(AppExternal):
 
     def get_layout(self):
         return self._layout
+
+    def get_actions(self) -> List[Action]:
+        return []
+
+    def get_kwargs(self) -> dict:
+        return {}

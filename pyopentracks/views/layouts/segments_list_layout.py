@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk
 
 from dataclasses import dataclass
 from typing import List
@@ -38,7 +38,7 @@ from pyopentracks.views.layouts.track_map_layout import SegmentMapLayout
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segments_list_layout.ui")
-class SegmentsListLayout(Gtk.Box, GObject.GObject):
+class SegmentsListLayout(Gtk.Box):
     __gtype_name__ = "SegmentsListLayout"
 
     _top_box: Gtk.Box = Gtk.Template.Child()
@@ -60,7 +60,6 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
 
     def __init__(self):
         super().__init__()
-        GObject.GObject.__init__(self)
 
         self._data_rows = 0
         self._map = None
@@ -176,12 +175,6 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
 
         self._box_segment_detail.pack_start(grid, False, True, 0)
 
-        # scrolled_window = Gtk.ScrolledWindow()
-        # self._map = BaseMap()
-        # self._map.add_polyline(
-        #     [(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(data.segment.id)]
-        # )
-        # scrolled_window.add(self._map)
         map_layout = SegmentMapLayout()
         map_layout.add_polyline_from_points(DatabaseHelper.get_segment_points(data.segment.id))
         self._box_map.pack_start(map_layout, True, True, 0)
@@ -217,17 +210,21 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         return self._data_rows
 
     def _show_info_no_data(self):
-        box = Gtk.VBox(margin=20)
+        for child in self.get_children():
+            self.remove(child)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        box.set_margin_start(50)
+        box.set_margin_end(50)
         label1 = Gtk.Label(_("There are not anything to show"), xalign=0.0)
         label2 = Gtk.Label(_(
             "Go to track list, select one of them and create the segment you want clicking on the track you can "
             "see on the map. You have to add two points on the map: start and end segment."
-        ))
+        ), xalign=0.0)
         label1.get_style_context().add_class("pyot-h2")
-        box.pack_start(label1, True, True, 10)
-        box.pack_start(label2, True, True, 10)
-        self._grid.attach(box, 0, 0, 1, 1)
-        self._title_label.set_text(_("Segments"))
+        box.pack_start(label1, False, False, 10)
+        box.pack_start(label2, False, False, 10)
+        self.pack_start(box, False, False, 0)
         self.remove(self._top_box)
         self.show_all()
 

@@ -16,9 +16,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass, field
+from typing import List
 
 from gi.repository import Gtk, Gio, Gdk, GLib
 
+from pyopentracks.app_interfaces import Action
+from pyopentracks.app_track_list import AppTrackList
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.app_window import PyopentracksWindow
@@ -37,6 +41,17 @@ from pyopentracks.app_segments import AppSegments
 
 
 class Application(Gtk.Application):
+
+    @dataclass
+    class AppLoaded:
+        class_var: any
+        kwargs: dict = field(default_factory=dict)
+        actions: List[Action] = None
+        show_menu_buttons: bool = False
+
+        def instance(self, app):
+            return self.class_var(app, self.args)
+
     def __init__(self, app_id):
         super().__init__(
             application_id=app_id,
@@ -53,6 +68,7 @@ class Application(Gtk.Application):
         self._menu: Gio.Menu = Gio.Menu()
         self._window: PyopentracksWindow = None
         self._preferences: AppPreferences = None
+        self._apps_queue: List[Application.AppLoaded] = []
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -73,7 +89,7 @@ class Application(Gtk.Application):
         self._setup_menu()
         self._setup_settings()
         self._setup_database()
-        self._load_tracks()
+        self._load_main_app()
         # self._auto_import()
         win.present()
         win.set_menu(self._menu)
@@ -111,30 +127,9 @@ class Application(Gtk.Application):
         cb -- the callback to call after loading.
         """
         self._window.loading(0.5)
-        gpxParserHandle = ParserHandlerInThread()
-        gpxParserHandle.connect("end-parse", self._end_load_file_cb)
-        gpxParserHandle.parse(filename, cb)
-
-    def back_button_clicked(self, back_btn):
-        back_btn.hide()
-        self._load_tracks()
-
-    def preferences_button_clicked(self, prefs_btn):
-        dialog = PreferencesDialog(parent=self._window, app=self)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            updated_prefs = dialog.get_updated_preferences()
-            for pref, value in updated_prefs.items():
-                self.set_pref(pref, value)
-        dialog.destroy()
-
-    def analytic_button_clicked(self, btn):
-        app_analytic = AppAnalytic()
-        self._window.load_app(app_analytic)
-
-    def segments_button_clicked(self, btn):
-        app_segments = AppSegments()
-        self._window.load_app(app_segments)
+        gpx_parser_handle = ParserHandlerInThread()
+        gpx_parser_handle.connect("end-parse", self._end_load_file_cb)
+        gpx_parser_handle.parse(filename, cb)
 
     def get_pref(self, pref):
         return self._preferences.get_pref(pref)
@@ -146,6 +141,65 @@ class Application(Gtk.Application):
         self._preferences.set_pref(pref, newvalue)
         # if pref == AppPreferences.AUTO_IMPORT_FOLDER:
         #     self._auto_import()
+
+    def get_window(self):
+        return self._window
+
+    def back_button_clicked(self, back_btn):
+        """Close the current loaded app and then load the last loaded app"""
+        self._apps_queue.pop()
+        if not self._apps_queue:
+            back_btn.hide()
+            self._load_main_app()
+            return
+        if len(self._apps_queue) < 2:
+            back_btn.hide()
+        self._load_app(
+            self._apps_queue[-1].class_var, self._apps_queue[-1].kwargs, self._apps_queue[-1].show_menu_buttons
+        )
+
+    def preferences_button_clicked(self, prefs_btn):
+        dialog = PreferencesDialog(parent=self._window, app=self)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            updated_prefs = dialog.get_updated_preferences()
+            for pref, value in updated_prefs.items():
+                self.set_pref(pref, value)
+        dialog.destroy()
+
+    def analytic_button_clicked(self, btn):
+        self._load_app(AppAnalytic)
+
+    def segments_button_clicked(self, btn):
+        self._load_app(AppSegments)
+
+    def open_external_app(self, class_var, dict_args):
+        self._load_app(class_var, dict_args)
+
+    def _load_main_app(self):
+        self._load_app(AppTrackList, {"app": self}, True)
+
+    def _load_app(self, class_var, kwargs: dict = dict({}), show_menu_buttons: bool = False):
+        """Load external app whose class is class_var."""
+        self._window.set_visibility_menu_buttons(show_menu_buttons)
+
+        app_external = class_var(**kwargs)
+        app_external.connect("actions-changed", self._connect_actions)
+        self._connect_actions(app_external)
+
+        if not list(filter(lambda al: al.class_var == class_var, self._apps_queue)):
+            self._apps_queue.append(
+                Application.AppLoaded(class_var, kwargs, app_external.get_actions(), show_menu_buttons)
+            )
+
+        self._window.load_app(app_external)
+        if self._apps_queue and len(self._apps_queue) > 1:
+            self._window.connect_action_button(PyopentracksWindow.ActionButton.BACK, self.back_button_clicked, None)
+
+    def _connect_actions(self, app_external):
+        self._window.disconnect_action_buttons()
+        for action in app_external.get_actions():
+            self._window.connect_action_button(action.button_id, action.callback, action.args)
 
     def _setup_menu(self):
         action = Gio.SimpleAction.new("import_folder", None)
@@ -223,10 +277,6 @@ class Application(Gtk.Application):
     #         ]
     #     )
 
-    def _load_tracks(self):
-        db = Database()
-        self._window.load_tracks(db.get_tracks())
-
     def _end_load_file_cb(self, gpxParserHandler):
         self._window.loading(1.0)
 
@@ -247,7 +297,7 @@ class Application(Gtk.Application):
             )
             import_dialog.run()
             import_dialog.destroy()
-            self._load_tracks()
+            self._load_main_app()
         else:
             dialog.destroy()
 

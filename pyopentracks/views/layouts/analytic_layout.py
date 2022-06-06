@@ -97,7 +97,7 @@ class SummarySport(Gtk.Box):
         self.show_all()
 
 
-class AggregatedStats(Gtk.VBox):
+class AggregatedStats(Gtk.Box):
     """Gtk.VBox with all aggregated stats from all categories (sports)."""
 
     def __init__(self):
@@ -105,7 +105,7 @@ class AggregatedStats(Gtk.VBox):
 
         It uses a ProcessView (thread) to do all its job.
         """
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self._setup_ui()
         ProcessView(
             self._aggregated_stats_ready,
@@ -121,8 +121,9 @@ class AggregatedStats(Gtk.VBox):
         if not aggregated_stats:
             lbl = Gtk.Label(label=_("There are not any aggregated statistics"))
             lbl.set_yalign(0.0)
-            lbl.get_style_context().add_class("pyot-h1")
+            lbl.get_style_context().add_class("pyot-h3")
             self.pack_start(lbl, False, False, 0)
+            self.show_all()
             return
         for aggregated in aggregated_stats:
             self.pack_start(SummarySport(aggregated), False, False, 0)
@@ -151,8 +152,13 @@ class AggregatedStatsMonth(Gtk.Box):
         self._combo_years.set_active(0)
         self._combo_years.connect("changed", self._on_year_changed)
 
-        self._months_stack = AnalyticMonthsStack(years[0])
-        self.pack_start(self._months_stack, False, False, 0)
+        if years:
+            self._months_stack = AnalyticMonthsStack(years[0])
+            self.pack_start(self._months_stack, False, False, 0)
+        else:
+            label = Gtk.Label(_("There are not data"))
+            label.get_style_context().add_class("pyot-h3")
+            self.pack_start(label, False, False, 50)
 
     def _on_year_changed(self, combo):
         iter_item = combo.get_active_iter()
@@ -295,8 +301,13 @@ class AggregatedStatsYear(Gtk.Box):
         self._combo_years.set_active(0)
         self._combo_years.connect("changed", self._on_year_changed)
 
-        self._year_totals = AnalyticTotalsYear(years[0])
-        self.pack_start(self._year_totals, False, False, 0)
+        if years:
+            self._year_totals = AnalyticTotalsYear(years[0])
+            self.pack_start(self._year_totals, False, False, 0)
+        else:
+            label = Gtk.Label(_("There are not data"))
+            label.get_style_context().add_class("pyot-h3")
+            self.pack_start(label, False, False, 50)
 
     def _on_year_changed(self, combo):
         iter_item = combo.get_active_iter()
@@ -309,7 +320,7 @@ class AggregatedStatsYear(Gtk.Box):
             self.pack_start(self._year_totals, False, False, 0)
 
 
-class AnalyticTotalsYear(Gtk.VBox):
+class AnalyticTotalsYear(Gtk.Box):
     """Gtk.VBox with activities totals stats in a year."""
 
     def __init__(self, year):
@@ -318,8 +329,7 @@ class AnalyticTotalsYear(Gtk.VBox):
         Arguments:
         year -- the year of the totals stats.
         """
-        super().__init__()
-        self.get_style_context().add_class(".pru")
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self._year = year
         ProcessView(
             self._ready,
@@ -333,7 +343,8 @@ class AnalyticTotalsYear(Gtk.VBox):
             lbl.set_yalign(0.0)
             lbl.set_xalign(0.0)
             lbl.get_style_context().add_class("pyot-h3")
-            self.pack_start(lbl, False, False, 0)
+            self.pack_start(lbl, False, False, 50)
+            self.show_all()
             return
         grid = Gtk.Grid()
         grid.set_column_homogeneous(True)

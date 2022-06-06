@@ -16,11 +16,30 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
 
-from abc import ABC, abstractmethod
+from gi.repository import GObject
+
+from pyopentracks.app_interfaces import Action
 
 
-class AppExternal(ABC):
-    @abstractmethod
+class AppExternal(GObject.GObject):
+
+    __gsignals__ = {
+        "actions-changed": (GObject.SIGNAL_RUN_FIRST, None, ())
+    }
+
+    def __init__(self):
+        GObject.GObject.__init__(self)
+
     def get_layout(self):
-        pass
+        """Return the main layout of the external app"""
+        raise "get_layout must be implemented"
+
+    def get_actions(self) -> List[Action]:
+        """Never return None, if any then return empty list []"""
+        raise "get_actions must be implemented"
+
+    def get_kwargs(self) -> dict:
+        """Return the dictionary of arguments needed to rebuild the external app"""
+        raise "get_kwargs must be implemented"

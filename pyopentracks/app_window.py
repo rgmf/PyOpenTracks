@@ -16,33 +16,39 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 
 from gi.repository import Gtk, Gio
 
-from pyopentracks.views.layouts.notebook_layout import NotebookLayout
-from pyopentracks.views.layouts.greeter_layout import GreeterLayout
-from pyopentracks.views.layouts.track_summary_layout import TrackSummaryLayout
-from pyopentracks.views.layouts.tracks_layout import TracksLayout
 from pyopentracks.views.layouts.info_layout import InfoLayout
-from pyopentracks.views.dialogs import MessageDialogError
 from pyopentracks.app_preferences import AppPreferences
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
 class PyopentracksWindow(Gtk.ApplicationWindow):
-    # TODO Describe what this app window offer and works
-    # TODO Refactor all around the action buttons: edit, del, back buttons.
     __gtype_name__ = "PyopentracksWindow"
-
-    _edit_btn: Gtk.Button = Gtk.Template.Child()
-    _del_btn: Gtk.Button = Gtk.Template.Child()
-    _analytic_btn: Gtk.Button = Gtk.Template.Child()
 
     _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
     _preferences_menu_btn: Gtk.Button = Gtk.Template.Child()
     _analytic_menu_btn: Gtk.Button = Gtk.Template.Child()
     _segments_menu_btn: Gtk.Button = Gtk.Template.Child()
+
     _back_btn: Gtk.Button = Gtk.Template.Child()
+    _edit_btn: Gtk.Button = Gtk.Template.Child()
+    _del_btn: Gtk.Button = Gtk.Template.Child()
+    _detail_btn: Gtk.Button = Gtk.Template.Child()
+
+    class MenuButton(Enum):
+        MAIN = 0
+        PREFERENCES = 1
+        ANALYTIC = 2
+        SEGMENTS = 3
+
+    class ActionButton(Enum):
+        BACK = 0
+        DELETE = 1
+        EDIT = 2
+        DETAIL = 3
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -52,31 +58,29 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._height = None
         self._is_maximized = None
         self._load_window_state()
-        self._action_buttons_handlers = []
         self.set_title("PyOpenTracks")
         self._app = kwargs["application"]
         self._layout = None
-        self.show_layout(GreeterLayout())
 
-    # def del_rec(self, widget):
-    #     if isinstance(widget, Gtk.Container):
-    #         for w in widget.get_children():
-    #             self.del_rec(w)
-    #         print("DESTROYING...", widget)
-    #         widget.destroy()
-    #     else:
-    #         print("DESTROYING...", widget)
-    #         widget.destroy()
+        self._menu_buttons = {
+            PyopentracksWindow.MenuButton.MAIN: self._primary_menu_btn,
+            PyopentracksWindow.MenuButton.PREFERENCES: self._preferences_menu_btn,
+            PyopentracksWindow.MenuButton.ANALYTIC: self._analytic_menu_btn,
+            PyopentracksWindow.MenuButton.SEGMENTS: self._segments_menu_btn,
+        }
+        self._action_buttons = {
+            PyopentracksWindow.ActionButton.BACK: self._back_btn,
+            PyopentracksWindow.ActionButton.DELETE: self._del_btn,
+            PyopentracksWindow.ActionButton.EDIT: self._edit_btn,
+            PyopentracksWindow.ActionButton.DETAIL: self._detail_btn,
+        }
+        self._action_buttons_handlers = []
 
-    def show_layout(self, layout):
-        if layout is self._layout:
-            return
+        for _, value in self._menu_buttons.items():
+            value.hide()
 
-        if self._layout:
-            self.remove(self._layout)
-
-        self._layout = layout
-        self.add(self._layout)
+        for _, value in self._action_buttons.items():
+            value.hide()
 
     def set_menu(self, menu: Gio.Menu):
         self._back_btn.connect(
@@ -110,29 +114,21 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         layout = InfoLayout(itype, message, buttons)
         top_widget.pack_start(layout, False, False, 0)
         top_widget.show_all()
-        #layout.show_all()
 
-    def connect_button_del(self, action_cb, *args):
-        self._del_btn.show()
-        handler_id = self._del_btn.connect("clicked", action_cb, *args)
-        self._action_buttons_handlers.append({
-            "widget": self._del_btn,
-            "handler_id": handler_id
-        })
+    def set_visibility_menu_buttons(self, visible: bool):
+        self._primary_menu_btn.set_visible(visible)
+        self._preferences_menu_btn.set_visible(visible)
+        self._analytic_menu_btn.set_visible(visible)
+        self._segments_menu_btn.set_visible(visible)
 
-    def connect_button_edit(self, action_cb, *args):
-        self._edit_btn.show()
-        handler_id = self._edit_btn.connect("clicked", action_cb, *args)
+    def connect_action_button(self, button_id: ActionButton, callback, args):
+        if not button_id or button_id not in self._action_buttons:
+            return
+        button = self._action_buttons[button_id]
+        button.show()
+        handler_id = button.connect("clicked", callback, args)
         self._action_buttons_handlers.append({
-            "widget": self._edit_btn,
-            "handler_id": handler_id
-        })
-
-    def connect_button_analytic(self, action_cb, *args):
-        self._analytic_btn.show()
-        handler_id = self._analytic_btn.connect("clicked", action_cb, *args)
-        self._action_buttons_handlers.append({
-            "widget": self._analytic_btn,
+            "widget": button,
             "handler_id": handler_id
         })
 
@@ -142,64 +138,15 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             dict_item["widget"].hide()
         self._action_buttons_handlers = []
 
-    def load_track_stats(self, result):
-        """Load track stats layout with new track.
-
-        Arguments:
-        result -- pyopentracks.io.result.Result object.
-        """
-        track = result.track
-        if not track:
-            MessageDialogError(
-                transient_for=self,
-                text=(
-                    _(f"Error opening the file {result.filename}") +
-                    ": \n" + result.message
-                ),
-                title=_("Error opening track file")
-            ).show()
-        else:
-            notebook_layout = NotebookLayout()
-            layout = TrackSummaryLayout(track)
-            layout.build()
-            notebook_layout.append(layout, _("Track Opened"))
-            self.show_layout(notebook_layout)
-            self._edit_btn.hide()
-            self._del_btn.hide()
-            self._analytic_btn.hide()
-            self._back_btn.show()
-            self._analytic_menu_btn.hide()
-            self._preferences_menu_btn.hide()
-            self._segments_menu_btn.hide()
-            self._primary_menu_btn.hide()
-
-    def load_tracks(self, tracks):
-        """Load all tracks in the corresponding layout.
-
-        Arguments:
-        tracks -- a list of Track objects.
-        """
-        self._primary_menu_btn.show()
-        self._preferences_menu_btn.show()
-        if tracks and len(tracks) > 0:
-            self._analytic_menu_btn.show()
-            self._segments_menu_btn.show()
-            self.show_layout(TracksLayout(self, tracks))
-        else:
-            self._analytic_menu_btn.hide()
-            self._segments_menu_btn.hide()
-            self.show_layout(GreeterLayout())
-
     def load_app(self, app):
-        self.show_layout(app.get_layout())
-        self._back_btn.show()
-        self._analytic_menu_btn.hide()
-        self._segments_menu_btn.hide()
-        self._preferences_menu_btn.hide()
-        self._edit_btn.hide()
-        self._del_btn.hide()
-        self._analytic_btn.hide()
-        self._primary_menu_btn.hide()
+        if app.get_layout() is self._layout:
+            return
+
+        if self._layout:
+            self.remove(self._layout)
+
+        self._layout = app.get_layout()
+        self.add(self._layout)
 
     def loading(self, total):
         """Handle a progress bar on the top of the loaded Layout.
@@ -236,21 +183,6 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
     def clean_top_widget(self):
         widget = self._layout.get_top_widget()
         widget.foreach(lambda child: widget.remove(child))
-
-    def set_menu_buttons_sensitive(self, sensitive: bool):
-        """Set sensitive attribute for menu/options buttons."""
-        if self._back_btn:
-            self._back_btn.set_sensitive(sensitive)
-        if self._analytic_menu_btn:
-            self._analytic_menu_btn.set_sensitive(sensitive)
-        if self._segments_menu_btn:
-            self._segments_menu_btn.set_sensitive(sensitive)
-        if self._preferences_menu_btn:
-            self._preferences_menu_btn.set_sensitive(sensitive)
-        if self._edit_btn:
-            self._edit_btn.set_sensitive(sensitive)
-        if self._del_btn:
-            self._del_btn.set_sensitive(sensitive)
 
     def on_quit(self):
         self._save_state()
