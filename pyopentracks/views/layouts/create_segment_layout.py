@@ -20,8 +20,6 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk, GObject
 from pyopentracks.models.stats import Stats
 
-from pyopentracks.utils.utils import DistanceUtils, ElevationUtils
-
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/create_segment_layout.ui")
 class CreateSegmentLayout(Gtk.Box, GObject.GObject):
@@ -91,8 +89,8 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
             "track-stats-segment-ok",
             self._name_entry.get_text().strip(),
             float(self._stats.total_distance_m),
-            float(self._stats.gain_elevation_m) if self._stats.gain_elevation else 0,
-            float(self._stats.loss_elevation_m) if self._stats.loss_elevation else 0
+            float(self._stats.gain_elevation_m) if self._stats.gain_elevation_m else 0,
+            float(self._stats.loss_elevation_m) if self._stats.loss_elevation_m else 0
         )
         self.destroy()
 

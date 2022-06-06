@@ -5,6 +5,7 @@
     <file>ui/track_stats_layout.ui</file>
     <file>ui/create_segment_layout.ui</file>
     <file>ui/greeter_layout.ui</file>
+    <file>ui/tracks_container_layout.ui</file>
     <file>ui/tracks_layout.ui</file>
     <file>ui/track_summary_layout.ui</file>
     <file>ui/track_data_analytic_layout.ui</file>

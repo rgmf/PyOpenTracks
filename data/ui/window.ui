@@ -15,6 +15,7 @@
         <property name="show-close-button">True</property>
         <child>
           <object class="GtkButton" id="_back_btn">
+            <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <child>
@@ -29,6 +30,7 @@
         </child>
         <child>
           <object class="GtkButton" id="_del_btn">
+            <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <child>
@@ -46,6 +48,7 @@
         </child>
         <child>
           <object class="GtkButton" id="_edit_btn">
+            <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <child>
@@ -138,7 +141,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="_analytic_btn">
+          <object class="GtkButton" id="_detail_btn">
+            <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <child>

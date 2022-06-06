@@ -16,7 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
 
+from pyopentracks.app_interfaces import Action
 from pyopentracks.views.layouts.analytic_layout import (
     AggregatedStatsYear, AggregatedStatsMonth, AggregatedStats
 )
@@ -31,6 +33,7 @@ class AppAnalytic(AppExternal):
     """
 
     def __init__(self):
+        super().__init__()
         self._layout = NotebookLayout()
         self._layout.append(AggregatedStatsMonth(), _("Monthly Aggregated Stats"))
         self._layout.append(AggregatedStatsYear(), _("Yearly Aggregated Stats"))
@@ -38,3 +41,9 @@ class AppAnalytic(AppExternal):
 
     def get_layout(self):
         return self._layout
+
+    def get_actions(self) -> List[Action]:
+        return []
+
+    def get_kwargs(self) -> dict:
+        return {}

@@ -16,12 +16,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-
 import threading
 
 from gi.repository import Gtk, GLib, GdkPixbuf
 
+from pyopentracks.app_interfaces import ActionId
 from pyopentracks.app_track_analytic import AppTrackAnalytic
+from pyopentracks.app_track_list_interfaces import ActionsTuple
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
@@ -32,22 +33,43 @@ from pyopentracks.views.layouts.process_view import QueuedProcessesView
 from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
-class TracksLayout(Gtk.Box, Layout):
-    __gtype_name__ = "TracksLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_container_layout.ui")
+class TracksContainerLayout(Gtk.Box, Layout):
+    __gtype_name__ = "TracksContainerLayout"
 
     _top_widget: Gtk.Box = Gtk.Template.Child()
-    _main_widget: Gtk.Paned = Gtk.Template.Child()
-    _bottom_widget: Gtk.Box = Gtk.Template.Child()
+    _content_widget: Gtk.Box = Gtk.Template.Child()
+
+    def __init__(self):
+        super().__init__()
+
+    def set_child(self, new_child):
+        for c in self._content_widget.get_children():
+            self._content_widget.remove(c)
+        self._content_widget.pack_start(new_child, True, True, 0)
+
+    def get_top_widget(self):
+        return self._top_widget
+
+
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
+class TracksLayout(Gtk.Paned):
+    __gtype_name__ = "TracksLayout"
 
     _tree_view_widget: Gtk.TreeView = Gtk.Template.Child()
     _track_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
     _entry_search_widget: Gtk.Entry = Gtk.Template.Child()
 
-    def __init__(self, app_window, tracks):
+    def __init__(self, app, tracks):
+        """Init function for the list of tracks.
+
+        Arguments:
+        app    -- AppTrackList instance.
+        tracks -- list of Track's object.
+        """
         super().__init__()
 
-        self._app_window = app_window
+        self._app = app
         self._treepath_selected = None
 
         self._show_message(_("Select a track to view its stats..."))
@@ -86,12 +108,9 @@ class TracksLayout(Gtk.Box, Layout):
 
         self.show_all()
 
-    def get_top_widget(self):
-        return self._top_widget
-
     def on_remove_bulk(self, widget, treeiter_list):
         dialog = QuestionDialog(
-            parent=self._app_window,
+            parent=self._app.get_window(),
             title=_("Remove Tracks"),
             question=_(f"Do you really want to remove all selected tracks")
         )
@@ -109,7 +128,6 @@ class TracksLayout(Gtk.Box, Layout):
                 self._list_store.remove(childiter)
             self._treepath_selected = None
             self._tree_view_widget.set_sensitive(True)
-            self._app_window.set_menu_buttons_sensitive(True)
             self._select_first_row()
 
         def delete_in_thread():
@@ -118,11 +136,10 @@ class TracksLayout(Gtk.Box, Layout):
             for treeiter in treeiter_list:
                 self._remove_item_from_db(treeiter)
                 done = done + 1
-                self._app_window.loading(done / total)
+                self._app.get_window().loading(done / total)
             GLib.idle_add(deletion_done)
 
         self._tree_view_widget.set_sensitive(False)
-        self._app_window.set_menu_buttons_sensitive(False)
         threading.Thread(target=delete_in_thread, daemon=True).start()
 
     def on_remove(self, widget, treeiter):
@@ -137,7 +154,7 @@ class TracksLayout(Gtk.Box, Layout):
         """
         trackname = self._tree_model_filter.get_value(treeiter, 1)
         dialog = QuestionDialog(
-            parent=self._app_window,
+            parent=self._app.get_window(),
             title=_("Remove Track"),
             question=_(f"Do you really want to remove track {trackname}")
         )
@@ -161,7 +178,7 @@ class TracksLayout(Gtk.Box, Layout):
         trackid = self._tree_model_filter.get_value(treeiter, 0)
 
         track = DatabaseHelper.get_track_by_id(trackid)
-        dialog = TrackEditDialog(parent=self._app_window, track=track)
+        dialog = TrackEditDialog(parent=self._app.get_window(), track=track)
         response = dialog.run()
         dialog.destroy()
         if response != Gtk.ResponseType.OK:
@@ -180,7 +197,7 @@ class TracksLayout(Gtk.Box, Layout):
             funcs.append({"func": altitude_correction.run, "args": None})
 
         if funcs:
-            self._app_window.show_infobar(
+            self._app.get_window().show_infobar(
                 itype=Gtk.MessageType.INFO,
                 message=_(
                     "Doing corrections. When it finishes then the track will "
@@ -189,7 +206,7 @@ class TracksLayout(Gtk.Box, Layout):
                 buttons=[
                     {
                      "text": _("Ok"),
-                     "cb": lambda b: self._app_window.clean_top_widget()
+                     "cb": lambda b: self._app.get_window().clean_top_widget()
                     }
                 ]
             )
@@ -206,12 +223,13 @@ class TracksLayout(Gtk.Box, Layout):
                     the Gtk.TreeView through the model.
         """
         track = DatabaseHelper.get_track_by_id(self._tree_model_filter.get_value(treeiter, 0))
-        self._app_window.load_app(AppTrackAnalytic(track))
+        self._app.open_external_app(AppTrackAnalytic, {"track": track})
+        # self._app_window.load_app(AppTrackAnalytic(track))
 
     def _on_correction_done(self, results):
         if results is None:
-            self._app_window.clean_top_widget()
-            self._app_window.show_infobar(
+            self._app.get_window().clean_top_widget()
+            self._app.get_window().show_infobar(
                 itype=Gtk.MessageType.ERROR,
                 message=_(
                     "An error was triggered and correction wasn't done."
@@ -219,14 +237,14 @@ class TracksLayout(Gtk.Box, Layout):
                 buttons=[
                     {
                         "text": _("Ok"),
-                        "cb": lambda b: self._app_window.clean_top_widget()
+                        "cb": lambda b: self._app.get_window().clean_top_widget()
                     }
                 ]
             )
             return
 
         track = results[0]
-        self._app_window.clean_top_widget()
+        self._app.get_window().clean_top_widget()
         iter = self._tree_model_filter.get_iter_first()
         while iter and self._tree_model_filter.get_value(iter, 0) != track.id:
             iter = self._tree_model_filter.iter_next(iter)
@@ -236,6 +254,9 @@ class TracksLayout(Gtk.Box, Layout):
     def _select_first_row(self):
         if len(self._tree_model_filter) > 0:
             self._select_row(Gtk.TreePath.new_from_string("0"), True)
+        else:
+            self._app.register_actions([])
+            self._show_message(_("There are not results for the selected filters"))
 
     def _select_row(self, treepath, force=False):
         """It loads treepath item.
@@ -260,10 +281,12 @@ class TracksLayout(Gtk.Box, Layout):
         layout = TrackStatsLayout(track)
         self._add_widget(layout)
         layout.load_data()
-        self._app_window.disconnect_action_buttons()
-        self._app_window.connect_button_del(self.on_remove, treeiter)
-        self._app_window.connect_button_edit(self.on_edit, treeiter)
-        self._app_window.connect_button_analytic(self.on_analytic, treeiter)
+
+        self._app.register_actions([
+            ActionsTuple(ActionId.DELETE, self.on_remove, treeiter),
+            ActionsTuple(ActionId.EDIT, self.on_edit, treeiter),
+            ActionsTuple(ActionId.DETAIL, self.on_analytic, treeiter),
+        ])
 
     def _show_message(self, msg):
         label = Gtk.Label(label=msg)
@@ -312,32 +335,25 @@ class TracksLayout(Gtk.Box, Layout):
         model, treepath_list = selection.get_selected_rows()
         if len(treepath_list) == 1:
             self._select_row(treepath_list[0])
-            self._app_window.disconnect_action_buttons()
-            self._app_window.connect_button_del(
-                self.on_remove,
-                self._tree_model_filter.get_iter(treepath_list[0])
-            )
-            self._app_window.connect_button_edit(
-                self.on_edit,
-                self._tree_model_filter.get_iter(treepath_list[0])
-            )
-            self._app_window.connect_button_analytic(
-                self.on_analytic,
-                self._tree_model_filter.get_iter(treepath_list[0])
-            )
+            self._app.register_actions([
+                ActionsTuple(ActionId.DELETE, self.on_remove, self._tree_model_filter.get_iter(treepath_list[0])),
+                ActionsTuple(ActionId.EDIT, self.on_edit, self._tree_model_filter.get_iter(treepath_list[0])),
+                ActionsTuple(ActionId.DETAIL, self.on_analytic, self._tree_model_filter.get_iter(treepath_list[0])),
+            ])
         else:
-            self._app_window.disconnect_action_buttons()
-            self._app_window.connect_button_del(
-                self.on_remove_bulk,
-                [ self._tree_model_filter.get_iter(treepath) for treepath in treepath_list ]
-            )
+            self._app.register_actions([
+                ActionsTuple(
+                    ActionId.DELETE,
+                    self.on_remove_bulk,
+                    tuple([self._tree_model_filter.get_iter(treepath) for treepath in treepath_list])
+                )
+            ])
 
     def _on_list_store_row_deleted(self, treemodel, treepath):
         if len(self._list_store) == 0:
-            self._app_window.disconnect_action_buttons()
-            self._app_window.load_tracks(None)
+            self._app.empty()
         if len(self._tree_model_filter) == 0:
-            self._app_window.disconnect_action_buttons()
+            self._app.register_actions([])
             self._show_message(_("Select a track to view its stats..."))
 
     def _on_list_store_filter_func(self, treemodel, treeiter, data):
@@ -365,3 +381,4 @@ class TracksLayout(Gtk.Box, Layout):
             self._entry_search_widget.set_text("")
             self._current_model_filter = None
             self._tree_model_filter.refilter()
+            self._select_first_row()
