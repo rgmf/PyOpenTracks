@@ -92,7 +92,9 @@ RecordedOptions = {
     1: RecordedWith(1, "OpenTracks"),
     2: RecordedWith(2, "Garmin"),
     3: RecordedWith(3, "Garmin", FitSdkProduct("Garmin", "edge520", 2067, "Edge 520", True)),
-    4: RecordedWith(4, "Garmin", FitSdkProduct("Garmin", "edge530", 3121, "Edge 530", True))
+    4: RecordedWith(4, "Garmin", FitSdkProduct("Garmin", "edge530", 3121, "Edge 530", True)),
+    5: RecordedWith(5, "Garmin", FitSdkProduct("Garmin", "fenix6S", 3288, "Fenix 6s", True)),
+    6: RecordedWith(5, "Garmin", FitSdkProduct("Garmin", "fenix6S_sport", 3287, "Fenix 6s", True))
 }
 
 

@@ -169,13 +169,21 @@ class FitRecordMessage:
         self._longitude = values["position_long"] / FitRecordMessage.DIV_LAT_LON if "position_long" in values else None
         self._distance = values["distance"] if "distance" in values else None
         self._time_ms = TimeUtils.dt_to_aware_locale_ms(values["timestamp"]) if "timestamp" in values else None
-        self._speed_mps = values["speed"] if "speed" in values else None
-        self._altitude_m = values["altitude"] if "altitude" in values else None
+        self._speed_mps = self._value(values, "enhanced_speed", "speed")
+        self._altitude_m = self._value(values, "enhanced_altitude", "altitude")
         self._elevation_gain_m, self._elevation_loss_m = manager.get_and_reset()
         self._heart_rate_bpm = values["heart_rate"] if "heart_rate" in values else None
         self._cadence_rpm = values["cadence"] if "cadence" in values else None
         self._power_w = values["power"] if "power" in values else None
         self._temperature = values["temperature"] if "temperature" else None
+
+    @staticmethod
+    def _value(values: dict, *keys):
+        """Return the value for the first key found or None if any is found."""
+        for key in keys:
+            if key in values:
+                return values[key]
+        return None
 
     @property
     def track_point(self):
