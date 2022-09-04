@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from parser import ParserError
+from dateutil.parser import ParserError
 from typing import List
 
 from pyopentracks.utils import logging as pyot_logging
