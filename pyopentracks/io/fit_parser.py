@@ -165,8 +165,7 @@ class FitRecordMessage:
     def __init__(self, record: fitparse.records.DataMessage, numsegment: int, manager: GainLossManager):
         values = record.get_values()
         self._numsegment = numsegment
-        self._latitude = values["position_lat"] / FitRecordMessage.DIV_LAT_LON if "position_lat" in values else None
-        self._longitude = values["position_long"] / FitRecordMessage.DIV_LAT_LON if "position_long" in values else None
+        self._latitude, self._longitude = self._lat_and_lon(values)
         self._distance = values["distance"] if "distance" in values else None
         self._time_ms = TimeUtils.dt_to_aware_locale_ms(values["timestamp"]) if "timestamp" in values else None
         self._speed_mps = self._value(values, "enhanced_speed", "speed")
@@ -176,6 +175,22 @@ class FitRecordMessage:
         self._cadence_rpm = values["cadence"] if "cadence" in values else None
         self._power_w = values["power"] if "power" in values else None
         self._temperature = values["temperature"] if "temperature" else None
+
+    @staticmethod
+    def _lat_and_lon(values: dict):
+        """Return latitude and longitude from values dictionary.
+
+        Both latitude and longitude must be not None, otherwise it returns None for both.
+        Also, it converts latitude and longitude from Garmin system to decimal degrees.
+        """
+        if "position_lat" not in values or "position_long" not in values:
+            return None, None
+        if values["position_lat"] is None or values["position_long"] is None:
+            return None, None
+        return (
+            values["position_lat"] / FitRecordMessage.DIV_LAT_LON,
+            values["position_long"] / FitRecordMessage.DIV_LAT_LON
+        )
 
     @staticmethod
     def _value(values: dict, *keys):
