@@ -16,15 +16,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from itertools import chain
 from typing import List
 
 from gi.repository import Gtk
 
 from pyopentracks.app_preferences import AppPreferences
+from pyopentracks.models.section import Section
 from pyopentracks.stats.track_stats import IntervalStats, HrZonesStats
 from pyopentracks.utils.utils import TypeActivityUtils, SensorUtils, TimeUtils, ZonesUtils
 from pyopentracks.views.graphs import BarsChart
 from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.models.track import Track
 
 
 def build_box(value):
@@ -40,17 +43,17 @@ def build_box(value):
 class TrackDataAnalyticLayout(Gtk.Box):
     __gtype_name__ = "TrackDataAnalyticLayout"
 
-    def __init__(self, track, preferences: AppPreferences):
+    def __init__(self, track: Track, preferences: AppPreferences):
         super().__init__()
         self.get_style_context().add_class("pyot-bg")
-        self._track = track
+        self._track: Track = track
         self._preferences = preferences
 
     def build(self):
-        self.pack_start(TrackIntervalsLayout(self._track.category, self._track.track_points), True, True, 0)
+        self.pack_start(TrackIntervalsLayout(self._track.category, self._track.sections), True, True, 0)
         self.pack_start(
             TrackZonesLayout(
-                self._track.track_points,
+                self._track.sections,
                 self._preferences.get_pref(self._preferences.HEART_RATE_MAX),
                 self._preferences.get_pref(self._preferences.HEART_RATE_ZONES)
             ),
@@ -68,11 +71,11 @@ class TrackIntervalsLayout(Gtk.Box):
     _intervals_list_store: Gtk.ListStore = Gtk.Template.Child()
     _intervals_grid: Gtk.Grid = Gtk.Template.Child()
 
-    def __init__(self, category, track_points):
+    def __init__(self, category, sections: List[Section]):
         super().__init__()
 
         self._category = category
-        self._track_points = track_points
+        self._track_points = list(chain(*[ section.track_points for section in sections ]))
         self._is_speed_track = TypeActivityUtils.is_speed(self._category)
 
         self._title_label.set_text(_("Intervals"))
@@ -150,12 +153,12 @@ class TrackZonesLayout(Gtk.Box):
     _hr_max_info_label: Gtk.Label = Gtk.Template.Child()
     _zones_grid: Gtk.Grid = Gtk.Template.Child()
 
-    def __init__(self, track_points, hr_max: int, hr_zones: List[int]):
+    def __init__(self, sections: List[Section], hr_max: int, hr_zones: List[int]):
         super().__init__()
-
-        self._track_points = track_points
+        self._sections: List[Section] = sections
         self._hr_max = hr_max
         self._hr_percentage_zones: List[int] = hr_zones
+
         self._hr_bpm_zones: List[int] = list(
             map(
                 lambda percentage:
@@ -166,6 +169,9 @@ class TrackZonesLayout(Gtk.Box):
         self._title_label.set_text(_("Heart Rate Zones"))
         self._title_label.get_style_context().add_class("pyot-h3")
         self._title_label.get_style_context().add_class("pyot-stats-bg-color")
+        if not (self._hr_max > 0 and list(filter(lambda i: i > 0, self._hr_percentage_zones))):
+            self._hr_max_info_label.set_text(_("Set you heart rate zones in the preferences"))
+            return
 
         self._hr_max_info_label.set_text(_("Max. Heart Rate: ") + str(self._hr_max) + "ppm")
         self._hr_max_info_label.get_style_context().add_class("pyot-h3")
@@ -181,13 +187,18 @@ class TrackZonesLayout(Gtk.Box):
 
     def _data_loading(self):
         hr_zones_stats = HrZonesStats(self._hr_bpm_zones)
-        stats = hr_zones_stats.compute(self._track_points)
+        stats = hr_zones_stats.compute(self._sections)
         total_time = hr_zones_stats.total_time
 
         return stats, total_time
 
     def _on_data_ready(self, data: tuple):
         stats, total_time = data
+        if not list(filter(lambda i: len(i) > 1 and i[1] > 0, stats.items())):
+            self._zones_grid.attach(Gtk.Label(_("There are not heart reate data")), 0, 1, 6, 1)
+            self.show_all()
+            return
+
         bars_result = {}
         for idx, value in stats.items():
             hr_bottom = str(self._hr_bpm_zones[idx])

@@ -17,81 +17,38 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from itertools import chain
+from typing import List
+
 from .model import Model
+from pyopentracks.models.section import Section
 from pyopentracks.utils.utils import DateTimeUtils as dtu
-from pyopentracks.utils.utils import TimeUtils as tu
-from pyopentracks.utils.utils import DistanceUtils as du
-from pyopentracks.utils.utils import SpeedUtils as su
-from pyopentracks.utils.utils import ElevationUtils as eu
-from pyopentracks.utils.utils import SensorUtils as se
-from pyopentracks.utils.utils import TypeActivityUtils as tau
-from pyopentracks.io.result import RecordedOptions, RecordedWith
+from pyopentracks.models.stats import Stats
+from pyopentracks.io.parser.recorded_with import RecordedOptions, RecordedWith
 
 
 class Track(Model):
+    __slots__ = ("_id", "_uuid", "_name", "_description", "_category", "_recorded_with", "_segments")
+
     def __init__(self, *args):
-        self._id = args[0]
-        self._uuid = args[1]
-        self._name = args[2]
-        self._description = args[3]
-        self._category = args[4]
-        self._starttime_ms = args[5]
-        self._stoptime_ms = args[6]
-        self._totaldistance_m = args[7]
-        self._totaltime_ms = args[8]
-        self._movingtime_ms = args[9]
-        self._avgspeed_mps = args[10]
-        self._avgmovingspeed_mps = args[11]
-        self._maxspeed_mps = args[12]
-        self._minelevation_m = args[13]
-        self._maxelevation_m = args[14]
-        self._elevationgain_m = args[15]
-        self._elevationloss_m = args[16]
-        self._maxhr_bpm = args[17]
-        self._avghr_bpm = args[18]
-        self._maxcadence_rpm = args[19]
-        self._avgcadence_rpm = args[20]
-        self._recorded_with = args[21]
+        super().__init__()
+        self._id = args[0] if args else None
+        self._uuid = args[1] if args else None
+        self._name = args[2] if args else None
+        self._description = args[3] if args else None
+        self._category = args[4] if args else None
+        self._recorded_with = args[5] if args else None
+        self._start_time_ms = args[6] if args else None
+        self._stats_id = args[7] if args else None
 
-        self._track_points = None
-
-    @staticmethod
-    def from_stats(ts):
-        """"Creates a Track from TrackStats."""
-        track = Track(*([None] * 22))
-        track.add_track_stats(ts)
-        return track
-
-    def add_track_stats(self, ts):
-        """Add TrackStats object and complete track data.
-
-        Arguments:
-        ts -- TrackStats object.
-        """
-        self._starttime_ms = ts.start_time
-        self._stoptime_ms = ts.end_time
-        self._totaldistance_m = ts.total_distance
-        self._totaltime_ms = ts.total_time
-        self._movingtime_ms = ts.moving_time
-        self._avgspeed_mps = ts.avg_speed
-        self._avgmovingspeed_mps = ts.avg_moving_speed
-        self._maxspeed_mps = ts.max_speed
-        self._minelevation_m = ts.min_elevation
-        self._maxelevation_m = ts.max_elevation
-        self._elevationgain_m = ts.gain_elevation
-        self._elevationloss_m = ts.loss_elevation
-        self._maxhr_bpm = ts.max_hr
-        self._avghr_bpm = ts.avg_hr
-        self._avgcadence_rpm = ts.avg_cadence
-        self._maxcadence_rpm = ts.max_cadence
+        self._stats: Stats = Stats(*args[8:]) if args and len(args) > 8 else None
+        self._sections: List[Section] = []
 
     @property
     def insert_query(self):
         """Returns the query for inserting a Track register."""
         return """
-        INSERT INTO tracks VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-        )
+        INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """
 
     @property
@@ -104,22 +61,13 @@ class Track(Model):
         """Return the query for updating a Track by id."""
         return """
         UPDATE tracks 
-        SET name=?, description=?, category=?, minelevation=?, maxelevation=?, elevationgain=?, elevationloss=?
+        SET name=?, description=?, category=?
         WHERE _id=?
         """
 
     @property
     def update_data(self):
-        return (
-            self._name,
-            self._description,
-            self._category,
-            self._minelevation_m,
-            self._maxelevation_m,
-            self._elevationgain_m,
-            self._elevationloss_m,
-            self._id
-        )
+        return (self._name, self._description, self._category, self._id)
 
     @property
     def fields(self):
@@ -127,28 +75,9 @@ class Track(Model):
         Maintain the database table tracks order of the fields.
         """
         return (
-            self._id,
-            self._uuid,
-            self._name,
-            self._description,
-            self._category,
-            self._starttime_ms,
-            self._stoptime_ms,
-            self._totaldistance_m,
-            self._totaltime_ms,
-            self._movingtime_ms,
-            self._avgspeed_mps,
-            self._avgmovingspeed_mps,
-            self._maxspeed_mps,
-            self._minelevation_m,
-            self._maxelevation_m,
-            self._elevationgain_m,
-            self._elevationloss_m,
-            self._maxhr_bpm,
-            self._avghr_bpm,
-            self._maxcadence_rpm,
-            self._avgcadence_rpm,
-            self._recorded_with
+            self._id, self._uuid, self._name, self._description,
+            self._category, self._recorded_with, self._start_time_ms, 
+            self._stats_id
         )
 
     def bulk_insert_fields(self, fk_value):
@@ -163,6 +92,10 @@ class Track(Model):
         return self._uuid
 
     @property
+    def stats_id(self):
+        return self._stats_id
+
+    @property
     def name(self):
         return self._name
 
@@ -175,190 +108,37 @@ class Track(Model):
         return self._category
 
     @property
-    def track_points(self):
-        return self._track_points
-
-    @property
-    def start_time(self):
-        return dtu.ms_to_str(self._starttime_ms)
-
-    @property
-    def short_start_time(self):
-        return dtu.ms_to_str(self._starttime_ms, short=True)
-
-    @property
-    def start_time_ms(self):
-        return self._starttime_ms
-
-    @property
-    def start_time_label(self):
-        return _("Start")
-
-    @property
-    def end_time(self):
-        return dtu.ms_to_str(self._stoptime_ms)
-
-    @property
-    def end_time_ms(self):
-        return self._stoptime_ms
-
-    @property
-    def end_time_label(self):
-        return _("End")
-
-    @property
-    def total_time(self):
-        return tu.ms_to_str(self._totaltime_ms)
-
-    @property
-    def total_time_label(self):
-        return _("Total Time")
-
-    @property
-    def moving_time(self):
-        return tu.ms_to_str(self._movingtime_ms)
-
-    @property
-    def moving_time_label(self):
-        return _("Moving Time")
-
-    @property
-    def total_distance(self):
-        return du.m_to_str(self._totaldistance_m)
-
-    @property
-    def total_distance_label(self):
-        return _("Distance")
-
-    @property
-    def avg_speed(self):
-        return su.mps_to_category_rate(self._avgspeed_mps, self._category)
-
-    @property
-    def speed_label(self):
-        return _("Speed") if tau.is_speed(self._category) else _("Pace")
-
-    @property
-    def avg_speed_label(self):
-        return _("Avg. Speed") if tau.is_speed(self._category) else _("Avg. Pace")
-
-    @property
-    def max_speed(self):
-        return su.mps_to_category_rate(self._maxspeed_mps, self._category)
-
-    @property
-    def max_speed_label(self):
-        return _("Max. Speed") if tau.is_speed(self._category) else _("Max. Pace")
-
-    @property
-    def avg_moving_speed(self):
-        return su.mps_to_category_rate(self._avgmovingspeed_mps, self._category)
-
-    @property
-    def avg_moving_speed_label(self):
-        return _("Avg. Moving Speed") if tau.is_speed(self._category) else _("Avg. Moving Pace")
-
-    @property
-    def max_elevation_m(self):
-        return self._maxelevation_m
-
-    @property
-    def max_elevation(self):
-        return eu.elevation_to_str(self._maxelevation_m)
-
-    @property
-    def max_elevation_label(self):
-        return _("Max. Altitude")
-
-    @property
-    def min_elevation_m(self):
-        return self._minelevation_m
-
-    @property
-    def min_elevation(self):
-        return eu.elevation_to_str(self._minelevation_m)
-
-    @property
-    def min_elevation_label(self):
-        return _("Min. Altitude")
-
-    @property
-    def gain_elevation(self):
-        return eu.elevation_to_str(self._elevationgain_m)
-
-    @property
-    def gain_elevation_m(self):
-        return self._elevationgain_m
-
-    @property
-    def gain_elevation_label(self):
-        return _("Elevation Gain")
-
-    @property
-    def loss_elevation(self):
-        return eu.elevation_to_str(self._elevationloss_m)
-
-    @property
-    def loss_elevation_m(self):
-        return self._elevationloss_m
-
-    @property
-    def loss_elevation_label(self):
-        return _("Elevation Loss")
-
-    @property
-    def max_hr_bpm(self):
-        return self._maxhr_bpm
-
-    @property
-    def max_hr(self):
-        return se.hr_to_str(self._maxhr_bpm)
-
-    @property
-    def max_hr_label(self):
-        return _("Max. Heart Rate")
-
-    @property
-    def avg_hr_bpm(self):
-        return self._avghr_bpm
-
-    @property
-    def avg_hr(self):
-        return se.hr_to_str(self._avghr_bpm)
-
-    @property
-    def avg_hr_label(self):
-        return _("Avg. Heart Rate")
-
-    @property
-    def max_cadence_rpm(self):
-        return self._maxcadence_rpm
-
-    @property
-    def max_cadence(self):
-        return se.cadence_to_str(self._maxcadence_rpm)
-
-    @property
-    def max_cadence_label(self):
-        return _("Max. Cadence")
-
-    @property
-    def avg_cadence_rpm(self):
-        return self._avgcadence_rpm
-
-    @property
-    def avg_cadence(self):
-        return se.cadence_to_str(self._avgcadence_rpm)
-
-    @property
-    def avg_cadence_label(self):
-        return _("Avg. Cadence")
-
-    @property
     def recorded_with(self) -> RecordedWith:
         if self._recorded_with is None or self._recorded_with not in RecordedOptions:
             return RecordedWith.unknown()
         return RecordedOptions[self._recorded_with]
+
+    @property
+    def start_time(self):
+        return dtu.ms_to_str(self._start_time_ms)
+
+    @property
+    def start_time_ms(self):
+        return self._start_time_ms
+
+    @property
+    def stats(self):
+        return self._stats
+
+    @property
+    def sections(self):
+        return self._sections
+
+    @property
+    def all_track_points(self):
+        """Return a list of all track points from all sections"""
+        if not self.sections:
+            return []
+        return list(chain(*[ section.track_points for section in self.sections ]))
+
+    @stats_id.setter
+    def stats_id(self, stats_id):
+        self._stats_id = stats_id
 
     @name.setter
     def name(self, name):
@@ -372,25 +152,13 @@ class Track(Model):
     def category(self, category):
         self._category = category
 
-    @gain_elevation_m.setter
-    def gain_elevation_m(self, gain):
-        self._elevationgain_m = gain
+    @stats.setter
+    def stats(self, stats):
+        self._stats = stats
 
-    @loss_elevation_m.setter
-    def loss_elevation_m(self, loss):
-        self._elevationloss_m = loss
-
-    @max_elevation_m.setter
-    def max_elevation_m(self, elevation):
-        self._maxelevation_m = elevation
-
-    @min_elevation_m.setter
-    def min_elevation_m(self, elevation):
-        self._minelevation_m = elevation
-
-    @track_points.setter
-    def track_points(self, track_points):
-        self._track_points = track_points
+    @sections.setter
+    def sections(self, sections):
+        self._sections = sections
 
     @recorded_with.setter
     def recorded_with(self, recorded_with):

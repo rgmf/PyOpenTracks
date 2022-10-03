@@ -18,6 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from gi.repository import Gtk, GObject
+from pyopentracks.models.track import Track
 
 from pyopentracks.utils.utils import DateTimeUtils
 from pyopentracks.models.database_helper import DatabaseHelper
@@ -34,13 +35,13 @@ class SegmentsTrackLayout(Gtk.Box, GObject.GObject):
     _title_label: Gtk.Label = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
 
-    def __init__(self, track):
+    def __init__(self, track: Track):
         super().__init__()
         GObject.GObject.__init__(self)
 
         self._data_rows = 0
         self._map = None
-        self._track = track
+        self._track: Track = track
 
         self._title_label.set_text(_("Segments"))
         self._title_label.set_line_wrap(True)
@@ -57,7 +58,7 @@ class SegmentsTrackLayout(Gtk.Box, GObject.GObject):
 
         self._grid.attach(self._build_header_label(_("Segment Information")), 0, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("Time")), 1, 0, 1, 1)
-        self._grid.attach(self._build_header_label(self._track.speed_label), 2, 0, 1, 1)
+        self._grid.attach(self._build_header_label(self._track.stats.speed_label(self._track.category)), 2, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("Heart Rate")), 3, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("Cadence")), 4, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("All Times PR")), 5, 0, 1, 1)

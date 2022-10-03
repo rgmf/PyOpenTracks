@@ -20,21 +20,24 @@ from abc import abstractmethod
 from dateutil.parser import ParserError
 from typing import List
 
+from pyopentracks.models.section import Section
+from pyopentracks.models.track_point import TrackPoint
+
 from pyopentracks.utils import logging as pyot_logging
-from pyopentracks.utils.utils import LocationUtils, TimeUtils, SensorUtils, ElevationUtils, DistanceUtils, SpeedUtils, \
-    TypeActivityUtils
+from pyopentracks.utils.utils import (
+    LocationUtils, TimeUtils, SensorUtils, ElevationUtils,
+    DistanceUtils, SpeedUtils, TypeActivityUtils
+)
 
 
 class TrackStats:
 
     def __init__(self):
-        self._segment = None
-
         self._start_time_ms = None
         self._end_time_ms = None
         self._total_time_ms = None
         self._moving_time_ms = None
-        self._last_segment_time_ms = None
+        self._last_section_time_ms = None
 
         self._last_latitude = None
         self._last_longitude = None
@@ -136,36 +139,48 @@ class TrackStats:
     def avg_cadence(self):
         return self._cadence.avg
 
-    def compute(self, track_points):
+    def compute(self, obj: any):
+        if not isinstance(obj, list) or not obj:
+            pyot_logging.get_logger(__name__).debug(
+                "Cannot compute the object because is not a list or is an empty list"
+            )
+            return
+
+        if isinstance(obj[0], Section):
+            self._compute(obj)
+        elif isinstance(obj[0], TrackPoint):
+            section = Section()
+            section.track_points.extend(obj)
+            self._compute([section])
+        else:
+            pyot_logging.get_logger(__name__).error(
+                "Error: TrackStats can only compute list of TrackPoint or list of Section, not " + str(type(obj))
+            )
+
+    def _compute(self, sections: List[Section]):
         """Compute stats from track_points
 
-        It expects all track points are valid ones: correct location
-        (lat, lon), time and speed.
+        It expects all track points inside each section are valid ones:
+        correct location (lat, lon), time and speed.
 
         Arguments:
-        track_points -- all TrackPoint's objects to compute that will
-        be used to compute stats.
+            sections -- all sections with the points.
         """
-        for tp in track_points:
-            self._new_track_point(tp)
-        self._avg_speed_mps = self._total_distance_m / (self._total_time_ms / 1000) if self._total_time_ms else 0
-        self._avg_moving_speed_mps = self._total_distance_m / (self._moving_time_ms / 1000) if self._moving_time_ms else 0
+        for section in sections:
+            self._new_section(section)
 
-    def _new_track_point(self, track_point):
-        """Compute all stats from new track point.
-
-        It expects track_point to have the following data: latitude, longitude,
-        time, speed.
-
-        Arguments:
-        track_point -- TrackPoint object with, at least, location (with
-        latitude and longitude), time and speed.
-        """
-        if track_point.segment != self._segment:
-            self._last_segment_time_ms = None
+            self._last_section_time_ms = None
             self._hr.reset()
             self._cadence.reset()
 
+        self._avg_speed_mps = self._total_distance_m / (self._total_time_ms / 1000) if self._total_time_ms else 0
+        self._avg_moving_speed_mps = self._total_distance_m / (self._moving_time_ms / 1000) if self._moving_time_ms else 0
+
+    def _new_section(self, section: Section):
+        for tp in section.track_points:
+            self._new_track_point(tp)
+
+    def _new_track_point(self, track_point: TrackPoint):
         self._add_speed(self._get_float_or_none(track_point.speed))
         self._add_elevation(
             self._get_float_or_none(track_point.altitude),
@@ -177,7 +192,6 @@ class TrackStats:
         self._hr.add(track_point.heart_rate, track_point.time_ms)
         self._cadence.add(track_point.cadence, track_point.time_ms)
 
-        self._segment = track_point.segment
         self._last_latitude = track_point.latitude
         self._last_longitude = track_point.longitude
 
@@ -188,7 +202,7 @@ class TrackStats:
         """Add the time to the stats.
 
         Arguments:
-        timestamp_ms -- time in millis.
+            timestamp_ms -- time in millis.
         """
         try:
             if self._end_time_ms is not None:
@@ -198,11 +212,11 @@ class TrackStats:
                     else timestamp_ms - self._end_time_ms
                 )
 
-            if self._last_segment_time_ms is not None:
+            if self._last_section_time_ms is not None:
                 self._moving_time_ms = (
-                    self._moving_time_ms + (timestamp_ms - self._last_segment_time_ms)
+                    self._moving_time_ms + (timestamp_ms - self._last_section_time_ms)
                     if self._moving_time_ms is not None
-                    else timestamp_ms - self._last_segment_time_ms
+                    else timestamp_ms - self._last_section_time_ms
                 )
 
             self._start_time_ms = (
@@ -210,7 +224,7 @@ class TrackStats:
                 else self._start_time_ms
             )
             self._end_time_ms = timestamp_ms
-            self._last_segment_time_ms = timestamp_ms
+            self._last_section_time_ms = timestamp_ms
 
         except ParserError as e:
             pyot_logging.get_logger(__name__).exception(
@@ -398,20 +412,19 @@ class HrZonesStats:
         for i, zone in enumerate(self._zones):
             self._stats[i] = 0
 
-    def compute(self, track_points):
-        if track_points is None or len(track_points) == 0:
+    def compute(self, sections: List[Section]):
+        if sections is None or len(sections) == 0:
             return
 
         last_zone = -1
-        last_tp = track_points[0]
-        for tp in track_points:
-            is_same_segment = last_tp.segment == tp.segment
-            if last_zone > -1 and is_same_segment:
-                self._stats[last_zone] += (tp.time_ms - last_tp.time_ms)
-            if is_same_segment:
+        for section in sections:
+            last_tp = section.track_points[0]
+            for tp in section.track_points:
+                if last_zone > -1:
+                    self._stats[last_zone] += (tp.time_ms - last_tp.time_ms)
                 self._total_time += (tp.time_ms - last_tp.time_ms)
-            last_zone = self._get_zone_idx(tp.heart_rate)
-            last_tp = tp
+                last_tp = tp
+                last_zone = self._get_zone_idx(last_tp.heart_rate)
 
         return self._stats
 

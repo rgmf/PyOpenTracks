@@ -25,7 +25,7 @@ from gi.repository import GLib, GObject
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.utils.utils import TimeUtils
-from pyopentracks.io.result import Result
+from pyopentracks.io.parser.result import Result
 
 
 class ExportTrack():

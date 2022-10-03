@@ -17,9 +17,13 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from functools import reduce
+from operator import iconcat
 from gi.repository import Gtk, GObject
 
 from pyopentracks.models.database_helper import DatabaseHelper
+from pyopentracks.models.stats import Stats
+from pyopentracks.models.track import Track
 from pyopentracks.utils.utils import TypeActivityUtils, TrackPointUtils, DistanceUtils
 from pyopentracks.views.graphs import LinePlot
 from pyopentracks.views.layouts.process_view import ProcessView
@@ -42,9 +46,9 @@ class TrackSummaryLayout(Gtk.Box):
     _main_box: Gtk.Box = Gtk.Template.Child()
     _bottom_box: Gtk.Box = Gtk.Template.Child()
 
-    def __init__(self, track):
+    def __init__(self, track: Track):
         super().__init__()
-        self._track = track
+        self._track: Track = track
         self._map_layout = TrackMapLayout()
         self._plot = LinePlot()
 
@@ -55,24 +59,28 @@ class TrackSummaryLayout(Gtk.Box):
         self._add_info_track(self._track)
 
         # Add track stats.
-        self._info_box.pack_start(TrackSummaryStatsLayout(self._track), False, True, 0)
-
-        # Load boxes where map and plot will be
-        self._add_item_to_bottom_box(Gtk.Label(_("Loading Graph...")))
-
-        # Add map to main box
-        self._main_box.pack_end(self._map_layout, False, True, 0)
-
-        # Get track points (if needed) to build plots and add them to the map's layout
-        if not self._track.track_points:
-            ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (self._track.id,)).start()
+        if self._track.stats:
+            self._info_box.pack_start(TrackSummaryStatsLayout(self._track.stats, self._track.category), False, True, 0)
         else:
-            self._on_track_points_end(self._track.track_points)
+            self._info_box.pack_start(Gtk.Label(_("There are not stats")), False, True, 0)
+
+        if self._track.stats:
+            # Load boxes where map and plot will be
+            self._add_item_to_bottom_box(Gtk.Label(_("Loading Graph...")))
+
+            # Add map to main box
+            self._main_box.pack_end(self._map_layout, False, True, 0)
+
+            # Get track points (if needed) to build plots and add them to the map's layout
+            if not self._track.sections:
+                ProcessView(self._on_track_points_end, DatabaseHelper.get_track_points, (self._track.id,)).start()
+            else:
+                self._on_track_points_end(self._track.all_track_points)
 
         # Show all
         self._info_box.show_all()
 
-    def _add_info_track(self, track):
+    def _add_info_track(self, track: Track):
         """Adds track information to the Gtk.Box with the information.
 
         track -- Track object.
@@ -108,15 +116,18 @@ class TrackSummaryLayout(Gtk.Box):
         start_label = Gtk.Label(label=_(f"Start: {track.start_time}"), xalign=0.0)
         start_label.get_style_context().add_class("pyot-p-small")
 
-        end_label = Gtk.Label(label=_(f"End: {track.end_time}"), xalign=0.0)
-        end_label.get_style_context().add_class("pyot-p-small")
+        if track.stats:
+            end_label = Gtk.Label(label=_(f"End: {track.stats.end_time}"), xalign=0.0)
+            end_label.get_style_context().add_class("pyot-p-small")
 
-        total_time_label = Gtk.Label(label=_(f"Total time: {track.total_time}"), xalign=0.0)
-        total_time_label.get_style_context().add_class("pyot-p-small")
+            total_time_label = Gtk.Label(label=_(f"Total time: {track.stats.total_time}"), xalign=0.0)
+            total_time_label.get_style_context().add_class("pyot-p-small")
 
         hbox_date.pack_start(start_label, False, True, 0)
-        hbox_date.pack_start(end_label, False, True, 0)
-        hbox_date.pack_start(total_time_label, False, True, 0)
+
+        if track.stats:
+            hbox_date.pack_start(end_label, False, True, 0)
+            hbox_date.pack_start(total_time_label, False, True, 0)
 
         vbox.pack_start(hbox_date, False, True, 0)
 
@@ -163,11 +174,11 @@ class TrackSummaryLayout(Gtk.Box):
 class TrackSummaryStatsLayout(Gtk.Grid):
     """A Gtk.Grid with all track's stats."""
 
-    def __init__(self, track, columns=2):
+    def __init__(self, stats: Stats, category: str, columns=2):
         """Initialize and create the layout.
 
         Arguments:
-        track -- Track's object.
+        stats -- Stats's object.
         columns -- number of columns for the grid layout where stats will be shown.
         """
         super().__init__()
@@ -176,43 +187,43 @@ class TrackSummaryStatsLayout(Gtk.Grid):
         self.set_row_spacing(10)
         self.set_column_homogeneous(True)
 
-        self._track = track
+        self._stats: Stats = stats
         self._columns = columns
         self._left = 0
         self._top = 0
 
         # Total distance
-        self._add_item(self._track.total_distance_label, self._track.total_distance)
+        self._add_item(self._stats.total_distance_label, self._stats.total_distance)
         # Total moving time
-        self._add_item(self._track.moving_time_label, self._track.moving_time)
+        self._add_item(self._stats.moving_time_label, self._stats.moving_time)
         # Avg. moving speed
-        self._add_item(self._track.avg_moving_speed_label, self._track.avg_moving_speed)
+        self._add_item(self._stats.avg_moving_speed_label(category), self._stats.avg_moving_speed(category))
         # Max. speed
-        self._add_item(self._track.max_speed_label, self._track.max_speed)
+        self._add_item(self._stats.max_speed_label(category), self._stats.max_speed(category))
 
-        if self._track.max_elevation_m is not None or self._track.min_elevation_m is not None:
+        if self._stats.max_elevation_m is not None or self._stats.min_elevation_m is not None:
             # Max. elevation
-            self._add_item(self._track.max_elevation_label, self._track.max_elevation)
+            self._add_item(self._stats.max_elevation_label, self._stats.max_elevation)
             # Min. elevation
-            self._add_item(self._track.min_elevation_label, self._track.min_elevation)
+            self._add_item(self._stats.min_elevation_label, self._stats.min_elevation)
 
-        if self._track.gain_elevation_m is not None or self._track.loss_elevation_m is not None:
+        if self._stats.gain_elevation_m is not None or self._stats.loss_elevation_m is not None:
             # Gain. elevation
-            self._add_item(self._track.gain_elevation_label, self._track.gain_elevation)
+            self._add_item(self._stats.gain_elevation_label, self._stats.gain_elevation)
             # Loss elevation
-            self._add_item(self._track.loss_elevation_label, self._track.loss_elevation)
+            self._add_item(self._stats.loss_elevation_label, self._stats.loss_elevation)
 
-        if self._track.max_hr_bpm is not None or self._track.avg_hr_bpm is not None:
+        if self._stats.max_hr_bpm is not None or self._stats.avg_hr_bpm is not None:
             # Max. heart rate
-            self._add_item(self._track.max_hr_label, self._track.max_hr)
+            self._add_item(self._stats.max_hr_label, self._stats.max_hr)
             # Avg. heart rate
-            self._add_item(self._track.avg_hr_label, self._track.avg_hr)
+            self._add_item(self._stats.avg_hr_label, self._stats.avg_hr)
 
-        if self._track.max_cadence_rpm is not None or self._track.avg_cadence_rpm is not None:
+        if self._stats.max_cadence_rpm is not None or self._stats.avg_cadence_rpm is not None:
             # Max. cadence
-            self._add_item(self._track.max_cadence_label, self._track.max_cadence)
+            self._add_item(self._stats.max_cadence_label, self._stats.max_cadence)
             # Avg. cadence
-            self._add_item(self._track.avg_cadence_label, self._track.avg_cadence)
+            self._add_item(self._stats.avg_cadence_label, self._stats.avg_cadence)
 
     def _position(self):
         left = self._left

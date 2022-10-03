@@ -30,7 +30,6 @@ from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
 from pyopentracks.utils.utils import TypeActivityUtils
 from pyopentracks.views.layouts.process_view import QueuedProcessesView
 from pyopentracks.tasks.altitude_correction import AltitudeCorrection
-from pyopentracks.tasks.gain_loss_filter import GainLossFilter
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
@@ -176,9 +175,6 @@ class TracksLayout(Gtk.Box, Layout):
         DatabaseHelper.update(track)
 
         funcs = []
-        if dialog.correct_gain_loss():
-            gain_loss_correction = GainLossFilter(track.id)
-            funcs.append({"func": gain_loss_correction.run, "args": None})
         if dialog.correct_altitude():
             altitude_correction = AltitudeCorrection(track.id)
             funcs.append({"func": altitude_correction.run, "args": None})

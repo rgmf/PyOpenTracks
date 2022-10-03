@@ -20,6 +20,9 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 import sqlite3
 from os import path
 
+from sympy import false
+from pyopentracks.models.section import Section
+
 from pyopentracks.models.segment_track_record import SegmentTrackRecord
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.settings import xdg_data_home
@@ -78,7 +81,7 @@ class Database:
         """
         with sqlite3.connect(self._db_file) as conn:
             try:
-                query = "SELECT * FROM tracks WHERE _id=?"
+                query = "SELECT tracks.*, stats.* FROM tracks, stats WHERE tracks._id=? AND stats._id=tracks.statsid"
                 tuple_result = conn.execute(query, (_id,)).fetchone()
                 if tuple_result:
                     return Track(*tuple_result)
@@ -202,7 +205,7 @@ class Database:
         """Get all tracks from database.
 
         Return:
-        list of Track object sorted by start time.
+            list of Track object sorted by start time.
         """
         with sqlite3.connect(self._db_file) as conn:
             try:
@@ -228,23 +231,24 @@ class Database:
         """
         with sqlite3.connect(self._db_file) as conn:
             try:
-                where = f" trackid = {trackid} AND " if trackid else ""
+                where = f" sections.trackid = {trackid} AND " if trackid else ""
                 query = f"""
                     SELECT
-                        trackid,
-                        _id,
-                        time,
-                        latitude,
-                        longitude
+                        sections.trackid,
+                        trackpoints._id,
+                        trackpoints.time,
+                        trackpoints.latitude,
+                        trackpoints.longitude
                     FROM
-                        trackpoints
+                        sections, trackpoints
                     WHERE
                         {where}
-                        latitude > {bbox.south.latitude} AND
-                        latitude < {bbox.north.latitude} AND
-                        longitude < {bbox.east.longitude} AND
-                        longitude > {bbox.west.longitude}
-                    ORDER BY trackid DESC, time ASC
+                        sections._id=trackpoints.sectionid AND
+                        trackpoints.latitude > {bbox.south.latitude} AND
+                        trackpoints.latitude < {bbox.north.latitude} AND
+                        trackpoints.longitude < {bbox.east.longitude} AND
+                        trackpoints.longitude > {bbox.west.longitude}
+                    ORDER BY sections.trackid DESC, trackpoints.time ASC
                 """
                 return [
                     SegmentTrack.Point(*row) for row in conn.execute(query).fetchall()
@@ -272,23 +276,24 @@ class Database:
             try:
                 query = f"""
                     SELECT
-                        trackid,
-                        _id,
-                        time,
-                        latitude,
-                        longitude,
-                        MIN(time)
+                        sections.trackid,
+                        trackpoints._id,
+                        trackpoints.time,
+                        trackpoints.latitude,
+                        trackpoints.longitude,
+                        MIN(trackpoints.time)
                     FROM
-                        trackpoints
+                        sections, trackpoints
                     WHERE
-                        trackid = {trackid} AND
-                        _id > {trackpoint_id_from} AND
-                        latitude > {bbox.south.latitude} AND
-                        latitude < {bbox.north.latitude} AND
-                        longitude < {bbox.east.longitude} AND
-                        longitude > {bbox.west.longitude}
-                    GROUP BY time
-                    ORDER BY time ASC
+                        sections._id=trackpoints.sectionid AND
+                        sections.trackid = {trackid} AND
+                        trackpoints._id > {trackpoint_id_from} AND
+                        trackpoints.latitude > {bbox.south.latitude} AND
+                        trackpoints.latitude < {bbox.north.latitude} AND
+                        trackpoints.longitude < {bbox.east.longitude} AND
+                        trackpoints.longitude > {bbox.west.longitude}
+                    GROUP BY trackpoints.time
+                    ORDER BY trackpoints.time ASC
                 """
                 tuple_result = conn.execute(query).fetchone()
                 return SegmentTrack.Point(*tuple_result) if tuple_result else None
@@ -318,12 +323,12 @@ class Database:
         with sqlite3.connect(self._db_file) as conn:
             try:
                 query = """
-                SELECT * FROM tracks
-                WHERE uuid=? OR (starttime=? and stoptime=?)
+                SELECT tracks.*, stats.* FROM tracks, stats
+                WHERE stats._id=tracks.statsid AND (tracks.uuid=? OR (tracks.starttime=? and stats.stoptime=?))
                 """
-                tracks = conn.execute(query, (uuid, start, end)).fetchall()
-                if tracks:
-                    return [Track(*track) for track in tracks]
+                tuple_result = conn.execute(query, (uuid, start, end)).fetchall()
+                if tuple_result:
+                    return [Track(*tuple) for tuple in tuple_result]
                 return None
             except Exception as error:
                 pyot_logging.get_logger(__name__).exception(
@@ -346,12 +351,12 @@ class Database:
             try:
                 if date_from and date_to:
                     where = f"""
-                    WHERE starttime>={date_from} and starttime<={date_to}
+                     AND stats.starttime>={date_from} and stats.starttime<={date_to}
                     """
                 elif date_from:
-                    where = f"WHERE starttime>={date_from}"
+                    where = f" AND stats.starttime>={date_from}"
                 elif date_to:
-                    where = f"WHERE starttime<={date_to}"
+                    where = f" AND stats.starttime<={date_to}"
                 else:
                     where = ""
 
@@ -359,23 +364,24 @@ class Database:
                 SELECT
                     category,
                     COUNT(*) total_activities,
-                    SUM(totaltime) total_time,
-                    SUM(movingtime) total_moving_time,
-                    SUM(totaldistance) total_distance,
-                    SUM(elevationgain) total_gain,
-                    AVG(totaltime) avg_time,
-                    AVG(movingtime) avg_moving_time,
-                    AVG(totaldistance) avg_distance,
-                    AVG(elevationgain) avg_gain,
-                    SUM(totaldistance) / (SUM(movingtime) / 1000) avg_speed,
-                    AVG(avghr) avg_heart_rate,
-                    MAX(totaltime) max_time,
-                    MAX(movingtime) max_moving_time,
-                    MAX(totaldistance) max_distance,
-                    MAX(elevationgain) max_gain,
-                    MAX(maxspeed) max_speed,
-                    MAX(maxhr) max_heart_rate
-                FROM tracks
+                    SUM(stats.totaltime) total_time,
+                    SUM(stats.movingtime) total_moving_time,
+                    SUM(stats.totaldistance) total_distance,
+                    SUM(stats.elevationgain) total_gain,
+                    AVG(stats.totaltime) avg_time,
+                    AVG(stats.movingtime) avg_moving_time,
+                    AVG(stats.totaldistance) avg_distance,
+                    AVG(stats.elevationgain) avg_gain,
+                    SUM(stats.totaldistance) / (SUM(stats.movingtime) / 1000) avg_speed,
+                    AVG(stats.avghr) avg_heart_rate,
+                    MAX(stats.totaltime) max_time,
+                    MAX(stats.movingtime) max_moving_time,
+                    MAX(stats.totaldistance) max_distance,
+                    MAX(stats.elevationgain) max_gain,
+                    MAX(stats.maxspeed) max_speed,
+                    MAX(stats.maxhr) max_heart_rate
+                FROM stats, tracks
+                WHERE stats._id=tracks.statsid
                 {where}
                 GROUP BY category
                 ORDER BY {order_by} DESC;
@@ -413,6 +419,49 @@ class Database:
                 )
         return []
 
+    def get_sections(self, trackid):
+        """Get all sections with its track points from track identified by trackid.
+
+        Arguments:
+        trackid -- Track's id.
+
+        Return:
+        list of all sections.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = f"SELECT * FROM sections WHERE sections.trackid=? ORDER BY _id ASC"
+                list_result = conn.execute(query, (trackid,)).fetchall()
+                if not list_result:
+                    return []
+
+                sections_to_return = []                
+                for result in list_result:
+                    section = Section(*result)
+                    section.track_points.extend(self.get_section_track_points(section.id))
+                    sections_to_return.append(section)
+
+                return sections_to_return
+            except Exception as error:
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
+        return []
+
+    def get_section_track_points(self, sectionid):
+        """Get all section track points identified by sectionid."""
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = f"SELECT * FROM trackpoints WHERE sectionid=? ORDER BY _id ASC"
+                trackpoints = conn.execute(query, (sectionid,)).fetchall()
+                if trackpoints:
+                    return [TrackPoint(*tp) for tp in trackpoints]
+            except Exception as error:
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
+        return []
+
     def get_track_points(self, trackid, from_trackpoint_id=None, to_trackpoint_id=None):
         """Get all track points from track identified by trackid.
 
@@ -432,7 +481,7 @@ class Database:
                     extra_where += f" AND _id >= {from_trackpoint_id} "
                 if to_trackpoint_id is not None:
                     extra_where += f" AND _id <= {to_trackpoint_id} "
-                query = f"SELECT * FROM trackpoints WHERE trackid=? {extra_where} ORDER BY _id ASC"
+                query = f"SELECT * FROM trackpoints WHERE sectionid in (select _id from sections where trackid=? ORDER BY _id ASC) {extra_where} ORDER BY _id ASC"
                 trackpoints = conn.execute(query, (trackid,)).fetchall()
                 if trackpoints:
                     return [TrackPoint(*tp) for tp in trackpoints]
@@ -505,6 +554,77 @@ class Database:
                 )
         return []
 
+    def insert_track(self, track: Track):
+        """Inserts a track.
+        
+        It inserts the stats, sections and track_points if they are into the
+        track's object.
+
+        Return
+            the id of the track inserted or None if any error.
+        """
+        if track is None:
+            pyot_logging.get_logger(__name__).debug("The track to be inserted is None")
+            return None
+
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                cursor = conn.cursor()
+
+                statsid = None
+                if track.stats:
+                    track.stats_id = statsid
+                    cursor.execute(track.stats.insert_query, track.stats.fields)
+                    statsid = cursor.lastrowid
+
+                trackid = None
+                if statsid is not None:
+                    track.stats_id = statsid
+                    cursor.execute(track.insert_query, track.fields)
+                    trackid = cursor.lastrowid
+
+                if trackid is not None and track.sections:
+                    for section in track.sections:
+                        section.track_id = trackid
+                        cursor.execute(section.insert_query, section.fields)
+                        sectionid = cursor.lastrowid
+                        if sectionid is not None:
+                            for track_point in section.track_points:
+                                cursor.execute(track_point.insert_query, track_point.bulk_insert_fields(sectionid))
+
+                conn.commit()
+
+                return trackid
+            except Exception as error:
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
+                conn.rollback()
+                return None
+
+        # statsid = None
+        # if track.stats:
+        #     print(track.stats)
+        #     statsid = self.insert(track.stats)
+
+        # trackid = None
+        # if statsid is not None:
+        #     track.stats_id = statsid
+        #     trackid = self.insert(track)
+
+        # if trackid is not None and track.sections:
+        #     num_trackpoints = 0
+        #     for section in track.sections:
+        #         section.track_id = trackid
+        #         sectionid = self.insert(section)
+        #         if sectionid is not None:
+        #             num_trackpoints += self.bulk_insert(section.track_points, sectionid)
+        #     if num_trackpoints > 0:
+        #         segment_track_search = SegmentTrackSearch(trackid)
+        #         segment_track_search.start()
+
+        # return trackid
+
     def insert(self, model):
         """Insert the model in the database.
 
@@ -522,7 +642,7 @@ class Database:
                 return cursor.lastrowid
             except Exception as error:
                 pyot_logging.get_logger(__name__).exception(
-                    f"Error: [SQL] Couldn't execute the query: {error}"
+                    f"Error: [SQL] Couldn't execute the query {model.insert_query}: {error}"
                 )
         return None
 
