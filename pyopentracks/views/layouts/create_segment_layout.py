@@ -18,8 +18,8 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from gi.repository import Gtk, GObject
+from pyopentracks.models.stats import Stats
 
-from pyopentracks.stats.track_stats import TrackStats
 from pyopentracks.utils.utils import DistanceUtils, ElevationUtils
 
 
@@ -90,14 +90,14 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
         self.emit(
             "track-stats-segment-ok",
             self._name_entry.get_text().strip(),
-            float(self._stats.total_distance),
-            float(self._stats.gain_elevation) if self._stats.gain_elevation else 0,
-            float(self._stats.loss_elevation) if self._stats.loss_elevation else 0
+            float(self._stats.total_distance_m),
+            float(self._stats.gain_elevation_m) if self._stats.gain_elevation else 0,
+            float(self._stats.loss_elevation_m) if self._stats.loss_elevation else 0
         )
         self.destroy()
 
-    def set_stats(self, stats: TrackStats):
+    def set_stats(self, stats: Stats):
         self._stats = stats
-        self._distance_label.set_text(DistanceUtils.m_to_str(stats.total_distance))
-        self._gain_label.set_text(ElevationUtils.elevation_to_str(stats.gain_elevation))
-        self._loss_label.set_text(ElevationUtils.elevation_to_str(stats.loss_elevation))
+        self._distance_label.set_text(stats.total_distance)
+        self._gain_label.set_text(stats.gain_elevation)
+        self._loss_label.set_text(stats.loss_elevation)

@@ -21,19 +21,14 @@ from gi.repository import Gtk, Gio, Gdk, GLib
 
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.app_preferences import AppPreferences
-from pyopentracks.io.import_handler import ParserHandlerInThread
 from pyopentracks.app_window import PyopentracksWindow
 from pyopentracks.views.file_chooser import (
     FileChooserWindow, FolderChooserWindow
 )
 from pyopentracks.models.migrations import Migration
 from pyopentracks.models.database import Database
-from pyopentracks.io.import_handler import (
-    ImportFileHandler, AutoImportHandler
-)
 from pyopentracks.views.preferences.dialog import PreferencesDialog
 from pyopentracks.views.dialogs import (
-    MessageDialogError,
     ImportResultDialog,
     ExportResultDialog
 )
@@ -79,7 +74,7 @@ class Application(Gtk.Application):
         self._setup_settings()
         self._setup_database()
         self._load_tracks()
-        self._auto_import()
+        # self._auto_import()
         win.present()
         win.set_menu(self._menu)
 
@@ -149,16 +144,16 @@ class Application(Gtk.Application):
 
     def set_pref(self, pref, newvalue):
         self._preferences.set_pref(pref, newvalue)
-        if pref == AppPreferences.AUTO_IMPORT_FOLDER:
-            self._auto_import()
+        # if pref == AppPreferences.AUTO_IMPORT_FOLDER:
+        #     self._auto_import()
 
     def _setup_menu(self):
         action = Gio.SimpleAction.new("import_folder", None)
-        action.connect("activate", self._on_import_folder)
+        action.connect("activate", self._on_folder_import)
         self.add_action(action)
 
         action = Gio.SimpleAction.new("import_file", None)
-        action.connect("activate", self._on_import_file)
+        action.connect("activate", self._on_file_import)
         self.add_action(action)
 
         action = Gio.SimpleAction.new("export_all", None)
@@ -188,45 +183,45 @@ class Application(Gtk.Application):
         db_version = migration.migrate()
         self._preferences.set_pref(AppPreferences.DB_VERSION, db_version)
 
-    def _auto_import(self):
-        folder = self._preferences.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
-        if not folder:
-            return
-        handler = AutoImportHandler()
-        if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
-            handler.with_opentracks_gain_loss_correction()
-        handler.connect("total-files-to-autoimport", self._auto_import_importing)
-        handler.import_folder(folder, self._auto_import_new_tracks)
+    # def _auto_import(self):
+    #     folder = self._preferences.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
+    #     if not folder:
+    #         return
+    #     handler = AutoImportHandler()
+    #     if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
+    #         handler.with_opentracks_gain_loss_correction()
+    #     handler.connect("total-files-to-autoimport", self._auto_import_importing)
+    #     handler.import_folder(folder, self._auto_import_new_tracks)
 
-    def _auto_import_importing(self, handler: AutoImportHandler, total_files):
-        if total_files == 0:
-            return
-        self._window.show_infobar(
-            itype=Gtk.MessageType.INFO,
-            message=_(f"{total_files} new tracks. Importing them..."),
-            buttons=[]
-        )
+    # def _auto_import_importing(self, handler: AutoImportHandler, total_files):
+    #     if total_files == 0:
+    #         return
+    #     self._window.show_infobar(
+    #         itype=Gtk.MessageType.INFO,
+    #         message=_(f"{total_files} new tracks. Importing them..."),
+    #         buttons=[]
+    #     )
 
-    def _auto_import_new_tracks(self):
-        self._window.clean_top_widget()
-        self._window.show_infobar(
-            itype=Gtk.MessageType.QUESTION,
-            message=_(
-                "There are new tracks imported. "
-                "Do you want to re-load all tracks to "
-                "see the new ones?"
-            ),
-            buttons=[
-                {
-                    "text": _("Cancel"),
-                    "cb": lambda b: self._window.clean_top_widget()
-                },
-                {
-                    "text": _("Re-load"),
-                    "cb": lambda b: self._load_tracks()
-                }
-            ]
-        )
+    # def _auto_import_new_tracks(self):
+    #     self._window.clean_top_widget()
+    #     self._window.show_infobar(
+    #         itype=Gtk.MessageType.QUESTION,
+    #         message=_(
+    #             "There are new tracks imported. "
+    #             "Do you want to re-load all tracks to "
+    #             "see the new ones?"
+    #         ),
+    #         buttons=[
+    #             {
+    #                 "text": _("Cancel"),
+    #                 "cb": lambda b: self._window.clean_top_widget()
+    #             },
+    #             {
+    #                 "text": _("Re-load"),
+    #                 "cb": lambda b: self._load_tracks()
+    #             }
+    #         ]
+    #     )
 
     def _load_tracks(self):
         db = Database()
@@ -235,52 +230,26 @@ class Application(Gtk.Application):
     def _end_load_file_cb(self, gpxParserHandler):
         self._window.loading(1.0)
 
-    def _on_import_folder(self, action, param):
-        dialog = FolderChooserWindow(parent=self._window)
+    def _on_folder_import(self, action, param):
+        self._on_import(FolderChooserWindow(parent=self._window))
+
+    def _on_file_import(self, action, param):
+        self._on_import(FileChooserWindow(parent=self._window))
+
+    def _on_import(self, dialog):
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            folder = dialog.get_filename()
+            filename = dialog.get_filename()
             dialog.destroy()
             import_dialog = ImportResultDialog(
                 parent=self._window,
-                folder=folder,
-                with_opentracks_gain_loss_correction=self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER)
+                filename=filename
             )
             import_dialog.run()
             import_dialog.destroy()
             self._load_tracks()
         else:
             dialog.destroy()
-
-    def _on_import_file(self, action, param):
-        dialog = FileChooserWindow(parent=self._window)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            self._window.loading(0.5)
-            handler = ImportFileHandler(dialog.get_filename(), self._import_ended)
-            if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
-                handler.with_opentracks_gain_loss_correction()
-            handler.run()
-        dialog.destroy()
-
-    def _import_ended(self, result):
-        """Called when file importing is finished.
-
-        Arguments:
-        result -- pyopentracks.io.result.Result object.
-        """
-        self._window.loading(1.0)
-        if result.is_ok:
-            self._load_tracks()
-        else:
-            MessageDialogError(
-                transient_for=self._window,
-                text=(
-                    _(f"Error importing the file {result.filename}") +
-                    ": \n" + result.message
-                ),
-                title=_("Error importing track file")
-            ).show()
 
     def _on_export_all(self, action, param):
         dialog = FolderChooserWindow(parent=self._window)

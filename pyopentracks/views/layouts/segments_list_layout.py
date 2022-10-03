@@ -41,6 +41,7 @@ from pyopentracks.views.layouts.track_map_layout import SegmentMapLayout
 class SegmentsListLayout(Gtk.Box, GObject.GObject):
     __gtype_name__ = "SegmentsListLayout"
 
+    _top_box: Gtk.Box = Gtk.Template.Child()
     _box_header: Gtk.Box = Gtk.Template.Child()
     _title_label: Gtk.Label = Gtk.Template.Child()
     _combobox_segments: Gtk.ComboBox = Gtk.Template.Child()
@@ -227,8 +228,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         box.pack_start(label2, True, True, 10)
         self._grid.attach(box, 0, 0, 1, 1)
         self._title_label.set_text(_("Segments"))
-        self.remove(self._box_header)
-        self.remove(self._grid_segment_detail)
+        self.remove(self._top_box)
         self.show_all()
 
     def _build_header_label(self, value, xalign=0.5, yalign=0.5, margin_top=0, margin_right=0, margin_bottom=0, margin_left=0):
@@ -249,7 +249,7 @@ class SegmentsListLayout(Gtk.Box, GObject.GObject):
         track_name = Gtk.Label(label=track.name, xalign=0.0, yalign=0.0)
         track_name.set_line_wrap(True)
         vbox.pack_start(track_name, True, True, 0)
-        vbox.pack_start(Gtk.Label(label=track.short_start_time, xalign=0.0, yalign=0.0), True, True, 0)
+        vbox.pack_start(Gtk.Label(label=track.stats.short_start_time, xalign=0.0, yalign=0.0), True, True, 0)
         return vbox
 
     def _build_box(self, value):

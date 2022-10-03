@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx
+    version="1.1"
+    creator="PyOpenTracks"
+    xmlns="http://www.topografix.com/GPX/1/1"
+    xmlns:topografix="http://www.topografix.com/GPX/Private/TopoGrafix/0/1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v2"
+    xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1"
+    xmlns:pwr="http://www.garmin.com/xmlschemas/PowerExtension/v1"
+    xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.topografix.com/GPX/Private/TopoGrafix/0/1 http://www.topografix.com/GPX/Private/TopoGrafix/0/1/topografix.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v2 https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd http://www.garmin.com/xmlschemas/PowerExtension/v1 https://www8.garmin.com/xmlschemas/PowerExtensionv1.xsd http://www.garmin.com/xmlschemas/TrackStatsExtension/v1">
+  <trk>
+    <name><![CDATA[For tests]]></name>
+    <desc><![CDATA[This is a GPX created for tests]]></desc>
+    <type><![CDATA[road biking]]></type>
+    <trkseg>
+      <trkpt lat="41.39655" lon="2.20821">
+      </trkpt>
+      <trkpt lat="41.39674" lon="2.20834">
+      </trkpt>
+      <trkpt lat="41.39689" lon="2.20841">
+      </trkpt>
+      <trkpt lat="41.39707" lon="2.20847">
+      </trkpt>
+      <trkpt lat="41.39720" lon="2.20855">
+      </trkpt>
+    </trkseg>
+
+    <trkseg>
+      <trkpt lat="41.39736" lon="2.20861">
+      </trkpt>
+      <trkpt lat="41.39749" lon="2.20864">
+      </trkpt>
+      <trkpt lat="41.39763" lon="2.20870">
+      </trkpt>
+    </trkseg>
+
+    <trkseg>
+      <trkpt lat="41.39794" lon="2.20886">
+      </trkpt>
+      <trkpt lat="41.39804" lon="2.20891">
+      </trkpt>
+      <trkpt lat="41.39814" lon="2.20899">
+      </trkpt>
+      <trkpt lat="41.39822" lon="2.20906">
+      </trkpt>
+      <trkpt lat="41.39832" lon="2.20914">
+      </trkpt>
+      <trkpt lat="41.39845" lon="2.20924">
+      </trkpt>
+      <trkpt lat="41.39860" lon="2.20934">
+      </trkpt>
+      <trkpt lat="41.39869" lon="2.20943">
+      </trkpt>
+      <trkpt lat="41.39880" lon="2.20951">
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

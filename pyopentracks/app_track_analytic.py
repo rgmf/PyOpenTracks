@@ -16,11 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
-
 from pyopentracks.app_external import AppExternal
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.models.database_helper import DatabaseHelper
+from pyopentracks.models.track import Track
 from pyopentracks.observers.data_update_observer import DataUpdateSubscription
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
 from pyopentracks.views.layouts.process_view import ProcessView
@@ -36,13 +35,13 @@ class AppTrackAnalytic(AppExternal):
     This is the controller of the analytic's views.
     """
 
-    def __init__(self, track):
+    def __init__(self, track: Track):
         self._layout = NotebookLayout()
-        self._track = track
+        self._track: Track = track
         self._preferences = AppPreferences()
 
-        if not self._track.track_points:
-            ProcessView(self._on_track_points_ready, DatabaseHelper.get_track_points, (self._track.id,)).start()
+        if not self._track.all_track_points:
+            ProcessView(self._on_sections_ready, DatabaseHelper.get_sections, (self._track.id,)).start()
         else:
             self._build()
 
@@ -65,8 +64,8 @@ class AppTrackAnalytic(AppExternal):
         segments_layout.build()
         map_analytic_layout.build()
 
-    def _on_track_points_ready(self, track_points):
-        self._track.track_points = track_points
+    def _on_sections_ready(self, sections):
+        self._track.sections = sections
         self._build()
 
     def get_layout(self):

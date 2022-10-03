@@ -32,6 +32,7 @@ from pyopentracks.views.graphs import LinePlot
 from pyopentracks.views.layouts.create_segment_layout import CreateSegmentLayout
 from pyopentracks.views.layouts.track_map_layout import TrackInteractiveMapLayout
 from pyopentracks.views.layouts.track_summary_layout import TrackSummaryStatsLayout
+from pyopentracks.io.proxy.proxy import TrackStatsProxy
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_map_analytic_layout.ui")
@@ -45,13 +46,14 @@ class TrackMapAnalyticLayout(Gtk.Box):
     _create_frame: Gtk.Frame = Gtk.Template.Child()
     _content_box: Gtk.Box = Gtk.Template.Child()
 
-    def __init__(self, track, new_segment_created_cb=None):
+    def __init__(self, track: Track, new_segment_created_cb=None):
+        """Track must have the sections with the track points."""
         super().__init__()
         self.get_style_context().add_class("pyot-bg")
         self._track = track
-        self._new_segment_created_cb = new_segment_created_cb
         self._stats = None
-        self._track_points = None
+        self._track_points = []
+        self._new_segment_created_cb = new_segment_created_cb
         self._map_layout = TrackInteractiveMapLayout()
         self._map_layout.connect("segment-selected", self._segment_selected)
         self._clear_button.set_label(_("Clear segment"))
@@ -61,10 +63,7 @@ class TrackMapAnalyticLayout(Gtk.Box):
         self._button_box.hide()
 
     def build(self):
-        if self._track.track_points:
-            self._map_layout.add_polyline_from_points(self._track.track_points)
-        else:
-            self._map_layout.add_polyline_from_trackid(self._track.id)
+        self._map_layout.add_polyline_from_points(self._track.all_track_points)
         self._content_box.pack_start(self._map_layout, True, True, 0)
         self.show_all()
 
@@ -97,7 +96,6 @@ class TrackMapAnalyticLayout(Gtk.Box):
         self._create_box.show()
 
         create_segment = CreateSegmentLayout()
-        # self._create_box.pack_start(create_segment, False, True, 0)
         self._create_frame.add(create_segment)
         create_segment.connect("track-stats-segment-cancel", self._cancel_segment)
         create_segment.connect("track-stats-segment-ok", self._create_segment)
@@ -125,9 +123,10 @@ class TrackMapAnalyticLayout(Gtk.Box):
 
         self._content_box.pack_start(plot.get_canvas(), True, True, 0)
 
-        self._stats = TrackStats()
-        self._stats.compute(map_layout.get_segment().track_points)
+        track_stats = TrackStats()
+        track_stats.compute(map_layout.get_segment().track_points)
+        self._stats = TrackStatsProxy(track_stats).to_stats()
 
-        self._content_box.pack_start(TrackSummaryStatsLayout(Track.from_stats(self._stats), 4), False, False, 0)
+        self._content_box.pack_start(TrackSummaryStatsLayout(self._stats, self._track.category, 4), False, False, 0)
 
         self.show_all()

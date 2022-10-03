@@ -37,6 +37,16 @@ class DatabaseHelper:
         return db.get_tracks()
 
     @staticmethod
+    def get_existed_tracks(track):
+        db = Database()
+        return db.get_existed_tracks(track.uuid, track.start_time_ms, track.stats.end_time_ms)
+
+    @staticmethod
+    def get_sections(trackid):
+        db = Database()
+        return db.get_sections(trackid)
+
+    @staticmethod
     def get_track_points(trackid, from_trackpoint_id=None, to_trackpoint_id=None):
         db = Database()
         return db.get_track_points(trackid, from_trackpoint_id, to_trackpoint_id)
@@ -74,6 +84,16 @@ class DatabaseHelper:
         segment_search.start()
 
     @staticmethod
+    def insert_track(track):
+        """Inserts a track and all its data (stats, sections, points...)"""
+        db = Database()
+        trackid = db.insert_track(track)
+        if trackid is not None:
+            segment_track_search = SegmentTrackSearch(trackid)
+            segment_track_search.start()
+        return trackid
+
+    @staticmethod
     def insert(model):
         """Inserts the model.
 
@@ -86,20 +106,10 @@ class DatabaseHelper:
         return db.insert(model)
 
     @staticmethod
-    def bulk_insert(track_points, trackid):
-        """Insert all track points to the track identify by trackid.
-
-        Also, it starts task to find segments in the track identify by trackid.
-
-        Return:
-        The number of track points inserted.
-        """
+    def bulk_insert(list_to_insert, fk):
+        """Insert the list of models and return the number of items inserted."""
         db = Database()
-        num_trackpoints = db.bulk_insert(track_points, trackid)
-        if num_trackpoints > 0:
-            segment_track_search = SegmentTrackSearch(trackid)
-            segment_track_search.start()
-        return num_trackpoints
+        return db.bulk_insert(list_to_insert, fk)
 
     @staticmethod
     def get_segments():

@@ -19,7 +19,13 @@ There are tests in the `tests` folder. To execute them, run the following comman
 
 `python3 -m unittest discover -v -s tests/`
 
+To run a single test, for example the test_fit_parser.py tests:
+
+`python3 -m unittest tests.test_fit_parser`
+
 You have to make sure that `python3-mock` is installed to run tests.
+
+Also, you should execute `sh build.sh` if there are changes before lauch tests.
 
 # Logs
 PyOpenTracks uses `logging` standard Python library for logs. You can set the log's level executing PyOpenTracks from terminal and passing to it the argument `--loglevel` with a value:

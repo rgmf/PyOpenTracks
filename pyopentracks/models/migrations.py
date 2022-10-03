@@ -42,12 +42,8 @@ class Migration:
 
     def _migrate_1(self):
         query = """
-            CREATE TABLE tracks (
+            CREATE TABLE stats (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
-                uuid BLOB,
-                name TEXT,
-                description TEXT,
-                category TEXT,
                 starttime INTEGER,
                 stoptime INTEGER,
                 totaldistance FLOAT,
@@ -64,18 +60,47 @@ class Migration:
                 avghr FLOAT,
                 maxcadence FLOAT,
                 avgcadence FLOAT,
-                recorded_with INTEGER
+                normalizedpower FLOAT,
+                maxpower FLOAT,
+                FOREIGN KEY (_id) REFERENCES tracks (statsid) ON UPDATE CASCADE ON DELETE CASCADE
+            );
+        """
+        self._db.execute(query)
+
+        query = """
+            CREATE TABLE tracks (
+                _id INTEGER PRIMARY KEY AUTOINCREMENT,
+                uuid BLOB,
+                name TEXT,
+                description TEXT,
+                category TEXT,
+                recorded_with INTEGER,
+                starttime INTEGER,
+                statsid INTEGER,
+                FOREIGN KEY (statsid) REFERENCES stats (_id) ON UPDATE CASCADE ON DELETE CASCADE
             );
         """
         self._db.execute(query)
         query = "CREATE UNIQUE INDEX tracks_uuid_index ON tracks (uuid)"
+        query = "CREATE UNIQUE INDEX tracks_stats_id_index ON tracks (statsid)"
+        self._db.execute(query)
+
+        query = """
+            CREATE TABLE sections (
+                _id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                trackid,
+                FOREIGN KEY (trackid) REFERENCES tracks (_id) ON UPDATE CASCADE ON DELETE CASCADE
+            );
+        """
+        self._db.execute(query)
+        query = "CREATE INDEX sections_trackid_index ON sections (trackid)"
         self._db.execute(query)
 
         query = """
             CREATE TABLE trackpoints (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
-                numsegment INTEGER NOT NULL,
-                trackid INTEGER NOT NULL,
+                sectionid INTEGER NOT NULL,
                 longitude INTEGER NOT NULL,
                 latitude INTEGER NOT NULL,
                 time INTEGER NOT NULL,
@@ -87,11 +112,11 @@ class Migration:
                 cadence FLOAT,
                 power FLOAT,
                 temperature FLOAT,
-                FOREIGN KEY (trackid) REFERENCES tracks (_id) ON UPDATE CASCADE ON DELETE CASCADE
+                FOREIGN KEY (sectionid) REFERENCES sections (_id) ON UPDATE CASCADE ON DELETE CASCADE
             );
         """
         self._db.execute(query)
-        query = "CREATE INDEX trackpoints_trackid_index ON trackpoints (trackid)"
+        query = "CREATE INDEX trackpoints_sectionid_index ON trackpoints (sectionid)"
         self._db.execute(query)
 
         query = """

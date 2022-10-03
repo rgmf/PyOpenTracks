@@ -19,8 +19,9 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
-from pyopentracks.io.import_handler import ImportFolderHandler
+from pyopentracks.io.import_handler import ImportHandler
 from pyopentracks.io.export_handler import ExportAllHandler
+from pyopentracks.io.importer.importer import ImportResult
 from pyopentracks.utils.utils import TypeActivityUtils as TAU
 
 
@@ -117,39 +118,31 @@ class ImportExportResultDialog(Gtk.Dialog):
 
 class ImportResultDialog(ImportExportResultDialog):
 
-    def __init__(self, parent, folder, with_opentracks_gain_loss_correction=False):
-        self._total = 0
-        self._imported = 0
-        self._with_opentracks_gain_loss_correction = with_opentracks_gain_loss_correction
-        super().__init__(parent, folder, _("Importing..."), _("Importing files from folder:"))
+    def __init__(self, parent, filename):
+        super().__init__(parent, filename, _("Importing..."), _("Importing files:"))
 
     def _start(self):
         self._progress.set_fraction(0)
-        self._handler = ImportFolderHandler()
-        if self._with_opentracks_gain_loss_correction:
-            self._handler.with_opentracks_gain_loss_correction()
+        self._handler = ImportHandler()
         self._handler.connect("total-files-to-import", self._total_files_cb)
         self._handler.import_folder(self._folder, self._import_ended_cb)
 
-    def _total_files_cb(self, handler: ImportFolderHandler, total_files):
-        self._total = total_files
-        self._label.set_text(f"{self._imported} / {self._total}")
+    def _total_files_cb(self, handler: ImportHandler, total_files):
+        self._label.set_text(f"0 / {total_files}")
 
-    def _import_ended_cb(self, result: dict):
-        total_imported = result["imported"] + len(result["errors"])
-        self._imported = self._imported + 1
-        self._progress.set_fraction(self._imported / self._total)
-        if not total_imported == self._total:
-            self._label.set_text(f"{self._imported} / {self._total}")
+    def _import_ended_cb(self, result: ImportResult):
+        self._progress.set_fraction(result.total_imported / result.total)
+        if not result.is_done:
+            self._label.set_text(f"{result.total_imported} / {result.total}")
             return
 
-        self._label.set_text(_(f"Total imported: {result['imported']}"))
-        if len(result["errors"]) > 0:
+        self._label.set_text(_(f"Total imported: {result.imported}"))
+        if result.is_error:
             self._label.set_text(
                 self._label.get_text() + ".\n" +
                 _("Finished with errors") + ":"
             )
-            for e in result["errors"]:
+            for e in result.errors:
                 row = Gtk.ListBoxRow()
                 label = Gtk.Label(label=e, xalign=0.0)
                 row.add(label)
@@ -222,7 +215,6 @@ class TrackEditDialog(Gtk.Dialog):
     _activity_type: Gtk.ComboBox = Gtk.Template.Child()
     _type_list_store: Gtk.ListStore = Gtk.Template.Child()
     _altitude_correction: Gtk.CheckButton = Gtk.Template.Child()
-    _gain_loss_correction: Gtk.CheckButton = Gtk.Template.Child()
 
     def __init__(self, parent, track):
         Gtk.Dialog.__init__(
@@ -270,9 +262,6 @@ class TrackEditDialog(Gtk.Dialog):
 
     def correct_altitude(self):
         return self._altitude_correction.get_active()
-
-    def correct_gain_loss(self):
-        return self._gain_loss_correction.get_active()
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segment_edit_dialog.ui")
