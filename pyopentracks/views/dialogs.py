@@ -162,16 +162,16 @@ class ExportResultDialog(ImportExportResultDialog):
     def _start(self):
         handler = ExportAllHandler(self._folder, self._export_all_ended)
         handler.run()
-        handler.connect("total-tracks-to-export", self._total_tracks_cb)
+        handler.connect("total-activities-to-export", self._total_activities_cb)
 
-    def _total_tracks_cb(self, handler: ExportAllHandler, total_tracks):
-        self._total = total_tracks
+    def _total_activities_cb(self, handler: ExportAllHandler, total_activities):
+        self._total = total_activities
         self._label.set_text(f"{self._exported} / {self._total}")
 
     def _export_all_ended(self, result):
         if not result.is_ok:
             self._errors.append({
-                "trackname": result.filename,
+                "activity_name": result.filename,
                 "message": result.message
             })
 
@@ -189,26 +189,26 @@ class ExportResultDialog(ImportExportResultDialog):
             )
             for e in self._errors:
                 row = Gtk.ListBoxRow()
-                trackname = e["trackname"]
+                activity_name = e["activity_name"]
                 message = e["message"]
-                label = Gtk.Label(label=f"{trackname}: {message}", xalign=0.0)
+                label = Gtk.Label(label=f"{activity_name}: {message}", xalign=0.0)
                 row.add(label)
                 self._list_box.add(row)
             self._list_box.show_all()
         self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_edit_dialog.ui")
-class TrackEditDialog(Gtk.Dialog):
-    """Track's dialog editor.
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/activity_edit_dialog.ui")
+class ActivityEditDialog(Gtk.Dialog):
+    """Activity's dialog editor.
 
-    This dialog can be used to edit a track: name, description and
+    This dialog can be used to edit a activity: name, description and
     activity type (category).
 
-    It offers a method (get_track) to get the track's changes.
+    It offers a method (get_activity) to get the activity's changes.
     """
 
-    __gtype_name__ = "TrackEditDialog"
+    __gtype_name__ = "ActivityEditDialog"
 
     _name: Gtk.Entry = Gtk.Template.Child()
     _description: Gtk.Entry = Gtk.Template.Child()
@@ -216,14 +216,14 @@ class TrackEditDialog(Gtk.Dialog):
     _type_list_store: Gtk.ListStore = Gtk.Template.Child()
     _altitude_correction: Gtk.CheckButton = Gtk.Template.Child()
 
-    def __init__(self, parent, track):
+    def __init__(self, parent, activity):
         Gtk.Dialog.__init__(
             self,
-            title=_("Edit Track"),
+            title=_("Edit Activity"),
             transient_for=parent,
             flags=0
         )
-        self._track = track
+        self._activity = activity
         self._set_data()
         self.add_buttons(
             Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
@@ -232,33 +232,33 @@ class TrackEditDialog(Gtk.Dialog):
         self.show_all()
 
     def _set_data(self):
-        self._name.set_text(self._track.name)
+        self._name.set_text(self._activity.name)
         self._name.connect("changed", self._on_name_changed)
 
-        self._description.set_text(self._track.description)
+        self._description.set_text(self._activity.description)
         self._description.connect("changed", self._on_description_changed)
 
         for idx, item in enumerate(TAU.get_activity_types()):
             self._type_list_store.append(item)
-            if item[0] == self._track.category:
+            if item[0] == self._activity.category:
                 self._activity_type_name = item[0]
                 self._activity_type.set_active(idx)
         self._activity_type.connect("changed", self._on_activity_type_changed)
 
     def _on_name_changed(self, entry):
-        self._track.name = entry.get_text()
+        self._activity.name = entry.get_text()
 
     def _on_description_changed(self, entry):
-        self._track.description = entry.get_text()
+        self._activity.description = entry.get_text()
 
     def _on_activity_type_changed(self, combo):
         iter_item = combo.get_active_iter()
         if iter_item is not None:
             name, icon = self._type_list_store[iter_item][:2]
-            self._track.category = name
+            self._activity.category = name
 
-    def get_track(self):
-        return self._track
+    def get_activity(self):
+        return self._activity
 
     def correct_altitude(self):
         return self._altitude_correction.get_active()

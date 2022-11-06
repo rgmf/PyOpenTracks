@@ -23,11 +23,12 @@ from gi.repository import Gtk
 
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.models.section import Section
-from pyopentracks.stats.track_stats import IntervalStats, HrZonesStats
+from pyopentracks.stats.track_activity_stats import IntervalStats, HrZonesStats
 from pyopentracks.utils.utils import TypeActivityUtils, SensorUtils, TimeUtils, ZonesUtils
 from pyopentracks.views.graphs import BarsChart
+from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.process_view import ProcessView
-from pyopentracks.models.track import Track
+from pyopentracks.models.activity import Activity
 
 
 def build_box(value):
@@ -39,21 +40,22 @@ def build_box(value):
     return box
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_data_analytic_layout.ui")
-class TrackDataAnalyticLayout(Gtk.Box):
-    __gtype_name__ = "TrackDataAnalyticLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_activity_data_analytic_layout.ui")
+class TrackActivityDataAnalyticLayout(Gtk.Box, Layout):
+    __gtype_name__ = "TrackActivityDataAnalyticLayout"
 
-    def __init__(self, track: Track, preferences: AppPreferences):
+    def __init__(self, activity: Activity, preferences: AppPreferences):
         super().__init__()
+        Layout.__init__(self)
         self.get_style_context().add_class("pyot-bg")
-        self._track: Track = track
+        self._activity: Activity = activity
         self._preferences = preferences
 
     def build(self):
-        self.pack_start(TrackIntervalsLayout(self._track.category, self._track.sections), True, True, 0)
+        self.pack_start(TrackActivityIntervalsLayout(self._activity.category, self._activity.sections), True, True, 0)
         self.pack_start(
-            TrackZonesLayout(
-                self._track.sections,
+            TrackActivityZonesLayout(
+                self._activity.sections,
                 self._preferences.get_pref(self._preferences.HEART_RATE_MAX),
                 self._preferences.get_pref(self._preferences.HEART_RATE_ZONES)
             ),
@@ -62,9 +64,9 @@ class TrackDataAnalyticLayout(Gtk.Box):
         self.show_all()
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_intervals_layout.ui")
-class TrackIntervalsLayout(Gtk.Box):
-    __gtype_name__ = "TrackIntervalsLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_activity_intervals_layout.ui")
+class TrackActivityIntervalsLayout(Gtk.Box):
+    __gtype_name__ = "TrackActivityIntervalsLayout"
 
     _title_label: Gtk.Label = Gtk.Template.Child()
     _intervals_combo_box: Gtk.ComboBox = Gtk.Template.Child()
@@ -76,13 +78,13 @@ class TrackIntervalsLayout(Gtk.Box):
 
         self._category = category
         self._track_points = list(chain(*[ section.track_points for section in sections ]))
-        self._is_speed_track = TypeActivityUtils.is_speed(self._category)
+        self._is_speed_activity = TypeActivityUtils.is_speed(self._category)
 
         self._title_label.set_text(_("Intervals"))
         self._title_label.get_style_context().add_class("pyot-h3")
         self._title_label.get_style_context().add_class("pyot-stats-bg-color")
 
-        if not self._is_speed_track:
+        if not self._is_speed_activity:
             self._intervals_list_store.append([100, "100 m"])
             self._intervals_list_store.append([200, "200 m"])
             self._intervals_list_store.append([400, "400 m"])
@@ -107,8 +109,8 @@ class TrackIntervalsLayout(Gtk.Box):
 
         self._intervals_grid.attach(Gtk.Label(_("Distance")), 0, 0, 1, 1)
         self._intervals_grid.attach(Gtk.Label(_("Time")), 1, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Speed") if self._is_speed_track else _("Pace")), 2, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Max.\nSpeed") if self._is_speed_track else _("Max.\nPace")), 3, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label(_("Speed") if self._is_speed_activity else _("Pace")), 2, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label(_("Max.\nSpeed") if self._is_speed_activity else _("Max.\nPace")), 3, 0, 1, 1)
         self._intervals_grid.attach(Gtk.Label(_("Avg.\nHeart Rate")), 4, 0, 1, 1)
         self._intervals_grid.attach(Gtk.Label(_("Max.\nHeart Rate")), 5, 0, 1, 1)
         self._intervals_grid.attach(Gtk.Label(_("Gain")), 6, 0, 1, 1)
@@ -145,9 +147,9 @@ class TrackIntervalsLayout(Gtk.Box):
         self.show_all()
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_zones_layout.ui")
-class TrackZonesLayout(Gtk.Box):
-    __gtype_name__ = "TrackZonesLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_activity_zones_layout.ui")
+class TrackActivityZonesLayout(Gtk.Box):
+    __gtype_name__ = "TrackActivityZonesLayout"
 
     _title_label: Gtk.Label = Gtk.Template.Child()
     _hr_max_info_label: Gtk.Label = Gtk.Template.Child()

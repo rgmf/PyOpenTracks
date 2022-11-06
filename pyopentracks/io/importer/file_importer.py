@@ -43,20 +43,36 @@ class FileImporter(Importer):
             yield ImportResult(filename=self._filename, total=1, imported=0, errors=[message])
 
     def _import(self, record: Record):
-        track = RecordProxy(record).to_track()
-        if DatabaseHelper.get_existed_tracks(track):
+        if not record or record.type not in (Record.Type.TRACK, Record.Type.SET):
             return ImportResult(
                 record=record,
                 filename=self._filename,
                 total=1,
                 imported=0,
                 errors=[_(
-                    f"Error importing the file {self._filename}: track '{track.name}' already exists"
+                    f"Error importing the file {self._filename}: it could not be parsed: there are not segments or sets"
                 )]
             )
 
-        trackid = DatabaseHelper.insert_track(track)
-        if trackid is None:
+        activity = RecordProxy(record).to_activity()
+        if DatabaseHelper.get_existed_activities(activity):
+            return ImportResult(
+                record=record,
+                filename=self._filename,
+                total=1,
+                imported=0,
+                errors=[_(
+                    f"Error importing the file {self._filename}: activity '{activity.name}' already exists"
+                )]
+            )
+
+        if record.type == Record.Type.TRACK:
+            activity_id = DatabaseHelper.insert_track_activity(activity)
+        else:
+            sets = RecordProxy(record).to_sets()
+            activity_id = DatabaseHelper.insert_set_activity(activity, sets)
+
+        if activity_id is None:
             return ImportResult(
                 record=record,
                 filename=self._filename,

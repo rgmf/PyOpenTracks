@@ -27,29 +27,34 @@ from pyopentracks.utils.utils import DateTimeUtils
 class DatabaseHelper:
 
     @staticmethod
-    def get_track_by_id(id):
+    def get_activity_by_id(id):
         db = Database()
-        return db.get_track_by_id(id)
+        return db.get_activity_by_id(id)
 
     @staticmethod
-    def get_tracks():
+    def get_activities():
         db = Database()
-        return db.get_tracks()
+        return db.get_activities()
 
     @staticmethod
-    def get_existed_tracks(track):
+    def get_existed_activities(activity):
         db = Database()
-        return db.get_existed_tracks(track.uuid, track.start_time_ms, track.stats.end_time_ms)
+        return db.get_existed_activities(activity.uuid, activity.start_time_ms, activity.stats.end_time_ms)
 
     @staticmethod
-    def get_sections(trackid):
+    def get_sections(activity_id):
         db = Database()
-        return db.get_sections(trackid)
+        return db.get_sections(activity_id)
 
     @staticmethod
-    def get_track_points(trackid, from_trackpoint_id=None, to_trackpoint_id=None):
+    def get_sets(stats_id):
         db = Database()
-        return db.get_track_points(trackid, from_trackpoint_id, to_trackpoint_id)
+        return db.get_sets(stats_id)
+
+    @staticmethod
+    def get_track_points(activity_id, from_trackpoint_id=None, to_trackpoint_id=None):
+        db = Database()
+        return db.get_track_points(activity_id, from_trackpoint_id, to_trackpoint_id)
 
     @staticmethod
     def get_aggregated_stats(date_from=None, date_to=None, order_by_categories=False):
@@ -84,26 +89,21 @@ class DatabaseHelper:
         segment_search.start()
 
     @staticmethod
-    def insert_track(track):
-        """Inserts a track and all its data (stats, sections, points...)"""
+    def insert_track_activity(activity):
+        """Inserts a track activity and all its data (stats, sections, points...)"""
         db = Database()
-        trackid = db.insert_track(track)
-        if trackid is not None:
-            segment_track_search = SegmentTrackSearch(trackid)
+        activity_id = db.insert_track_activity(activity)
+        if activity_id is not None:
+            segment_track_search = SegmentTrackSearch(activity_id)
             segment_track_search.start()
-        return trackid
+        return activity_id
 
     @staticmethod
-    def insert(model):
-        """Inserts the model.
-
-        If model is a Track then executes the task to find segments in it.
-
-        Return:
-        the id of the model inserted or None if any error.
-        """
+    def insert_set_activity(activity, sets):
+        """Inserts a set activity and all its data"""
         db = Database()
-        return db.insert(model)
+        activity_id = db.insert_set_activity(activity, sets)
+        return activity_id
 
     @staticmethod
     def bulk_insert(list_to_insert, fk):
@@ -122,19 +122,19 @@ class DatabaseHelper:
         return db.get_segment_by_id(id)
 
     @staticmethod
-    def get_segment_tracks_by_trackid(trackid):
+    def get_segment_tracks_by_activity_id(activity_id):
         db = Database()
-        return db.get_segment_tracks_by_trackid(trackid)
+        return db.get_segment_activities_by_activity_id(activity_id)
 
     @staticmethod
-    def get_segment_tracks_by_segmentid(segmentid, fetch_track=False):
+    def get_segment_tracks_by_segment_id(segment_id, fetch_track=False):
         db = Database()
-        segment_tracks = db.get_segment_tracks_by_segmentid(segmentid)
+        segment_tracks = db.get_segment_tracks_by_segment_id(segment_id)
         if not fetch_track:
             return segment_tracks
 
         for st in segment_tracks:
-            st.track = DatabaseHelper.get_track_by_id(st.trackid)
+            st.activity = DatabaseHelper.get_activity_by_id(st.activity_id)
 
         return segment_tracks
 
@@ -164,7 +164,7 @@ class DatabaseHelper:
                 "segment": segment,
                 "segmentracks": []
             }
-            for segmentracks in db.get_segment_tracks_by_segmentid(segment.id):
+            for segmentracks in db.get_segment_tracks_by_segment_id(segment.id):
                 obj["segmentracks"].append(segmentracks)
             result_list.append(obj)
 
@@ -176,27 +176,27 @@ class DatabaseHelper:
         return db.get_segment_points(segmentid)
 
     @staticmethod
-    def update_altitude(trackid, results):
-        """Update altitude for trackpoints that belong to the track identified by trackid with results dictionary.
+    def update_altitude(activity_id, results):
+        """Update altitude for trackpoints that belong to the activity identified by activity_id with results dictionary.
 
         Arguments:
-        trackid - track's id.
+        activity_id - activity's id.
         results - list of dictionaries with keys: "latitude", "longitude" and "elevation".
         """
         db = Database()
-        db.update_altitude(trackid, results)
+        db.update_altitude(activity_id, results)
 
     @staticmethod
-    def update_stats(trackid, gain, loss, min_elevation=None, max_elevation=None):
+    def update_stats(activity_id, gain, loss, min_elevation=None, max_elevation=None):
         db = Database()
-        track = db.get_track_by_id(trackid)
-        track.gain_elevation_m = gain
-        track.loss_elevation_m = loss
+        activity = db.get_activity_by_id(activity_id)
+        activity.gain_elevation_m = gain
+        activity.loss_elevation_m = loss
         if max_elevation is not None:
-            track.max_elevation_m = max_elevation
+            activity.max_elevation_m = max_elevation
         if min_elevation is not None:
-            track.min_elevation_m = min_elevation
-        db.update(track)
+            activity.min_elevation_m = min_elevation
+        db.update(activity)
 
     @staticmethod
     def update(model):
@@ -209,9 +209,9 @@ class DatabaseHelper:
         db.delete(model)
 
     @staticmethod
-    def get_tracks_in_day(y: int, m: int, d: int):
+    def get_activities_in_day(y: int, m: int, d: int):
         db = Database()
-        return db.get_tracks_between(DateTimeUtils.begin_of_day(y, m, d), DateTimeUtils.end_of_day(y, m, d))
+        return db.get_activities_between(DateTimeUtils.begin_of_day(y, m, d), DateTimeUtils.end_of_day(y, m, d))
 
     @staticmethod
     def get_segment_track_record(segmentid, time, year=None):

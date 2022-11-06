@@ -30,7 +30,7 @@ from pyopentracks.utils.utils import (
 )
 
 
-class TrackStats:
+class TrackActivityStats:
 
     def __init__(self):
         self._start_time_ms = None

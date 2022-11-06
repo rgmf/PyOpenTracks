@@ -10,7 +10,7 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <template class="TrackIntervalsLayout" parent="GtkBox">
+  <template class="TrackActivityIntervalsLayout" parent="GtkBox">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
     <property name="halign">start</property>

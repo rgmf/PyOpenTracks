@@ -19,10 +19,11 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from abc import ABC, abstractmethod
 from itertools import chain
 
+from pyopentracks.io.parser.fit.messages import FitSportMessage
 from pyopentracks.io.parser.parser import Parser
-from pyopentracks.io.parser.exceptions import ParserExtensionUnknownException
+from pyopentracks.io.parser.exceptions import FitParserException, ParserExtensionUnknownException
 from pyopentracks.io.parser.gpx.gpx import GpxOpenTracks, GpxPath, GpxStandard, PreParser as GpxPreParser
-from pyopentracks.io.parser.fit.fit import PreParser as FitPreParser
+from pyopentracks.io.parser.fit.fit import FIT_SUPPORTED_SPORTS, FitSetActivity, FitTrackActivity, PreParser as FitPreParser
 
 
 class ParserFactory:
@@ -69,5 +70,11 @@ class FitFactory(Factory):
     """FIT factory that creates the parser needed."""
 
     def make(self, filename: str) -> Parser:
-        return FitPreParser(filename).parse()
-
+        fitfile, file_id = FitPreParser(filename).parse()
+        sport_message = FitSportMessage(fitfile)
+        if sport_message.category.lower() in FIT_SUPPORTED_SPORTS["with_points"]:
+            return FitTrackActivity(fitfile, file_id)
+        elif sport_message.category.lower() in FIT_SUPPORTED_SPORTS["with_sets"]:
+            return FitSetActivity(fitfile, file_id)
+        else:
+            raise FitParserException(f"{sport_message} sport not supported")

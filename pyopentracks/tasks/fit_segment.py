@@ -85,10 +85,10 @@ class FitSegment:
         track_points -- list of track points from track with best time in the segment.
         """
         track_points = []
-        segment_tracks = DatabaseHelper.get_segment_tracks_by_segmentid(self._segment.id, False)
+        segment_tracks = DatabaseHelper.get_segment_tracks_by_segment_id(self._segment.id, False)
         if segment_tracks:
             track_points = DatabaseHelper.get_track_points(
-                trackid=segment_tracks[0].trackid,
+                activity_id=segment_tracks[0].activity_id,
                 from_trackpoint_id=segment_tracks[0].track_point_id_start,
                 to_trackpoint_id=segment_tracks[0].track_point_id_end
             )

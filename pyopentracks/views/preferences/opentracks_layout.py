@@ -36,11 +36,11 @@ class PreferencesOpenTracksLayout(Gtk.Box):
 
         self._dialog = dialog
 
-        self._title.set_text(_("Options for tracks recorded with OpenTracks"))
+        self._title.set_text(_("Options for activities recorded with OpenTracks"))
         self._title.get_style_context().add_class("pyot-h3")
 
         self._help_text.set_text(_(
-            "Filter and correct elevation gain and loss for tracks "
+            "Filter and correct elevation gain and loss for activities "
             "recorded with OpenTracks"
         ))
 

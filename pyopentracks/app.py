@@ -22,7 +22,7 @@ from typing import List
 from gi.repository import Gtk, Gio, Gdk, GLib
 
 from pyopentracks.app_interfaces import Action
-from pyopentracks.app_track_list import AppTrackList
+from pyopentracks.app_activity_list import AppActivityList
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.app_window import PyopentracksWindow
@@ -106,11 +106,12 @@ class Application(Gtk.Application):
         return 0
 
     def on_open_file(self, action, param):
-        dialog = FileChooserWindow(parent=self._window)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            self.load_file(dialog.get_filename(), self._window.load_track_stats)
-        dialog.destroy()
+        # dialog = FileChooserWindow(parent=self._window)
+        # response = dialog.run()
+        # if response == Gtk.ResponseType.OK:
+        #     self.load_file(dialog.get_filename(), self._window.load_activity_stats)
+        # dialog.destroy()
+        pass
 
     def on_quit(self, action, param):
         self._window.on_quit()
@@ -119,17 +120,18 @@ class Application(Gtk.Application):
     def load_file(self, filename: str, cb):
         """Load the GPX filename and call cb.
 
-        It loads track from GPX filename and call to the cb callback
-        passing it th track object.
+        It loads activity from GPX filename and call to the cb callback
+        passing it the activity object.
 
         Arguments:
         filename -- absolute path to a GPX file.
         cb -- the callback to call after loading.
         """
-        self._window.loading(0.5)
-        gpx_parser_handle = ParserHandlerInThread()
-        gpx_parser_handle.connect("end-parse", self._end_load_file_cb)
-        gpx_parser_handle.parse(filename, cb)
+        # self._window.loading(0.5)
+        # gpx_parser_handle = ParserHandlerInThread()
+        # gpx_parser_handle.connect("end-parse", self._end_load_file_cb)
+        # gpx_parser_handle.parse(filename, cb)
+        pass
 
     def get_pref(self, pref):
         return self._preferences.get_pref(pref)
@@ -177,7 +179,7 @@ class Application(Gtk.Application):
         self._load_app(class_var, dict_args)
 
     def _load_main_app(self):
-        self._load_app(AppTrackList, {"app": self}, True)
+        self._load_app(AppActivityList, {"app": self}, True)
 
     def _load_app(self, class_var, kwargs: dict = dict({}), show_menu_buttons: bool = False):
         """Load external app whose class is class_var."""

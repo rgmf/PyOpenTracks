@@ -16,16 +16,38 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Union
 import fitparse
-from pyopentracks.io.parser.fit.messages import FitSportMessage
 
+from typing import List
+
+from pyopentracks.io.parser.fit.messages import FitClimbMessage, FitEventMessage, FitSessionMessage, FitSetMessage, FitSportMessage
 from pyopentracks.io.parser.exceptions import FitParserException
 from pyopentracks.io.parser.fit.gain_loss_manager import GainLossManager
 from pyopentracks.io.parser.fit.messages import FitFileIdMessage, FitRecordMessage
 from pyopentracks.io.parser.parser import Parser
 from pyopentracks.io.parser.recorded_with import RecordedWith
 from pyopentracks.io.parser.records import Point, Record, Segment
+
+
+FIT_SUPPORTED_SPORTS = {
+    # Sports that need location's points (latitude, longitude)
+    "with_points": [
+        "running",
+        "cycling",
+        "walking",
+        "hiking",
+        "e_biking",
+        "motorcycling",
+        "driving",
+        "inline_skating",
+        "ice_skating",
+    ],
+    # Sports with sets
+    "with_sets": [
+        "training",
+        "rock_climbing",
+    ]
+}
 
 
 class Fit(Parser):
@@ -37,7 +59,7 @@ class Fit(Parser):
         self._file_id = file_id
 
 
-class FitActivity(Fit):
+class FitTrackActivity(Fit):
     """FIT parser for activity files."""
 
     def _compute_mesg_event(self, mesg: fitparse.records.DataMessage, stopped: bool) -> bool:
@@ -64,7 +86,7 @@ class FitActivity(Fit):
         sport_message = FitSportMessage(self._fitfile)
         record.name = sport_message.name
         record.category = sport_message.category
-        record.time = self._file_id.time_created_ms
+        record.start_time = self._file_id.time_created_ms
 
         is_event_stopped = False
         is_moving = True
@@ -93,6 +115,41 @@ class FitActivity(Fit):
             segment.points = segment_points
             record.segments.append(segment)
 
+        record.end_time = record.segments[-1].points[-1] if len(record.segments) > 0 and len(record.segments[-1].points) > 0 else None
+
+        return record
+
+
+class FitSetActivity(Fit):
+    """FIT parser for activity without points, with sets."""
+
+    def parse(self) -> Record:
+        record = Record()
+        record.recorded_with = RecordedWith.from_device(
+            self._file_id.manufacturer, self._file_id.product
+        )
+        sport_message = FitSportMessage(self._fitfile)
+        record.name = sport_message.name
+        record.category = sport_message.category
+        record.start_time = self._file_id.time_created_ms
+
+        for mesg in [m for m in self._fitfile.messages if m.name in ("unknown_312", "set", "session", "event")]:
+            if mesg.name == "unknown_312":
+                record.sets.append(FitClimbMessage(mesg).set)
+            elif mesg.name == "set":
+                record.sets.append(FitSetMessage(mesg).set)
+            elif mesg.name == "session":
+                fit_session_mesg = FitSessionMessage(mesg)
+                record.sub_category = fit_session_mesg.sub_sport
+                record.avghr = fit_session_mesg.avg_heart_rate
+                record.maxhr = fit_session_mesg.max_heart_rate
+                record.avg_temperature = fit_session_mesg.avg_temperature
+                record.max_temperature = fit_session_mesg.max_temperature
+                record.total_calories = fit_session_mesg.total_calories
+            elif mesg.name == "event":
+                fem = FitEventMessage(mesg)
+                record.end_time = fem.timestamp if fem.type == "stop_all" else record.end_time
+
         return record
 
 
@@ -103,12 +160,6 @@ class FitSegment(Fit):
         return super().parse()
 
 
-FitTypes = {
-    "activity": FitActivity,
-    "segment": FitSegment,   
-}
-
-
 class PreParser:
     """Do a FIT file pre-parse."""
 
@@ -116,13 +167,13 @@ class PreParser:
         self._filename = filename
         self._fitparse = None
 
-    def parse(self) -> Union[FitActivity, FitSegment]:
-        """Parse the FIT file and return the FIT parser depending on the file_id type.
+    def parse(self) -> tuple:
+        """Parse the FIT file and return the FIT parser.
         
         It checks if FileId message is supported and valid.
 
         Return:
-            The parser needed to end parsing file.
+            A tuple with fitfile and fitfileid message.
         """
         fitfile = fitparse.FitFile(self._filename)
         messages = list(fitfile.get_messages("file_id"))
@@ -135,8 +186,4 @@ class PreParser:
         if not type_list or len(type_list) != 1:
             raise FitParserException(filename=self._filename, message="type of the 'file_id' is wrong")
 
-        field_data = type_list[0]
-        if field_data.value not in FitTypes:
-            raise FitParserException(filename=self._filename, message="FIT file type '" + str(field_data.value) + "' not supported")
-
-        return FitTypes[field_data.value](fitfile, FitFileIdMessage(fields))
+        return (fitfile, FitFileIdMessage(fields))

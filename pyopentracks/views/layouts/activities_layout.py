@@ -19,68 +19,50 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 import threading
 
 from gi.repository import Gtk, GLib, GdkPixbuf
+from pyopentracks.app_activity_analytic import AppActivityAnalytic
 
 from pyopentracks.app_interfaces import ActionId
-from pyopentracks.app_track_analytic import AppTrackAnalytic
-from pyopentracks.app_track_list_interfaces import ActionsTuple
+from pyopentracks.app_activity_list_interfaces import ActionsTuple
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.views.layouts.layout import Layout
-from pyopentracks.views.layouts.track_stats_layout import TrackStatsLayout
+from pyopentracks.views.layouts.activity_stats_layout import ActivityStatsLayout
 from pyopentracks.models.database_helper import DatabaseHelper
-from pyopentracks.views.dialogs import QuestionDialog, TrackEditDialog
+from pyopentracks.views.dialogs import QuestionDialog, ActivityEditDialog
 from pyopentracks.utils.utils import TypeActivityUtils
 from pyopentracks.views.layouts.process_view import QueuedProcessesView
 from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_container_layout.ui")
-class TracksContainerLayout(Gtk.Box, Layout):
-    __gtype_name__ = "TracksContainerLayout"
-
-    _top_widget: Gtk.Box = Gtk.Template.Child()
-    _content_widget: Gtk.Box = Gtk.Template.Child()
-
-    def __init__(self):
-        super().__init__()
-
-    def set_child(self, new_child):
-        for c in self._content_widget.get_children():
-            self._content_widget.remove(c)
-        self._content_widget.pack_start(new_child, True, True, 0)
-
-    def get_top_widget(self):
-        return self._top_widget
-
-
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/tracks_layout.ui")
-class TracksLayout(Gtk.Paned):
-    __gtype_name__ = "TracksLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/activities_layout.ui")
+class ActivitiesLayout(Gtk.Paned, Layout):
+    __gtype_name__ = "ActivitiesLayout"
 
     _tree_view_widget: Gtk.TreeView = Gtk.Template.Child()
-    _track_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
+    _activity_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
     _entry_search_widget: Gtk.Entry = Gtk.Template.Child()
 
-    def __init__(self, app, tracks):
-        """Init function for the list of tracks.
+    def __init__(self, app, activities):
+        """Init function for the list of activities.
 
         Arguments:
-        app    -- AppTrackList instance.
-        tracks -- list of Track's object.
+        app        -- AppActivityList instance.
+        activities -- list of Activity's object.
         """
         super().__init__()
+        Layout.__init__(self)
 
         self._app = app
         self._treepath_selected = None
 
-        self._show_message(_("Select a track to view its stats..."))
+        self._show_message(_("Select an activity to view its stats..."))
 
-        self._tracks = tracks
+        self._activities = activities
         self._list_store = Gtk.ListStore(int, str, GdkPixbuf.Pixbuf)
-        for track in self._tracks:
+        for activity in self._activities:
             self._list_store.append([
-                track.id,
-                track.name,
-                TypeActivityUtils.get_icon_pixbuf(track.category, 32, 32)
+                activity.id,
+                activity.name,
+                TypeActivityUtils.get_icon_pixbuf(activity.category, 32, 32)
             ])
 
         self._current_model_filter = None
@@ -92,7 +74,7 @@ class TracksLayout(Gtk.Paned):
             Gtk.TreeViewColumn(cell_renderer=Gtk.CellRendererPixbuf(), pixbuf=2)
         )
         self._tree_view_widget.append_column(
-            Gtk.TreeViewColumn(_("Tracks"), Gtk.CellRendererText(), text=1)
+            Gtk.TreeViewColumn(_("Activities"), Gtk.CellRendererText(), text=1)
         )
         self._list_store.connect("row-deleted", self._on_list_store_row_deleted)
 
@@ -106,13 +88,14 @@ class TracksLayout(Gtk.Paned):
         self._entry_search_widget.connect("activate", self._on_search_text_changed)
         self._entry_search_widget.connect("icon-press", self._on_search_text_icon_pressed)
 
+    def build(self):
         self.show_all()
 
     def on_remove_bulk(self, widget, treeiter_list):
         dialog = QuestionDialog(
             parent=self._app.get_window(),
-            title=_("Remove Tracks"),
-            question=_(f"Do you really want to remove all selected tracks")
+            title=_("Remove Activities"),
+            question=_(f"Do you really want to remove all selected activities")
         )
         response = dialog.run()
         dialog.destroy()
@@ -152,11 +135,11 @@ class TracksLayout(Gtk.Paned):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in
                     the Gtk.TreeView through the model.
         """
-        trackname = self._tree_model_filter.get_value(treeiter, 1)
+        activity_name = self._tree_model_filter.get_value(treeiter, 1)
         dialog = QuestionDialog(
             parent=self._app.get_window(),
-            title=_("Remove Track"),
-            question=_(f"Do you really want to remove track {trackname}")
+            title=_("Remove Activity"),
+            question=_(f"Do you really want to remove activity {activity_name}")
         )
         response = dialog.run()
         dialog.destroy()
@@ -175,32 +158,32 @@ class TracksLayout(Gtk.Paned):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in
                     the Gtk.TreeView through the model.
         """
-        trackid = self._tree_model_filter.get_value(treeiter, 0)
+        activity_id = self._tree_model_filter.get_value(treeiter, 0)
 
-        track = DatabaseHelper.get_track_by_id(trackid)
-        dialog = TrackEditDialog(parent=self._app.get_window(), track=track)
+        activity = DatabaseHelper.get_activity_by_id(activity_id)
+        dialog = ActivityEditDialog(parent=self._app.get_window(), activity=activity)
         response = dialog.run()
         dialog.destroy()
         if response != Gtk.ResponseType.OK:
             return
 
-        track = dialog.get_track()
-        self._tree_model_filter.set_value(treeiter, 1, track.name)
+        activity = dialog.get_activity()
+        self._tree_model_filter.set_value(treeiter, 1, activity.name)
         self._tree_model_filter.set_value(
-            treeiter, 2, TypeActivityUtils.get_icon_pixbuf(track.category, 32, 32)
+            treeiter, 2, TypeActivityUtils.get_icon_pixbuf(activity.category, 32, 32)
         )
-        DatabaseHelper.update(track)
+        DatabaseHelper.update(activity)
 
         funcs = []
         if dialog.correct_altitude():
-            altitude_correction = AltitudeCorrection(track.id)
+            altitude_correction = AltitudeCorrection(activity.id)
             funcs.append({"func": altitude_correction.run, "args": None})
 
         if funcs:
             self._app.get_window().show_infobar(
                 itype=Gtk.MessageType.INFO,
                 message=_(
-                    "Doing corrections. When it finishes then the track will "
+                    "Doing corrections. When it finishes then the activity will "
                     "be reloaded"
                 ),
                 buttons=[
@@ -222,9 +205,9 @@ class TracksLayout(Gtk.Paned):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in
                     the Gtk.TreeView through the model.
         """
-        track = DatabaseHelper.get_track_by_id(self._tree_model_filter.get_value(treeiter, 0))
-        self._app.open_external_app(AppTrackAnalytic, {"track": track})
-        # self._app_window.load_app(AppTrackAnalytic(track))
+        activity = DatabaseHelper.get_activity_by_id(self._tree_model_filter.get_value(treeiter, 0))
+        self._app.open_external_app(AppActivityAnalytic, {"activity": activity})
+        # self._app_window.load_app(AppAnalytic(activity))
 
     def _on_correction_done(self, results):
         if results is None:
@@ -243,10 +226,10 @@ class TracksLayout(Gtk.Paned):
             )
             return
 
-        track = results[0]
+        activity = results[0]
         self._app.get_window().clean_top_widget()
         iter = self._tree_model_filter.get_iter_first()
-        while iter and self._tree_model_filter.get_value(iter, 0) != track.id:
+        while iter and self._tree_model_filter.get_value(iter, 0) != activity.id:
             iter = self._tree_model_filter.iter_next(iter)
         if self._treepath_selected == self._tree_model_filter.get_path(iter):
             self._select_row(self._tree_model_filter.get_path(iter), force=True)
@@ -270,17 +253,17 @@ class TracksLayout(Gtk.Paned):
         self._treepath_selected = treepath
 
         treeiter = self._tree_model_filter.get_iter(treepath)
-        track_id = self._tree_model_filter.get_value(treeiter, 0)
-        track = DatabaseHelper.get_track_by_id(track_id)
-        if not track:
+        activity_id = self._tree_model_filter.get_value(treeiter, 0)
+        activity = DatabaseHelper.get_activity_by_id(activity_id)
+        if not activity:
             return
 
         self._tree_view_widget.set_cursor(treepath, None, False)
         self._tree_view_widget.grab_focus()
 
-        layout = TrackStatsLayout(track)
+        layout = ActivityStatsLayout(activity)
         self._add_widget(layout)
-        layout.load_data()
+        layout.build()
 
         self._app.register_actions([
             ActionsTuple(ActionId.DELETE, self.on_remove, treeiter),
@@ -294,16 +277,16 @@ class TracksLayout(Gtk.Paned):
         self._add_widget(label)
 
     def _add_widget(self, widget):
-        """Add the widget to _track_stats_widget.
+        """Add the widget to _activity_stats_widget.
 
         Arguments:
-        widget -- the widget to add to ScrolledWindow _track_stats_widget.
+        widget -- the widget to add to ScrolledWindow _activity_stats_widget.
         """
-        if self._track_stats_widget and self._track_stats_widget.get_child():
-            self._track_stats_widget.remove(
-                self._track_stats_widget.get_child()
+        if self._activity_stats_widget and self._activity_stats_widget.get_child():
+            self._activity_stats_widget.remove(
+                self._activity_stats_widget.get_child()
             )
-        self._track_stats_widget.add(widget)
+        self._activity_stats_widget.add(widget)
         self.show_all()
 
     def _remove_item_from_db(self, treeiter):
@@ -313,12 +296,12 @@ class TracksLayout(Gtk.Paned):
         treeiter -- Gtk.TreeIter object that point to the item to be deleted from the model.
         """
         try:
-            trackid = self._tree_model_filter.get_value(treeiter, 0)
-            track = DatabaseHelper.get_track_by_id(trackid)
-            DatabaseHelper.delete(track)
+            activity_id = self._tree_model_filter.get_value(treeiter, 0)
+            activity = DatabaseHelper.get_activity_by_id(activity_id)
+            DatabaseHelper.delete(activity)
         except ValueError:
             pyot_logging.get_logger(__name__).exception(
-                f"Error: deleting track {self._tree_model_filter.get_value(treeiter, 1)}"
+                f"Error: deleting activity {self._tree_model_filter.get_value(treeiter, 1)}"
             )
 
     def _remove_item_from_list_store(self, treeiter):
@@ -354,7 +337,7 @@ class TracksLayout(Gtk.Paned):
             self._app.empty()
         if len(self._tree_model_filter) == 0:
             self._app.register_actions([])
-            self._show_message(_("Select a track to view its stats..."))
+            self._show_message(_("Select a activity to view its stats..."))
 
     def _on_list_store_filter_func(self, treemodel, treeiter, data):
         if self._current_model_filter is None:

@@ -76,7 +76,7 @@ class AggregatedStats:
 
     @property
     def total_distance_float(self):
-        return self._total_distance_m / 1000
+        return self._total_distance_m / 1000 if self._total_distance_m is not None else None
 
     @property
     def total_elevation_gain(self):

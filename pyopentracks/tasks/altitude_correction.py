@@ -32,7 +32,7 @@ class AltitudeCorrection:
     It uses Open Elevation API to correct track points altitudes and compute
     gain, loss, min and max altitudes.
 
-    It also updates data in the database (tracks and trackpoints).
+    It also updates data in the database (activities and trackpoints).
     """
 
     BULK_NUM = 500
@@ -41,14 +41,14 @@ class AltitudeCorrection:
     DISTANCE_THRESHOLD = 50
     CIRCULAR_BUFFER_LEN = 20
 
-    def __init__(self, trackid):
+    def __init__(self, activity_id):
         super().__init__()
-        self._trackid = trackid
+        self._activity_id = activity_id
         self._max = None
         self._min = None
         self._gain = 0
         self._loss = 0
-        self._trackpoints = DatabaseHelper.get_track_points(self._trackid)
+        self._trackpoints = DatabaseHelper.get_track_points(self._activity_id)
         self._buffer = collections.deque(maxlen=AltitudeCorrection.CIRCULAR_BUFFER_LEN)
         self._altitudes = []
 
@@ -63,7 +63,7 @@ class AltitudeCorrection:
             return None
         self._compute_gain_and_loss()
         self._update_track_stats()
-        return DatabaseHelper.get_track_by_id(self._trackid)
+        return DatabaseHelper.get_activity_by_id(self._activity_id)
 
     def _init_buffer(self):
         n = 20 if len(self._trackpoints) >= 20 else len(self._trackpoints)
@@ -86,8 +86,8 @@ class AltitudeCorrection:
             js_str = json.loads(res_str)
             response.close()
 
-            DatabaseHelper.update_altitude(self._trackid, js_str["results"])
-        self._trackpoints = DatabaseHelper.get_track_points(self._trackid)
+            DatabaseHelper.update_altitude(self._activity_id, js_str["results"])
+        self._trackpoints = DatabaseHelper.get_track_points(self._activity_id)
 
     def _compute_gain_and_loss(self):
         last_valid_tp = self._trackpoints[0]
@@ -116,4 +116,4 @@ class AltitudeCorrection:
                 self._max = tp.altitude
 
     def _update_track_stats(self):
-        DatabaseHelper.update_stats(self._trackid, self._gain, self._loss, self._min, self._max)
+        DatabaseHelper.update_stats(self._activity_id, self._gain, self._loss, self._min, self._max)

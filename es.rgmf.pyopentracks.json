@@ -24,42 +24,78 @@
   ],
   "modules": [
     {
-      "name": "pyopentracks",
-      "builddir": true,
-      "buildsystem": "meson",
-      "sources": [
-        {
-          "type": "git",
-          "url": "file:///home/roman/workspace/PyOpenTracks",
-          "branch": "main"
-        }
-      ]
-    },
-    {
-      "name": "pip-install",
-      "buildsystem": "simple",
-      "build-options": {
-        "build-args": [
-          "--share=network"
+        "name": "cogl",
+        "builddir": true,
+        "buildsystem": "autotools",
+        "sources": [
+          {
+            "type": "git",
+            "url": "https://gitlab.gnome.org/Archive/cogl.git",
+            "branch": "master"
+          }
         ]
       },
-      "build-commands": [
-        "pip3 install --prefix=/app matplotlib==3.3.4",
-        "pip3 install --prefix=/app python-dateutil>=2.8.1",
-        "pip3 install --prefix=/app fitparse>=1.2.0"
-      ]
-    },
-    {
-      "name": "libchamplain",
-      "builddir": true,
-      "buildsystem": "meson",
-      "sources": [
-        {
-          "type": "git",
-          "url": "https://gitlab.gnome.org/GNOME/libchamplain.git",
-          "branch": "master"
-        }
-      ]
-    }
+      {
+        "name": "clutter",
+        "builddir": true,
+        "buildsystem": "autotools",
+        "sources": [
+          {
+            "type": "git",
+            "url": "https://gitlab.gnome.org/Archive/clutter.git",
+            "branch": "master"
+          }
+        ]
+      },
+      {
+        "name": "clutter-gtk",
+        "builddir": true,
+        "buildsystem": "autotools",
+        "sources": [
+          {
+            "type": "git",
+            "url": "https://gitlab.gnome.org/Archive/clutter-gtk.git",
+            "branch": "master"
+          }
+        ]
+      },
+      {
+        "name": "libchamplain",
+        "builddir": true,
+        "buildsystem": "meson",
+        "sources": [
+          {
+            "type": "git",
+            "url": "https://gitlab.gnome.org/GNOME/libchamplain.git",
+            "branch": "master"
+          }
+        ]
+      },
+      {
+        "name": "pip-install",
+        "buildsystem": "simple",
+        "build-options": {
+          "build-args": [
+            "--share=network"
+          ]
+        },
+        "build-commands": [
+          "pip3 install --prefix=/app matplotlib==3.3.4",
+          "pip3 install --prefix=/app python-dateutil>=2.8.1",
+          "pip3 install --prefix=/app fitparse>=1.2.0"
+        ]
+      },
+      {
+        "name": "pyopentracks",
+        "builddir": true,
+        "buildsystem": "meson",
+        "sources": [
+          {
+            "type": "git",
+            "url": "file:///home/roman/workspace/PyOpenTracks",
+            "branch": "main"
+          }
+        ]
+      }
   ]
 }

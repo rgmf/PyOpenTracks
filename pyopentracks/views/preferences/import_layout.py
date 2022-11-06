@@ -41,7 +41,7 @@ class PreferencesImportLayout(Gtk.Box):
         self._title.get_style_context().add_class("pyot-h3")
 
         self._help_text.set_text(_(
-            "Select a folder to import automatically new track files. "
+            "Select a folder to import automatically new activity files. "
             "PyOpenTracks will check it for new files every time it opens."
         ))
         self._help_text.get_style_context().add_class("pyot-prefs-help")

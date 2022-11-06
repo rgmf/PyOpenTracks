@@ -60,7 +60,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._load_window_state()
         self.set_title("PyOpenTracks")
         self._app = kwargs["application"]
-        self._layout = None
+        self._container = AppWindowContainer()
+        self.add(self._container)
 
         self._menu_buttons = {
             PyopentracksWindow.MenuButton.MAIN: self._primary_menu_btn,
@@ -107,7 +108,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         This method can be used to show a message to the user with
         the result of a background task.
         """
-        top_widget = self._layout.get_top_widget()
+        top_widget = self._container.get_top_widget()
         if not top_widget:
             return
 
@@ -139,14 +140,9 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._action_buttons_handlers = []
 
     def load_app(self, app):
-        if app.get_layout() is self._layout:
+        if app.get_layout() is self._container.get_layout():
             return
-
-        if self._layout:
-            self.remove(self._layout)
-
-        self._layout = app.get_layout()
-        self.add(self._layout)
+        self._container.set_layout(app.get_layout())
 
     def loading(self, total):
         """Handle a progress bar on the top of the loaded Layout.
@@ -157,7 +153,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         total -- a float number between 0.0 and 1.0 indicating the
                  progress of the loading process.
         """
-        top_widget = self._layout.get_top_widget()
+        top_widget = self._container.get_top_widget()
         if not top_widget:
             return
 
@@ -181,7 +177,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             progress.set_fraction(total)
 
     def clean_top_widget(self):
-        widget = self._layout.get_top_widget()
+        widget = self._container.get_top_widget()
         widget.foreach(lambda child: widget.remove(child))
 
     def on_quit(self):
@@ -210,3 +206,25 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
     def _on_destroy(self, widget, event):
         self._save_state()
+
+
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/app_window_container.ui")
+class AppWindowContainer(Gtk.Box):
+    __gtype_name__ = "AppWindowContainer"
+
+    _top_widget: Gtk.Box = Gtk.Template.Child()
+    _content_widget: Gtk.Box = Gtk.Template.Child()
+
+    def __init__(self):
+        super().__init__()
+
+    def set_layout(self, new_child):
+        for c in self._content_widget.get_children():
+            self._content_widget.remove(c)
+        self._content_widget.pack_start(new_child, True, True, 0)
+
+    def get_top_widget(self):
+        return self._top_widget
+
+    def get_layout(self):
+        return self._content_widget.get_children()[0] if self._content_widget.get_children() else None

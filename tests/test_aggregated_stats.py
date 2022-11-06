@@ -3,7 +3,7 @@ from datetime import datetime
 from mock_db import MockDB
 
 from pyopentracks.models.database_helper import DatabaseHelper
-from pyopentracks.models.track import Track
+from pyopentracks.models.activity import Track
 
 
 class TestAggregatedStats(MockDB):

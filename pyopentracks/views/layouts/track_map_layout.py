@@ -96,9 +96,9 @@ class TrackMapLayout(MapLayout):
     def add_polyline_from_points(self, points: List[TrackPoint]) -> None:
         self._map.add_polyline(points)
 
-    def add_polyline_from_trackid(self, trackid):
-        """Load track points from track's id."""
-        ProcessView(self.add_polyline_from_points, DatabaseHelper.get_track_points, (trackid,)).start()
+    def add_polyline_from_activity_id(self, activity_id):
+        """Load track points from activity's id."""
+        ProcessView(self.add_polyline_from_points, DatabaseHelper.get_track_points, (activity_id,)).start()
 
     def highlight(self, locations: List[Location]):
         self._map.add_highlight_polyline(locations)

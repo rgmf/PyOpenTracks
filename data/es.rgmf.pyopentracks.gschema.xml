@@ -6,10 +6,10 @@
       <summary>Database version</summary>
       <description>Database version actually used.</description>
     </key>
-    <key name="trackspath" type="s">
+    <key name="activitiespath" type="s">
       <default>''</default>
-      <summary>Track's Path</summary>
-      <description>Select a directory where PyOpenTracks will load all tracks from.</description>
+      <summary>Activity's Path</summary>
+      <description>Select a directory where PyOpenTracks will load all activities from.</description>
     </key>
     <key name="last-folder" type="s">
       <default>''</default>
@@ -19,7 +19,7 @@
     <key name="opentracks-gain-loss-filter" type="b">
       <default>true</default>
       <summary>OpenTracks gain and loss filtering</summary>
-      <description>PyOpenTracks can filter and improve barometric values of elevation gain and loss when tracks were recorded with OpenTracks.</description>
+      <description>PyOpenTracks can filter and improve barometric values of elevation gain and loss when activities were recorded with OpenTracks.</description>
     </key>
     <key name="heart-rate-max" type="i">
       <default>-1</default>

@@ -124,7 +124,8 @@ class GpxParser:
     def close(self):
         if self._segment.points:
             self._record.segments.append(self._segment)
-            self._record.time = self._record.segments[0].points[0].time
+            self._record.start_time = self._record.segments[0].points[0].time
+            self._record.end_time = self._record.segments[-1].points[-1].time
 
     def _end_tag_inside_metadata_trk(self, tag):
         """Compute the tag tag that is inside metadata or trk tag."""

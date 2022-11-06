@@ -23,7 +23,7 @@ from .model import Model
 class AutoImport(Model):
     def __init__(self, *args):
         self._id = args[0]
-        self._trackfile = args[1]
+        self._activity_file = args[1]
         self._result = args[2]
 
     @property
@@ -38,22 +38,22 @@ class AutoImport(Model):
 
     @property
     def update_query(self):
-        """Return the query for updating a Track by id."""
+        """Return the query for updating an Activity by id."""
         return """
-        UPDATE autoimport SET trackfile=?, result=?
+        UPDATE autoimport SET activityfile=?, result=?
         WHERE _id=?
         """
 
     @property
     def update_data(self):
-        return (self._trackfile, self._result, self._id)
+        return (self._activity_file, self._result, self._id)
 
     @property
     def fields(self):
         """Returns a tuple with all AutoImport fields.
         Maintain the database table autoimport order of the fields.
         """
-        return (self._id, self._trackfile, self._result)
+        return (self._id, self._activity_file, self._result)
 
     @property
     def bulk_insert_fields(self, fk_value):

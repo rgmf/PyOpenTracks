@@ -27,8 +27,11 @@ from pyopentracks.models.stats import Stats
 from pyopentracks.io.parser.recorded_with import RecordedOptions, RecordedWith
 
 
-class Track(Model):
-    __slots__ = ("_id", "_uuid", "_name", "_description", "_category", "_recorded_with", "_segments")
+class Activity(Model):
+    __slots__ = (
+        "_id", "_uuid", "_name", "_description", "_category", "_recorded_with",
+        "_start_time_ms", "_stats_id", "_stats", "_sections"
+    )
 
     def __init__(self, *args):
         super().__init__()
@@ -46,21 +49,21 @@ class Track(Model):
 
     @property
     def insert_query(self):
-        """Returns the query for inserting a Track register."""
+        """Returns the query for inserting an Activity register."""
         return """
-        INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO activities VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """
 
     @property
     def delete_query(self):
-        """Returns the query for deleting a Track by id."""
-        return "DELETE FROM tracks WHERE _id=?"
+        """Returns the query for deleting a Activity by id."""
+        return "DELETE FROM activities WHERE _id=?"
 
     @property
     def update_query(self):
-        """Return the query for updating a Track by id."""
+        """Return the query for updating a Activity by id."""
         return """
-        UPDATE tracks 
+        UPDATE activities 
         SET name=?, description=?, category=?
         WHERE _id=?
         """
@@ -71,8 +74,8 @@ class Track(Model):
 
     @property
     def fields(self):
-        """Returns a tuple with all Track fields.
-        Maintain the database table tracks order of the fields.
+        """Returns a tuple with all Activity fields.
+        Maintain the database table activities order of the fields.
         """
         return (
             self._id, self._uuid, self._name, self._description,

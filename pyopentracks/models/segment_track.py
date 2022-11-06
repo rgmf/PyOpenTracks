@@ -18,7 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .model import Model
-from pyopentracks.stats.track_stats import TrackStats
+from pyopentracks.stats.track_activity_stats import TrackActivityStats
 from pyopentracks.utils.utils import TimeUtils, SpeedUtils, SensorUtils
 
 
@@ -32,19 +32,19 @@ class SegmentTrack(Model):
         Point (from-point or to-point) in a SegmentTrack.
         """
         def __init__(self, *args):
-            self._trackid = args[0] if args else None
-            self._trackpointid = args[1] if args else None
+            self._activity_id = args[0] if args else None
+            self._trackpoint_id = args[1] if args else None
             self._timestamp = args[2] if args else None
             self._latitude = args[3] if args else None
             self._longitude = args[4] if args else None
 
         @property
-        def trackid(self):
-            return self._trackid
+        def activity_id(self):
+            return self._activity_id
 
         @property
-        def trackpointid(self):
-            return self._trackpointid
+        def trackpoint_id(self):
+            return self._trackpoint_id
 
         @property
         def timestamp(self):
@@ -61,9 +61,9 @@ class SegmentTrack(Model):
     def __init__(self, *args):
         self._id = args[0] if args else None
         self._segmentid = args[1] if args else None
-        self._trackid = args[2] if args else None
-        self._trackpointid_start = args[3] if args else None
-        self._trackpointid_end = args[4] if args else None
+        self._activity_id = args[2] if args else None
+        self._trackpoint_id_start = args[3] if args else None
+        self._trackpoint_id_end = args[4] if args else None
         self._time = args[5] if args else None
         self._maxspeed = args[6] if args else None
         self._avgspeed = args[7] if args else None
@@ -72,15 +72,15 @@ class SegmentTrack(Model):
         self._maxcadence = args[10] if args else None
         self._avgcadence = args[11] if args else None
         self._avgpower = args[12] if args else None
-        self._track = None
+        self._activity = None
 
     @staticmethod
-    def from_points(segment_id: int, stats: TrackStats, from_point: Point, to_point: Point):
+    def from_points(segment_id: int, stats: TrackActivityStats, from_point: Point, to_point: Point):
         segment_track = SegmentTrack()
         segment_track._segmentid = segment_id
-        segment_track._trackid = from_point.trackid
-        segment_track._trackpointid_start = from_point.trackpointid
-        segment_track._trackpointid_end = to_point.trackpointid
+        segment_track._activity_id = from_point.activity_id
+        segment_track._trackpoint_id_start = from_point.trackpoint_id
+        segment_track._trackpoint_id_end = to_point.trackpoint_id
         segment_track._time = stats.total_time
         segment_track._maxspeed = stats.max_speed
         segment_track._avgspeed = stats.avg_speed
@@ -117,9 +117,9 @@ class SegmentTrack(Model):
         return (
             self._id,
             self._segmentid,
-            self._trackid,
-            self._trackpointid_start,
-            self._trackpointid_end,
+            self._activity_id,
+            self._trackpoint_id_start,
+            self._trackpoint_id_end,
             self._time,
             self._maxspeed,
             self._avgspeed,
@@ -142,20 +142,20 @@ class SegmentTrack(Model):
         return self._segmentid
 
     @property
-    def trackid(self):
-        return self._trackid
+    def activity_id(self):
+        return self._activity_id
 
     @property
     def track_point_id_start(self):
-        return self._trackpointid_start
+        return self._trackpoint_id_start
 
     @property
     def track_point_id_end(self):
-        return self._trackpointid_end
+        return self._trackpoint_id_end
 
     @property
-    def track(self):
-        return self._track
+    def activity(self):
+        return self._activity
 
     @property
     def time_ms(self):
@@ -167,14 +167,14 @@ class SegmentTrack(Model):
 
     @property
     def maxspeed(self):
-        if self.track is not None:
-            return SpeedUtils.mps_to_category_rate(self._maxspeed, self.track.category)
+        if self.activity is not None:
+            return SpeedUtils.mps_to_category_rate(self._maxspeed, self.activity.category)
         return SpeedUtils.mps_to_kph(self._maxspeed)
 
     @property
     def avgspeed(self):
-        if self.track is not None:
-            return SpeedUtils.mps_to_category_rate(self._avgspeed, self.track.category)
+        if self.activity is not None:
+            return SpeedUtils.mps_to_category_rate(self._avgspeed, self.activity.category)
         return SpeedUtils.mps_to_kph(self._avgspeed)
 
     @property
@@ -193,6 +193,6 @@ class SegmentTrack(Model):
     def maxcadence(self):
         return SensorUtils.cadence_to_str(self._maxcadence)
 
-    @track.setter
-    def track(self, track):
-        self._track = track
+    @activity.setter
+    def activity(self, activity):
+        self._activity = activity

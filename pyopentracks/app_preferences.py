@@ -37,13 +37,13 @@ class AppPreferences:
 
     def __init__(self):
         self._settings = Gio.Settings.new("es.rgmf.pyopentracks")
-        self._settings.connect("changed::trackspath", self._on_settings_folder_changed)
+        self._settings.connect("changed::activitiespath", self._on_settings_folder_changed)
 
     def get_pref(self, pref):
         if pref == AppPreferences.DB_VERSION:
             return self._settings.get_int("dbversion")
         elif pref == AppPreferences.AUTO_IMPORT_FOLDER:
-            return self._settings.get_string("trackspath")
+            return self._settings.get_string("activitiespath")
         elif pref == AppPreferences.WIN_STATE_WIDTH:
             return self._settings.get_int("win-state-width")
         elif pref == AppPreferences.WIN_STATE_HEIGHT:
@@ -61,7 +61,7 @@ class AppPreferences:
         if pref == AppPreferences.DB_VERSION:
             self._settings.set_int("dbversion", new_value)
         elif pref == AppPreferences.AUTO_IMPORT_FOLDER:
-            self._settings.set_string("trackspath", new_value)
+            self._settings.set_string("activitiespath", new_value)
         elif pref == AppPreferences.WIN_STATE_WIDTH:
             self._settings.set_int("win-state-width", new_value)
         elif pref == AppPreferences.WIN_STATE_HEIGHT:
@@ -79,7 +79,7 @@ class AppPreferences:
         if pref == AppPreferences.DB_VERSION:
             self._settings.get_default_value("dbversion")
         elif pref == AppPreferences.AUTO_IMPORT_FOLDER:
-            self._settings.get_default_value("trackspath")
+            self._settings.get_default_value("activitiespath")
         elif pref == AppPreferences.WIN_STATE_WIDTH:
             self._settings.get_default_value("win-state-width")
         elif pref == AppPreferences.WIN_STATE_HEIGHT:
@@ -98,7 +98,7 @@ class AppPreferences:
         # dialog = FolderChooserWindow(parent=self._window)
         # response = dialog.run()
         # if response == Gtk.ResponseType.OK:
-        #     self._settings.set_string("trackspath", dialog.get_filename())
+        #     self._settings.set_string("activitiespath", dialog.get_filename())
         # dialog.destroy()
         pass
 

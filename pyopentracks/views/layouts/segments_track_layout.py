@@ -18,7 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from gi.repository import Gtk, GObject
-from pyopentracks.models.track import Track
+from pyopentracks.models.activity import Activity
 
 from pyopentracks.utils.utils import DateTimeUtils
 from pyopentracks.models.database_helper import DatabaseHelper
@@ -35,13 +35,13 @@ class SegmentsTrackLayout(Gtk.Box, GObject.GObject):
     _title_label: Gtk.Label = Gtk.Template.Child()
     _grid: Gtk.Grid = Gtk.Template.Child()
 
-    def __init__(self, track: Track):
+    def __init__(self, activity: Activity):
         super().__init__()
         GObject.GObject.__init__(self)
 
         self._data_rows = 0
         self._map = None
-        self._track: Track = track
+        self._activity: Activity = activity
 
         self._title_label.set_text(_("Segments"))
         self._title_label.set_line_wrap(True)
@@ -50,24 +50,24 @@ class SegmentsTrackLayout(Gtk.Box, GObject.GObject):
         self.get_style_context().add_class("pyot-bg")
 
     def build(self):
-        track_year = DateTimeUtils.date_from_timestamp(self._track.start_time_ms).year
-        segmentracks = DatabaseHelper.get_segment_tracks_by_trackid(self._track.id)
+        activity_year = DateTimeUtils.date_from_timestamp(self._activity.start_time_ms).year
+        segmentracks = DatabaseHelper.get_segment_tracks_by_activity_id(self._activity.id)
         if not segmentracks:
-            self._grid.attach(Gtk.Label(_("There are not segments for this track")), 0, 0, 1, 1)
+            self._grid.attach(Gtk.Label(_("There are not segments for this activity")), 0, 0, 1, 1)
             return object
 
         self._grid.attach(self._build_header_label(_("Segment Information")), 0, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("Time")), 1, 0, 1, 1)
-        self._grid.attach(self._build_header_label(self._track.stats.speed_label(self._track.category)), 2, 0, 1, 1)
+        self._grid.attach(self._build_header_label(self._activity.stats.speed_label(self._activity.category)), 2, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("Heart Rate")), 3, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("Cadence")), 4, 0, 1, 1)
         self._grid.attach(self._build_header_label(_("All Times PR")), 5, 0, 1, 1)
-        self._grid.attach(self._build_header_label(str(track_year) + " PR"), 6, 0, 1, 1)
+        self._grid.attach(self._build_header_label(str(activity_year) + " PR"), 6, 0, 1, 1)
 
         for i, st in enumerate(segmentracks):
             all_times_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms)
-            year_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms, track_year)
-            st.track = self._track
+            year_pr = DatabaseHelper.get_segment_track_record(st.segmentid, st.time_ms, activity_year)
+            st.activity = self._activity
             segment = DatabaseHelper.get_segment_by_id(st.segmentid)
             self._grid.attach(
                 self._build_info_box(
