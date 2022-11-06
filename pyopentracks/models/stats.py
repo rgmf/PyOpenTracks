@@ -16,6 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
+
+from pyopentracks.models.set import Set
 from .model import Model
 from pyopentracks.utils.utils import DateTimeUtils as dtu
 from pyopentracks.utils.utils import TimeUtils as tu
@@ -33,7 +36,8 @@ class Stats(Model):
         "_avgmovingspeed_mps", "_maxspeed_mps", "_minelevation_m",
         "_maxelevation_m", "_elevationgain_m", "_elevationloss_m",
         "_maxhr_bpm", "_avghr_bpm", "_maxcadence_rpm",
-        "_avgcadence_rpm", "_power_normalized_w", "_power_max_w"
+        "_avgcadence_rpm", "_power_normalized_w", "_power_max_w",
+        "_avg_temperature", "_max_temperature", "_total_calories"
     )
 
     def __init__(self, *args) -> None:
@@ -57,13 +61,18 @@ class Stats(Model):
         self._avgcadence_rpm = args[16] if args else None
         self._power_normalized_w = args[17] if args else None
         self._power_max_w = args[18] if args else None
+        self._avg_temperature = args[19] if args else None
+        self._max_temperature = args[20] if args else None
+        self._total_calories = args[21] if args else None
+
+        self._sets: List[Set] = []
 
     @property
     def insert_query(self):
         """Returns the query for inserting a Stats register."""
         return """
         INSERT INTO stats VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -89,7 +98,8 @@ class Stats(Model):
             self._minelevation_m, self._maxelevation_m, self._elevationgain_m,
             self._elevationloss_m, self._maxhr_bpm, self._avghr_bpm,
             self._maxcadence_rpm, self._avgcadence_rpm, self._power_normalized_w,
-            self._power_max_w
+            self._power_max_w, self._avg_temperature, self._max_temperature,
+            self._total_calories
         )
 
     def bulk_insert_fields(self, fk_value):
@@ -154,6 +164,10 @@ class Stats(Model):
     @property
     def total_distance_label(self):
         return _("Distance")
+
+    @property
+    def sets(self):
+        return self._sets
 
     def avg_speed(self, category):
         return su.mps_to_category_rate(self._avgspeed_mps, category)
@@ -288,6 +302,42 @@ class Stats(Model):
     def power_max_label(self):
         return _("Max. Power")
 
+    @property
+    def avg_temperature_label(self):
+        return _("Avg. Temperature")
+
+    @property
+    def avg_temperature_value(self):
+        return self._avg_temperature
+
+    @property
+    def avg_temperature(self):
+        return se.temperature_to_str(self._avg_temperature)
+
+    @property
+    def max_temperature_label(self):
+        return _("Max. Temperature")
+
+    @property
+    def max_temperature_value(self):
+        return self._max_temperature
+
+    @property
+    def max_temperature(self):
+        return se.temperature_to_str(self._max_temperature)
+
+    @property
+    def total_calories_label(self):
+        return _("Total Calories")
+
+    @property
+    def total_calories_value(self):
+        return self._total_calories
+
+    @property
+    def total_calories(self):
+        return se.calories_to_str(self._total_calories)
+
     @gain_elevation_m.setter
     def gain_elevation_m(self, gain):
         self._elevationgain_m = gain
@@ -303,3 +353,7 @@ class Stats(Model):
     @min_elevation_m.setter
     def min_elevation_m(self, elevation):
         self._minelevation_m = elevation
+
+    @sets.setter
+    def sets(self, sets):
+        self._sets = sets

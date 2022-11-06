@@ -62,13 +62,16 @@ class Migration:
                 avgcadence FLOAT,
                 normalizedpower FLOAT,
                 maxpower FLOAT,
-                FOREIGN KEY (_id) REFERENCES tracks (statsid) ON UPDATE CASCADE ON DELETE CASCADE
+                avgtemperature FLOAT,
+                maxtemperature FLOAT,
+                totalcalories INTEGER,
+                FOREIGN KEY (_id) REFERENCES activities (statsid) ON UPDATE CASCADE ON DELETE CASCADE
             );
         """
         self._db.execute(query)
 
         query = """
-            CREATE TABLE tracks (
+            CREATE TABLE activities (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
                 uuid BLOB,
                 name TEXT,
@@ -81,20 +84,20 @@ class Migration:
             );
         """
         self._db.execute(query)
-        query = "CREATE UNIQUE INDEX tracks_uuid_index ON tracks (uuid)"
-        query = "CREATE UNIQUE INDEX tracks_stats_id_index ON tracks (statsid)"
+        query = "CREATE UNIQUE INDEX activities_uuid_index ON activities (uuid)"
+        query = "CREATE UNIQUE INDEX activities_stats_id_index ON activities (statsid)"
         self._db.execute(query)
 
         query = """
             CREATE TABLE sections (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
-                trackid,
-                FOREIGN KEY (trackid) REFERENCES tracks (_id) ON UPDATE CASCADE ON DELETE CASCADE
+                activityid INTEGER,
+                FOREIGN KEY (activityid) REFERENCES activities (_id) ON UPDATE CASCADE ON DELETE CASCADE
             );
         """
         self._db.execute(query)
-        query = "CREATE INDEX sections_trackid_index ON sections (trackid)"
+        query = "CREATE INDEX sections_activityid_index ON sections (activityid)"
         self._db.execute(query)
 
         query = """
@@ -117,6 +120,27 @@ class Migration:
         """
         self._db.execute(query)
         query = "CREATE INDEX trackpoints_sectionid_index ON trackpoints (sectionid)"
+        self._db.execute(query)
+
+        query = """
+            CREATE TABLE sets (
+                _id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type INTEGER,
+                exercisecategory INTEGER,
+                weight FLOAT,
+                repetitions INT,
+                avghr FLOAT,
+                maxhr FLOAT,
+                time INTEGER,
+                calories INTEGER,
+                temperature FLOAT,
+                difficulty INTEGER,
+                statsid INTEGER,
+                FOREIGN KEY (statsid) REFERENCES stats (_id) ON UPDATE CASCADE ON DELETE CASCADE
+            );
+        """
+        self._db.execute(query)
+        query = "CREATE INDEX sets_statsid_index ON sets (statsid)"
         self._db.execute(query)
 
         query = """
@@ -148,7 +172,7 @@ class Migration:
             CREATE TABLE segmentracks (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
                 segmentid INTEGER NOT NULL,
-                trackid INTEGER NOT NULL,
+                activityid INTEGER NOT NULL,
                 trackpointid_start INTEGER NOT NULL,
                 trackpointid_end INTEGER NOT NULL,
                 time INTEGER NOT NULL,
@@ -160,7 +184,7 @@ class Migration:
                 avgcadence FLOAT,
                 avgpower FLOAT,
                 FOREIGN KEY (segmentid) REFERENCES segments (_id) ON UPDATE CASCADE ON DELETE CASCADE,
-                FOREIGN KEY (trackid) REFERENCES tracks (_id) ON UPDATE CASCADE ON DELETE CASCADE,
+                FOREIGN KEY (activityid) REFERENCES activities (_id) ON UPDATE CASCADE ON DELETE CASCADE,
                 FOREIGN KEY (trackpointid_start) REFERENCES trackpoints (_id) ON UPDATE CASCADE ON DELETE CASCADE,
                 FOREIGN KEY (trackpointid_end) REFERENCES trackpoints (_id) ON UPDATE CASCADE ON DELETE CASCADE                
             );
@@ -168,7 +192,7 @@ class Migration:
         self._db.execute(query)
         query = "CREATE INDEX segmenttracks_segmentid_index ON segmentracks (segmentid)"
         self._db.execute(query)
-        query = "CREATE INDEX segmenttracks_trackid_index ON segmentracks (trackid)"
+        query = "CREATE INDEX segmenttracks_activityid_index ON segmentracks (activityid)"
         self._db.execute(query)
         query = "CREATE INDEX segmenttracks_trackpointid_start_index ON segmentracks (trackpointid_start)"
         self._db.execute(query)
@@ -178,10 +202,10 @@ class Migration:
         query = """
             CREATE TABLE autoimport (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
-                trackfile TEXT,
+                activityfile TEXT,
                 result INTEGER
             );
         """
         self._db.execute(query)
-        query = "CREATE UNIQUE INDEX autoimport_trackfile_index ON autoimport (trackfile)"
+        query = "CREATE UNIQUE INDEX autoimport_activityfile_index ON autoimport (activityfile)"
         self._db.execute(query)

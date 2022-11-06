@@ -19,9 +19,11 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk
 
+from pyopentracks.views.layouts.layout import Layout
+
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/notebook_layout.ui")
-class NotebookLayout(Gtk.Notebook):
+class NotebookLayout(Gtk.Notebook, Layout):
     """Generic Gtk.Notebook."""
 
     __gtype_name__ = "NotebookLayout"
@@ -29,8 +31,12 @@ class NotebookLayout(Gtk.Notebook):
     def __init__(self):
         """Init."""
         super().__init__()
+        Layout.__init__(self)
 
-    def append(self, layout: Gtk.Widget, label: str):
+    def build(self):
+        self.show_all()
+
+    def append(self, layout: Layout, label: str):
         """Add a new tab to the notebook.
 
         Every tab contains a scrolled window that contains the layout.
@@ -46,4 +52,7 @@ class NotebookLayout(Gtk.Notebook):
 
         label_widget = Gtk.Label(label)
         self.append_page(scrolled_win, label_widget)
-        self.show_all()
+
+    def get_layouts(self):
+        for scrolled_win in self.get_children():
+            yield scrolled_win.get_children()[0].get_children()[0]

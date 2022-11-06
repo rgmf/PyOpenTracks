@@ -28,22 +28,21 @@ from pyopentracks.utils.utils import TimeUtils
 from pyopentracks.io.parser.result import Result
 
 
-class ExportTrack():
-    def __init__(self, trackid, folder):
-        self._trackid = trackid
-        self._track = DatabaseHelper.get_track_by_id(trackid)
+class ExportActivity():
+    def __init__(self, activity_id, folder):
+        self._activity = DatabaseHelper.get_activity_by_id(activity_id)
         self._folder = folder
         self._segment = None
 
     def run(self):
-        if not self._track:
-            return Result(code=Result.ERROR, message=_(f"Error: there are not tracks identified by {self._trackid}"))
-        trackpoints = DatabaseHelper.get_track_points(self._track.id)
+        if not self._activity:
+            return Result(code=Result.ERROR, message=_(f"Error: there are not activities identified by {self._activity.id}"))
+        trackpoints = DatabaseHelper.get_track_points(self._activity.id)
         if not trackpoints or len(trackpoints) == 0:
-            return Result(code=Result.ERROR, message=_(f"Error: there are not track points into track identified by {self._trackid}"))
+            return Result(code=Result.ERROR, message=_(f"Error: there are not track points into activity identified by {self._activity.id}"))
 
         try:
-            with open(path.join(self._folder, str(self._track.id) + self._track.name + ".gpx"), "w") as gpx:
+            with open(path.join(self._folder, str(self._activity.id) + self._activity.name + ".gpx"), "w") as gpx:
                 self._segment = trackpoints[0].segment
                 segment_buffer = []
 
@@ -68,10 +67,10 @@ class ExportTrack():
                 gpx.write(self._close_track)
                 gpx.write(self._footer)
         except Exception as e:
-            message = _(f"Error exporting the track {self._track.name}: {e}")
+            message = _(f"Error exporting the track {self._activity.name}: {e}")
             pyot_logging.get_logger(__name__).exception(message)
             return Result(code=Result.ERROR, message=message)
-        return Result(code=Result.OK, message=_(f"Track {self._track.name} exported correctly"))
+        return Result(code=Result.OK, message=_(f"Activity {self._activity.name} exported correctly"))
 
     @property
     def _header(self):
@@ -94,10 +93,10 @@ class ExportTrack():
     @property
     def _metadata(self):
         return "<metadata>\n" \
-            f"<name>{self._track.name}</name>\n" \
-            f"<time>{TimeUtils.ms_to_iso(self._track.start_time_ms)}</time>\n" \
-            f"<desc>{self._track.description}</desc>\n" \
-            f"<type>{self._track.category}</type>\n" \
+            f"<name>{self._activity.name}</name>\n" \
+            f"<time>{TimeUtils.ms_to_iso(self._activity.start_time_ms)}</time>\n" \
+            f"<desc>{self._activity.description}</desc>\n" \
+            f"<type>{self._activity.category}</type>\n" \
             "</metadata>\n"
 
     @property
@@ -106,9 +105,9 @@ class ExportTrack():
 
     @property
     def _extensions(self):
-        if self._track and self._track.uuid:
+        if self._activity and self._activity.uuid:
             return "<extensions>\n" \
-                f"<opentracks:trackid>{self._track.uuid}</opentracks:trackid>\n" \
+                f"<opentracks:trackid>{self._activity.uuid}</opentracks:trackid>\n" \
                 "</extensions>\n"
         return ""
 
@@ -142,7 +141,7 @@ class ExportTrack():
 class ExportAllHandler(GObject.GObject):
 
     __gsignals__ = {
-        "total-tracks-to-export": (GObject.SIGNAL_RUN_FIRST, None, (int,)),
+        "total-activities-to-export": (GObject.SIGNAL_RUN_FIRST, None, (int,)),
     }
 
     def __init__(self, path, cb):
@@ -154,8 +153,8 @@ class ExportAllHandler(GObject.GObject):
         threading.Thread(target=self._export_in_thread, daemon=True).start()
 
     def _export_in_thread(self):
-        tracks = DatabaseHelper.get_tracks()
-        self.emit("total-tracks-to-export", len(tracks))
-        for track in DatabaseHelper.get_tracks():
-            result = ExportTrack(track.id, self._folder).run()
+        activities = DatabaseHelper.get_activitties()
+        self.emit("total-activities-to-export", len(activities))
+        for activity in DatabaseHelper.get_activities():
+            result = ExportActivity(activity.id, self._folder).run()
             GLib.idle_add(self._callback, result)

@@ -18,34 +18,36 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
 
+from gi.repository import Gtk
+
 from pyopentracks.app_external import AppExternal
 from pyopentracks.app_interfaces import Action
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.models.database_helper import DatabaseHelper
-from pyopentracks.models.track import Track
+from pyopentracks.models.activity import Activity
 from pyopentracks.observers.data_update_observer import DataUpdateSubscription
+from pyopentracks.views.layouts.layout_builder import LayoutBuilder
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
 from pyopentracks.views.layouts.process_view import ProcessView
-from pyopentracks.views.layouts.track_data_analytic_layout import TrackDataAnalyticLayout
 from pyopentracks.views.layouts.track_map_analytic_layout import TrackMapAnalyticLayout
 from pyopentracks.views.layouts.track_segments_layout import TrackSegmentsLayout
-from pyopentracks.views.layouts.track_summary_layout import TrackSummaryLayout
 
 
-class AppTrackAnalytic(AppExternal):
+class AppActivityAnalytic(AppExternal):
     """Handler of Analytics App.
 
     This is the controller of the analytic's views.
     """
 
-    def __init__(self, track: Track):
+    def __init__(self, activity: Activity):
         super().__init__()
-        self._layout = NotebookLayout()
-        self._track: Track = track
+        self._layout = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
+        self._activity: Activity = activity
         self._preferences = AppPreferences()
+        self._subscriptions = DataUpdateSubscription()
 
-        if not self._track.all_track_points:
-            ProcessView(self._on_sections_ready, DatabaseHelper.get_sections, (self._track.id,)).start()
+        if not self._activity.all_track_points:
+            ProcessView(self._on_sections_ready, DatabaseHelper.get_sections, (self._activity.id,)).start()
         else:
             self._build()
 
@@ -56,30 +58,31 @@ class AppTrackAnalytic(AppExternal):
         return []
 
     def get_kwargs(self) -> dict:
-        return {"track": self._track}
+        return {"activity": self._activity}
 
     def segment_created_notify(self):
         self._subscriptions.notify()
 
     def _build(self):
-        summary_layout = TrackSummaryLayout(self._track)
-        data_analytic_layout = TrackDataAnalyticLayout(self._track, self._preferences)
-        segments_layout = TrackSegmentsLayout(self._track)
-        map_analytic_layout = TrackMapAnalyticLayout(self._track, self.segment_created_notify)
+        LayoutBuilder(self._on_build_layout_done)\
+            .set_type(LayoutBuilder.Layouts.ACTIVITY_ANALYTIC)\
+            .set_activity(self._activity)\
+            .set_preferences(self._preferences)\
+            .make()
 
-        self._subscriptions = DataUpdateSubscription()
-        self._subscriptions.attach(segments_layout)
-
-        self._layout.append(summary_layout, _("Summary"))
-        self._layout.append(data_analytic_layout, _("Data Analytic"))
-        self._layout.append(segments_layout, _("Segments"))
-        self._layout.append(map_analytic_layout, _("Map Analytic"))
-
-        summary_layout.build()
-        data_analytic_layout.build()
-        segments_layout.build()
-        map_analytic_layout.build()
+    def _on_build_layout_done(self, layout):
+        if type(layout) == NotebookLayout:
+            for child_layout in layout.get_layouts():
+                if type(child_layout) == TrackSegmentsLayout:
+                    self._subscriptions.attach(child_layout)
+                elif type(child_layout) == TrackMapAnalyticLayout:
+                    child_layout.set_new_segment_created_cb(self.segment_created_notify)
+                child_layout.build()
+                child_layout.post_build()
+        layout.build()
+        self._layout.pack_start(layout, True, True, 0)
+        self._layout.show_all()
 
     def _on_sections_ready(self, sections):
-        self._track.sections = sections
+        self._activity.sections = sections
         self._build()

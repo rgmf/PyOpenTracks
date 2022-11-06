@@ -105,14 +105,14 @@ class SegmentsListLayout(Gtk.Box):
 
         return SegmentsListLayout.SegmentData(
             segments[0],
-            DatabaseHelper.get_segment_tracks_by_segmentid(segments[0].id, True)
+            DatabaseHelper.get_segment_tracks_by_segment_id(segments[0].id, True)
         )
 
     def _data_changing(self, segmentid):
         segment = DatabaseHelper.get_segment_by_id(segmentid)
         return SegmentsListLayout.SegmentData(
             segment,
-            DatabaseHelper.get_segment_tracks_by_segmentid(segment.id, True)
+            DatabaseHelper.get_segment_tracks_by_segment_id(segment.id, True)
         )
 
     def _on_data_ready(self, data: SegmentData):
@@ -200,7 +200,7 @@ class SegmentsListLayout(Gtk.Box):
             self._grid.attach(self._build_box(st.maxhr), 5, top, 1, 1)
             self._grid.attach(self._build_box(st.avgcadence), 6, top, 1, 1)
             self._grid.attach(self._build_box(st.maxcadence), 7, top, 1, 1)
-            self._grid.attach(self._build_track_box(st.track), 8, top, 1, 1)
+            self._grid.attach(self._build_activity_box(st.activity), 8, top, 1, 1)
             self._data_rows = self._data_rows + 1
 
         self._title_label.set_text(_("Segments"))
@@ -218,7 +218,7 @@ class SegmentsListLayout(Gtk.Box):
         box.set_margin_end(50)
         label1 = Gtk.Label(_("There are not anything to show"), xalign=0.0)
         label2 = Gtk.Label(_(
-            "Go to track list, select one of them and create the segment you want clicking on the track you can "
+            "Go to activity list, select one of them and create the segment you want clicking on the activity you can "
             "see on the map. You have to add two points on the map: start and end segment."
         ), xalign=0.0)
         label1.get_style_context().add_class("pyot-h2")
@@ -239,14 +239,14 @@ class SegmentsListLayout(Gtk.Box):
         lbl.set_margin_left(margin_left)
         return lbl
 
-    def _build_track_box(self, track):
+    def _build_activity_box(self, activity):
         vbox = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
         vbox.get_style_context().add_class("pyot-stats-bg-color")
         vbox.set_homogeneous(False)
-        track_name = Gtk.Label(label=track.name, xalign=0.0, yalign=0.0)
-        track_name.set_line_wrap(True)
-        vbox.pack_start(track_name, True, True, 0)
-        vbox.pack_start(Gtk.Label(label=track.stats.short_start_time, xalign=0.0, yalign=0.0), True, True, 0)
+        activity_name = Gtk.Label(label=activity.name, xalign=0.0, yalign=0.0)
+        activity_name.set_line_wrap(True)
+        vbox.pack_start(activity_name, True, True, 0)
+        vbox.pack_start(Gtk.Label(label=activity.stats.short_start_time, xalign=0.0, yalign=0.0), True, True, 0)
         return vbox
 
     def _build_box(self, value):

@@ -24,13 +24,13 @@ from pyopentracks.models.track_point import TrackPoint
 
 class Section(Model):
 
-    __slots__ = ("_id", "_name", "_track_id", "_track_points")
+    __slots__ = ("_id", "_name", "_activity_id", "_track_points")
 
     def __init__(self, *args):
         super().__init__()
         self._id = args[0] if args else None
         self._name = args[1] if args else None
-        self._track_id = args[2] if args else None
+        self._activity_id = args[2] if args else None
 
         self._track_points: List[TrackPoint] = []
 
@@ -54,7 +54,7 @@ class Section(Model):
 
     @property
     def fields(self):
-        return (self._id, self._name, self._track_id)
+        return (self._id, self._name, self._activity_id)
 
     def bulk_insert_fields(self, fk_value):
         pass
@@ -64,12 +64,12 @@ class Section(Model):
         return self._id
 
     @property
-    def track_id(self):
-        return self._track_id
+    def activity_id(self):
+        return self._activity_id
 
-    @track_id.setter
-    def track_id(self, track_id):
-        self._track_id = track_id
+    @activity_id.setter
+    def activity_id(self, activity_id):
+        self._activity_id = activity_id
 
     @property
     def track_points(self):

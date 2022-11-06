@@ -16,7 +16,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 import time
+
 from math import radians, sin, cos, asin, sqrt
 
 from pyopentracks.io.parser.recorded_with import RecordedOptions, RecordedWith
@@ -26,22 +28,46 @@ class Record:
     """Class where parser will save the data extracted from files."""
 
     __slots__ = (
-        "uuid", "name", "description", "time", "category", "recorded_with", "segments"
+        "uuid", "name", "description", "start_time", "end_time", "category", "sub_category",
+        "avghr", "maxhr", "avg_temperature", "max_temperature", "total_calories",
+        "recorded_with", "segments", "sets"
     )
+
+    class Type(Enum):
+        UNKNOWN = 0
+        TRACK = 1
+        SET = 2
 
     def __init__(self):
         self.uuid: str = None
         self.name: str = "PyOpenTracks"
         self.description: str = ""
-        self.time: int = time.time() * 1000
+        self.start_time: int = time.time() * 1000
+        self.end_time: int = None
         self.category: str = "Activity"
+        self.sub_category: str = ""
+        self.avghr: float = None
+        self.maxhr: float = None
+        self.avg_temperature: float = None
+        self.max_temperature: float = None
+        self.total_calories: int = None
         self.recorded_with: RecordedWith = RecordedOptions[0]
         self.segments: list[Segment] = []
+        self.sets: list[Set] = []
+
+    @property
+    def type(self):
+        if len(self.segments) > 0:
+            return Record.Type.TRACK
+        if len(self.sets) > 0:
+            return Record.Type.SET
+        return Record.Type.UNKNOWN
 
     def __repr__(self) -> str:
-        return '<Record: uuid (%s) name (%s) description (%s) time (%d) category (%s) recorded_width (%s) segments (%d)>' % (
-            self.uuid if self.uuid else "None", self.name, self.description, self.time,
-            self.category, self.recorded_with.__repr__(), len(self.segments)
+        return '<Record: uuid (%s) name (%s) description (%s) time (%d) category (%s) recorded_width (%s) segments (%d) sets (%d)>' % (
+            self.uuid if self.uuid else "None", self.name, self.description,
+            self.time, self.category, self.recorded_with.__repr__(),
+            len(self.segments), len(self.sets)
         )
 
 
@@ -59,6 +85,23 @@ class Segment:
     def __repr__(self) -> str:
         return '<Segment: number of points (%d)>' % (len(self.points))
 
+
+class Value:
+    @staticmethod
+    def is_float(value):
+        try:
+            float(value)
+            return True
+        except (ValueError, TypeError):
+            return False
+
+    @staticmethod
+    def is_int(value):
+        try:
+            int(value)
+            return True
+        except (ValueError, TypeError):
+            return False
 
 class Point:
 
@@ -142,51 +185,51 @@ class Point:
 
     @latitude.setter
     def latitude(self, value):
-        self._latitude = float(value) if Point._is_float(value) else None
+        self._latitude = float(value) if Value.is_float(value) else None
 
     @longitude.setter
     def longitude(self, value):
-        self._longitude = float(value) if Point._is_float(value) else None
+        self._longitude = float(value) if Value.is_float(value) else None
 
     @distance.setter
     def distance(self, value):
-        self._distance = float(value) if Point._is_float(value) else None
+        self._distance = float(value) if Value.is_float(value) else None
 
     @time.setter
     def time(self, value):
-        self._time = int(value) if Point._is_int(value) else None
+        self._time = int(value) if Value.is_int(value) else None
 
     @speed.setter
     def speed(self, value):
-        self._speed = float(value) if Point._is_float(value) else None
+        self._speed = float(value) if Value.is_float(value) else None
 
     @altitude.setter
     def altitude(self, value):
-        self._altitude = float(value) if Point._is_float(value) else None
+        self._altitude = float(value) if Value.is_float(value) else None
 
     @gain.setter
     def gain(self, value):
-        self._gain = float(value) if Point._is_float(value) else None
+        self._gain = float(value) if Value.is_float(value) else None
 
     @loss.setter
     def loss(self, value):
-        self._loss = float(value) if Point._is_float(value) else None
+        self._loss = float(value) if Value.is_float(value) else None
 
     @heart_rate.setter
     def heart_rate(self, value):
-        self._heart_rate = float(value) if Point._is_float(value) else None
+        self._heart_rate = float(value) if Value.is_float(value) else None
 
     @cadence.setter
     def cadence(self, value):
-        self._cadence = float(value) if Point._is_float(value) else None
+        self._cadence = float(value) if Value.is_float(value) else None
 
     @power.setter
     def power(self, value):
-        self._power = float(value) if Point._is_float(value) else None
+        self._power = float(value) if Value.is_float(value) else None
 
     @temperature.setter
     def temperature(self, value):
-        self._temperature = float(value) if Point._is_float(value) else None
+        self._temperature = float(value) if Value.is_float(value) else None
 
     def is_location_valid(self):
         """Return True if this point has a valid location."""
@@ -228,4 +271,133 @@ class Point:
         return '<Point: latitude, longitude (%s, %s) distance (%s) time (%s) speed (%s) altitude (%s) gain, loss (%s, %s) heart_rate (%s) cadence (%s) power (%s) temperature (%s)>' % (
             self.latitude, self.longitude, self.distance, self.time, self.speed, self.altitude, self.gain, self.loss,
             self.heart_rate, self.cadence, self.power, self.temperature
+        )
+
+
+class Set:
+
+    def __init__(self):
+        self._type: int = None
+        self._exercise_category: int = None
+        self._start: int = None
+        self._end: int = None
+        self._weight: float = None
+        self._repetitions: int = None
+        self._avghr: int = None
+        self._maxhr: int = None
+        self._calories: int = None
+        self._temperature: float = None
+        self._difficulty: int = None
+        self._result: int = None
+
+    @property
+    def time(self):
+        if self._start and self._end and self._start < self._end:
+            return self._end - self._start
+        else:
+            return None
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
+
+    @property
+    def calories(self):
+        return self._calories
+
+    @property
+    def avghr(self):
+        return self._avghr
+
+    @property
+    def maxhr(self):
+        return self._maxhr
+
+    @property
+    def difficulty(self):
+        return self._difficulty
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def exercise_category(self):
+        return self._exercise_category
+
+    @property
+    def weight(self):
+        return self._weight
+
+    @property
+    def repetitions(self):
+        return self._repetitions
+
+    @property
+    def temperature(self):
+        return self._temperature
+
+    @property
+    def result(self):
+        return self._result
+
+    @start.setter
+    def start(self, value):
+        self._start = int(value) if Value.is_int(value) else None
+
+    @end.setter
+    def end(self, value):
+        self._end = int(value) if Value.is_int(value) else None
+
+    @calories.setter
+    def calories(self, value):
+        self._calories = int(value) if Value.is_int(value) else None
+
+    @avghr.setter
+    def avghr(self, value):
+        self._avghr = int(value) if Value.is_int(value) else None
+
+    @maxhr.setter
+    def maxhr(self, value):
+        self._maxhr = int(value) if Value.is_int(value) else None
+
+    @difficulty.setter
+    def difficulty(self, value):
+        self._difficulty = int(value) if Value.is_int(value) else None
+
+    @type.setter
+    def type(self, value):
+        self._type = int(value) if Value.is_int(value) else None
+
+    @result.setter
+    def result(self, value):
+        self._result = int(value) if Value.is_int(value) else None
+
+    @exercise_category.setter
+    def exercise_category(self, value):
+        self._exercise_category = int(value) if Value.is_int(value) else None
+
+    @repetitions.setter
+    def repetitions(self, value):
+        self._repetitions = value
+
+    def __repr__(self) -> str:
+        return "<Set: type (%d) exercise_category (%d) start(%d) end (%d) weight (%f) repetitions (%d) avghr (%d) maxhr (%d) calories (%d) temperature (%f) difficulty (%d) result (%d) time (%d)" % (
+            self._type if self._type is not None else 0, 
+            self._exercise_category if self._exercise_category is not None else 0,
+            self._start if self._start is not None else 0,
+            self._end if self._end is not None else 0,
+            self._weight if self._weight is not None else 0,
+            self._repetitions if self._repetitions is not None else 0,
+            self._avghr if self._avghr is not None else 0,
+            self._maxhr if self._maxhr is not None else 0,
+            self._calories if self._calories is not None else 0,
+            self._temperature if self._temperature is not None else 0,
+            self._difficulty if self._difficulty is not None else 0,
+            self._result if self._result is not None else 0,
+            self.time if self.time is not None else 0
         )

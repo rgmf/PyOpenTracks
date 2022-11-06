@@ -51,7 +51,7 @@ class CalendarLayout(Gtk.Box):
 
     def _calendar_ready(self, calendar_stats):
         for day in calendar_stats.days:
-            self._add_item_to_grid(day.day, day.tracks, day.column, day.row)
+            self._add_item_to_grid(day.day, day.activities, day.column, day.row)
         for week in calendar_stats.weeks:
             self._add_aggregated_stats_to_grid(week.aggregated_list, week.week, week.max_value)
 
@@ -63,16 +63,16 @@ class CalendarLayout(Gtk.Box):
             label.get_style_context().add_class("pyot-h3")
             self._grid.attach(label, i, 0, 1, 1)
 
-    def _add_item_to_grid(self, day, tracks, left, top):
+    def _add_item_to_grid(self, day, activities, left, top):
         vbox = Gtk.VBox()
         hbox = Gtk.HBox()
 
         vbox.set_homogeneous(True)
         hbox.set_homogeneous(True)
 
-        for track in tracks:
+        for activity in activities:
             icon = Gtk.Image()
-            icon.set_from_pixbuf(tau.get_icon_pixbuf(track.category, 36, 36))
+            icon.set_from_pixbuf(tau.get_icon_pixbuf(activity.category, 36, 36))
             hbox.pack_start(icon, True, True, 0)
 
         vbox.pack_start(Gtk.Label(str(day)), True, True, 0)

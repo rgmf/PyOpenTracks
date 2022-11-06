@@ -33,11 +33,11 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
     click on create button.
     """
 
-    __gtype_name__ = "TrackStatsSegmentLayout"
+    __gtype_name__ = "CreateSegmentLayout"
 
     __gsignals__ = {
-        "track-stats-segment-ok": (GObject.SIGNAL_RUN_FIRST, None, (str, float, float, float)),
-        "track-stats-segment-cancel": (GObject.SIGNAL_RUN_FIRST, None, ())
+        "track-activity-stats-segment-ok": (GObject.SIGNAL_RUN_FIRST, None, (str, float, float, float)),
+        "track-activity-stats-segment-cancel": (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
     _title_label: Gtk.Label = Gtk.Template.Child()
@@ -81,12 +81,12 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
         self._right_button.connect("clicked", self._right_button_clicked_cb)
 
     def _left_button_clicked_cb(self, button):
-        self.emit("track-stats-segment-cancel")
+        self.emit("track-activity-stats-segment-cancel")
         self.destroy()
 
     def _right_button_clicked_cb(self, button):
         self.emit(
-            "track-stats-segment-ok",
+            "track-activity-stats-segment-ok",
             self._name_entry.get_text().strip(),
             float(self._stats.total_distance_m),
             float(self._stats.gain_elevation_m) if self._stats.gain_elevation_m else 0,

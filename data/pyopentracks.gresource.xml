@@ -2,21 +2,25 @@
 <gresources>
   <gresource prefix="/es/rgmf/pyopentracks">
     <file>ui/window.ui</file>
-    <file>ui/track_stats_layout.ui</file>
+    <file>ui/app_window_container.ui</file>
+
+    <file>ui/activity_stats_layout.ui</file>
+    <file>ui/activities_layout.ui</file>
     <file>ui/create_segment_layout.ui</file>
-    <file>ui/greeter_layout.ui</file>
-    <file>ui/tracks_container_layout.ui</file>
-    <file>ui/tracks_layout.ui</file>
-    <file>ui/track_summary_layout.ui</file>
-    <file>ui/track_data_analytic_layout.ui</file>
+
+    <file>ui/track_activity_summary_layout.ui</file>
+    <file>ui/track_activity_data_analytic_layout.ui</file>
+    <file>ui/track_activity_intervals_layout.ui</file>
+    <file>ui/track_activity_zones_layout.ui</file>
+    <file>ui/set_activity_summary_layout.ui</file>
+
     <file>ui/track_map_analytic_layout.ui</file>
     <file>ui/track_segments_layout.ui</file>
-    <file>ui/track_intervals_layout.ui</file>
-    <file>ui/track_zones_layout.ui</file>
 
     <file>ui/notebook_layout.ui</file>
 
     <file>ui/analytic_summary_sport_layout.ui</file>
+    <file>ui/analytic_summary_time_sport_layout.ui</file>
     <file>ui/analytic_year_layout.ui</file>
     <file>ui/analytic_month_layout.ui</file>
     <file>ui/analytic_months_stack_layout.ui</file>
@@ -25,7 +29,7 @@
     <file>ui/segments_track_layout.ui</file>
     <file>ui/segments_list_layout.ui</file>
 
-    <file>ui/track_edit_dialog.ui</file>
+    <file>ui/activity_edit_dialog.ui</file>
     <file>ui/segment_edit_dialog.ui</file>
 
     <file>ui/menu.ui</file>
@@ -58,6 +62,8 @@
     <file>icons/run_black_48dp.svg</file>
     <file>icons/unknown_black_48dp.svg</file>
     <file>icons/walk_black_48dp.svg</file>
+    <file>icons/climbing_black_48dp.svg</file>
+    <file>icons/training_black_48dp.svg</file>
 
     <file>icons/gold-medal.svg</file>
     <file>icons/silver-medal.svg</file>

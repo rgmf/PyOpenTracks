@@ -32,7 +32,7 @@ class ResultCode(Enum):
 
 @dataclass
 class Result:
-    """Result for importing tracks."""
+    """Result for importing activities."""
 
     code: ResultCode = ResultCode.UNKNOWN
     record: Record = Record()

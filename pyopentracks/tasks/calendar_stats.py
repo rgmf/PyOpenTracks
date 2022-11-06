@@ -26,8 +26,8 @@ from pyopentracks.utils.utils import DateTimeUtils as dtu
 class CalendarStats:
 
     class Day:
-        def __init__(self, tracks, day, column, row):
-            self.tracks = tracks
+        def __init__(self, activities, day, column, row):
+            self.activities = activities
             self.day = day
             self.column = column
             self.row = row
@@ -51,8 +51,8 @@ class CalendarStats:
         for week in calendar.monthcalendar(year, month):
             for day in week:
                 if day != 0:
-                    tracks = DatabaseHelper.get_tracks_in_day(year, month, day)
-                    obj.days.append(CalendarStats.Day(tracks, day, column, row))
+                    activities = DatabaseHelper.get_activities_in_day(year, month, day)
+                    obj.days.append(CalendarStats.Day(activities, day, column, row))
                 column = column + 1
             aggregated_lists.append(
                 DatabaseHelper.get_aggregated_stats(

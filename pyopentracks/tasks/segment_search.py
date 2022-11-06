@@ -25,7 +25,7 @@ import numpy as np
 from pyopentracks.utils.utils import LocationUtils
 from pyopentracks.models.database import Database
 from pyopentracks.models.segment_track import SegmentTrack
-from pyopentracks.stats.track_stats import TrackStats
+from pyopentracks.stats.track_activity_stats import TrackActivityStats
 from pyopentracks.models.location import Location
 
 
@@ -45,7 +45,7 @@ class SegmentSearchAbstract(mp.Process):
         from_point   -- SegmentTrack.Point object.
         to_point     -- SegmentTrack.Point object.
         """
-        stats = TrackStats()
+        stats = TrackActivityStats()
         stats.compute(track_points)
 
         segment_track = SegmentTrack.from_points(segment.id, stats, from_point, to_point)
@@ -56,10 +56,10 @@ class SegmentSearchAbstract(mp.Process):
         db = Database()
         return db.get_track_points_between(tp1_id, tp2_id)
 
-    def _get_points_near_point_start(self, bbox, trackid=None):
+    def _get_points_near_point_start(self, bbox, activity_id=None):
         # Gets all points inside the bounding box
         db = Database()
-        points = db.get_points_near_point_start(bbox, trackid)
+        points = db.get_points_near_point_start(bbox, activity_id)
 
         # Filters points: it gets only one inside the same minute of time
         filtered_points = []
@@ -79,9 +79,9 @@ class SegmentSearchAbstract(mp.Process):
 
         return filtered_points
 
-    def _get_points_near_point_end(self, bbox, trackid, trackpoint_id_from):
+    def _get_points_near_point_end(self, bbox, activity_id, trackpoint_id_from):
         db = Database()
-        return db.get_points_near_point_end(bbox, trackid, trackpoint_id_from)
+        return db.get_points_near_point_end(bbox, activity_id, trackpoint_id_from)
 
     def _linear_frechet(self, p: np.ndarray, q: np.ndarray) -> float:
         """Calculates the Fréchet distance between two curves: p and q."""
@@ -105,22 +105,22 @@ class SegmentSearchAbstract(mp.Process):
 
 
 class SegmentTrackSearch(SegmentSearchAbstract):
-    """This Process subclass look for segments in a track and add them into segmentracks database table."""
+    """This Process subclass look for segments in a track's activity and add them into segmentracks database table."""
 
-    def __init__(self, trackid):
+    def __init__(self, activity_id):
         """
         Arguments:
-        trackid -- Track's id where the Process will look for segments to add them into segmentracks database table.
+        activity_id -- Activity's id where the Process will look for segments to add them into segmentracks database table.
         """
         super().__init__()
-        self._trackid = trackid
+        self._activity_id = activity_id
 
     def run(self):
         db = Database()
         segments = db.get_segments()
         if not segments:
             return
-        track_points = db.get_track_points(self._trackid)
+        track_points = db.get_track_points(self._activity_id)
         if not track_points:
             return
 
@@ -130,12 +130,12 @@ class SegmentTrackSearch(SegmentSearchAbstract):
                 continue
 
             bbox = Location(segment_points[0].latitude, segment_points[0].longitude).bounding_box(1.1 * SegmentSearchAbstract.SEARCH_RADIO)
-            start_points = self._get_points_near_point_start(bbox, self._trackid)
+            start_points = self._get_points_near_point_start(bbox, self._activity_id)
             for start_p in start_points:
                 bbox = Location(segment_points[-1].latitude, segment_points[-1].longitude).bounding_box(1.1 * SegmentSearchAbstract.SEARCH_RADIO)
-                end_p = self._get_points_near_point_end(bbox, start_p.trackid, start_p.trackpointid)
+                end_p = self._get_points_near_point_end(bbox, start_p.activity_id, start_p.trackpoint_id)
                 if end_p:
-                    track_points = self._get_track_points_between(start_p.trackpointid, end_p.trackpointid)
+                    track_points = self._get_track_points_between(start_p.trackpoint_id, end_p.trackpoint_id)
 
                     frechet = self._linear_frechet(
                         np.array(list(map(lambda sp: [sp.latitude, sp.longitude], segment_points))),
@@ -147,7 +147,7 @@ class SegmentTrackSearch(SegmentSearchAbstract):
 
 
 class SegmentSearch(SegmentSearchAbstract):
-    """This Process subclass look for the segment in all tracks.
+    """This Process subclass look for the segment in all track's activity.
 
     Also, builds the stats and add the information into segmentracks table.
     """
@@ -167,9 +167,9 @@ class SegmentSearch(SegmentSearchAbstract):
         start_points = self._get_points_near_point_start(bbox)
         for start_p in start_points:
             bbox = Location(self._points[-1].latitude, self._points[-1].longitude).bounding_box(1.1 * SegmentSearchAbstract.SEARCH_RADIO)
-            end_p = self._get_points_near_point_end(bbox, start_p.trackid, start_p.trackpointid)
+            end_p = self._get_points_near_point_end(bbox, start_p.activity_id, start_p.trackpoint_id)
             if end_p:
-                track_points = self._get_track_points_between(start_p.trackpointid, end_p.trackpointid)
+                track_points = self._get_track_points_between(start_p.trackpoint_id, end_p.trackpoint_id)
 
                 frechet = self._linear_frechet(
                         np.array(list(map(lambda sp: [sp.latitude, sp.longitude], self._points))),

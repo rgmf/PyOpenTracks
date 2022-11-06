@@ -17,12 +17,14 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
+from pyopentracks.io.parser.fit.messages import SetType
 from pyopentracks.io.parser.records import Point, Record
+from pyopentracks.models.set import Set as SetModel
 from pyopentracks.models.section import Section
 from pyopentracks.models.stats import Stats
-from pyopentracks.models.track import Track
+from pyopentracks.models.activity import Activity
 from pyopentracks.models.track_point import TrackPoint
-from pyopentracks.stats.track_stats import TrackStats
+from pyopentracks.stats.track_activity_stats import TrackActivityStats
 
 
 class RecordProxy:
@@ -32,25 +34,45 @@ class RecordProxy:
     def __init__(self, record: Record):
         self._record = record
 
-    def to_track(self) -> Track:
-        track = Track(
+    def to_activity(self) -> Activity:
+        activity = Activity(
             None,
             self._record.uuid,
             self._record.name,
             self._record.description,
             self._record.category,
             self._record.recorded_with.id,
-            self._record.time,
+            self._record.start_time,
             None
         )
-        track.sections = self.to_sections()
+        activity.sections = self.to_sections()
+    
+        if self._record.type == Record.Type.TRACK:
+            activity_stats = TrackActivityStats()
+            activity_stats.compute(activity.sections)
 
-        track_stats = TrackStats()
-        track_stats.compute(track.sections)
+            activity.stats = TrackActivityStatsProxy(activity_stats).to_stats()
+        elif self._record.type == Record.Type.SET:
+            activity.stats = SetsProxy(self._record).to_stats()
 
-        track.stats = TrackStatsProxy(track_stats).to_stats()
+        return activity
 
-        return track
+    def to_sets(self) -> List[SetModel]:
+        sets_model: List[SetModel] = []
+        for set in self._record.sets:
+            set_model = SetModel()
+            set_model.type = set.type
+            set_model.exercise_category = set.exercise_category
+            set_model.weight = set.weight
+            set_model.repetitions = set.repetitions
+            set_model.avghr = set.avghr
+            set_model.maxhr = set.maxhr
+            set_model.time = (set.end - set.start) * 1000
+            set_model.calories = set.calories
+            set_model.temperature = set.temperature
+            set_model.difficulty = set.difficulty
+            sets_model.append(set_model)
+        return sets_model
 
     def to_sections(self) -> List[Section]:
         sections: List[Section] = []
@@ -81,32 +103,79 @@ class PointProxy:
         )
 
 
-class TrackStatsProxy:
+class TrackActivityStatsProxy:
 
-    __slots__ = "_track_stats"
+    __slots__ = "_track_activity_stats"
 
-    def __init__(self, track_stats: TrackStats):
-        self._track_stats = track_stats
+    def __init__(self, track_activity_stats: TrackActivityStats):
+        self._track_activity_stats = track_activity_stats
 
     def to_stats(self):
         return Stats(
             None,
-            self._track_stats.start_time,
-            self._track_stats.end_time,
-            self._track_stats.total_distance,
-            self._track_stats.total_time,
-            self._track_stats.moving_time,
-            self._track_stats.avg_speed,
-            self._track_stats.avg_moving_speed,
-            self._track_stats.max_speed,
-            self._track_stats.min_elevation,
-            self._track_stats.max_elevation,
-            self._track_stats.gain_elevation,
-            self._track_stats.loss_elevation,
-            self._track_stats.max_hr,
-            self._track_stats.avg_hr,
-            self._track_stats.max_cadence,
-            self._track_stats.avg_cadence,
+            self._track_activity_stats.start_time,
+            self._track_activity_stats.end_time,
+            self._track_activity_stats.total_distance,
+            self._track_activity_stats.total_time,
+            self._track_activity_stats.moving_time,
+            self._track_activity_stats.avg_speed,
+            self._track_activity_stats.avg_moving_speed,
+            self._track_activity_stats.max_speed,
+            self._track_activity_stats.min_elevation,
+            self._track_activity_stats.max_elevation,
+            self._track_activity_stats.gain_elevation,
+            self._track_activity_stats.loss_elevation,
+            self._track_activity_stats.max_hr,
+            self._track_activity_stats.avg_hr,
+            self._track_activity_stats.max_cadence,
+            self._track_activity_stats.avg_cadence,
+            None,
+            None,
+            None,
             None,
             None
+        )
+
+
+class SetsProxy:
+
+    __slots__ = "_record"
+
+    def __init__(self, record: Record):
+        self._record = record
+
+    def to_stats(self):
+        total_time_ms = (
+            self._record.end_time - self._record.start_time 
+            if self._record.end_time is not None and self._record.start_time is not None 
+            else None
+        )
+        moving_time_ms = 0
+        for set in self._record.sets:
+            if set.type == SetType.ACTIVE.value:
+                moving_time_ms += ((set.end - set.start) * 1000)
+
+        return Stats(
+            None,
+            self._record.start_time,
+            self._record.end_time,
+            None,
+            total_time_ms,
+            moving_time_ms,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            self._record.maxhr,
+            self._record.avghr,
+            None,
+            None,
+            None,
+            None,
+            self._record.avg_temperature,
+            self._record.max_temperature,
+            self._record.total_calories
         )

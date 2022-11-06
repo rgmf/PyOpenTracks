@@ -144,8 +144,12 @@ class TimeUtils:
         seconds = (seconds % 3600) % 60
         if not shorten:
             return f"{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}" if hours > 0 else f"{int(minutes):02d}:{int(seconds):02d}"
+        elif hours > 0:
+            return f"{int(hours):d}h\n{int(minutes)}min"
+        elif minutes > 0:
+            return f"{int(minutes)}min" + (f" {int(seconds)}s" if seconds > 0 else "")
         else:
-            return f"{int(hours):d}h\n{int(minutes)}min" if hours > 0 else f"{int(minutes)}min"
+            return f"{int(seconds)}s"
 
     @staticmethod
     def iso_to_ms(date_time: str) -> float:
@@ -293,6 +297,10 @@ class TypeActivityUtils:
         "trail hiking": {"icon": "icons/walk_black_48dp.svg", "color": "#03a9f4"},
 
         "driving": {"icon": "icons/drive_car_black_48dp.svg", "color": "#5d4037"},
+
+        "rock_climbing": {"icon": "icons/climbing_black_48dp.svg", "color": "#483e37"},
+
+        "training": {"icon": "icons/training_black_48dp.svg", "color": "#483e37"},
     }
 
     _pace = [
@@ -469,6 +477,18 @@ class SensorUtils:
         An string representing the cadence.
         """
         return str(int(cadence_rpm)) + " rpm" if cadence_rpm is not None else "-"
+
+    @staticmethod
+    def temperature_to_str(temperature: float) -> str:
+        return str(temperature) + " ºC" if temperature is not None else "-"
+
+    @staticmethod
+    def calories_to_str(calories: int) -> str:
+        return str(calories) + " calories" if calories is not None else "-"
+
+    @staticmethod
+    def weight_to_str(weight: float) -> str:
+        return str(weight) + " kg" if weight is not None else "-"
 
     @staticmethod
     def round_to_int(value: float) -> int:

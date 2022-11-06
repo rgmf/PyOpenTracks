@@ -15,7 +15,7 @@ from mock import patch
 from pyopentracks.models.database import Database, config
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.migrations import Migration
-from pyopentracks.models.track import Track
+from pyopentracks.models.activity import Track
 from pyopentracks.models.track_point import TrackPoint
 
 

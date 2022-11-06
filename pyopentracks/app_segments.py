@@ -36,6 +36,7 @@ class AppSegments(AppExternal):
         segments_list_layout = SegmentsListLayout()
         segments_list_layout.build()
         self._layout.append(segments_list_layout, _("Segment's List"))
+        self._layout.build()
 
     def get_layout(self):
         return self._layout

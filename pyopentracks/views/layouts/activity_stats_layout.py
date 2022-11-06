@@ -20,30 +20,34 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk
 
 from pyopentracks.views.layouts.layout import Layout
-from pyopentracks.views.layouts.track_summary_layout import TrackSummaryLayout
+from pyopentracks.views.layouts.layout_builder import LayoutBuilder
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_stats_layout.ui")
-class TrackStatsLayout(Gtk.ScrolledWindow, Layout):
-    __gtype_name__ = "TrackStatsLayout"
+@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/activity_stats_layout.ui")
+class ActivityStatsLayout(Gtk.ScrolledWindow, Layout):
+    __gtype_name__ = "ActivityStatsLayout"
 
     _top_widget: Gtk.Box = Gtk.Template.Child()
     _main_widget: Gtk.Grid = Gtk.Template.Child()
     _bottom_widget: Gtk.Box = Gtk.Template.Child()
 
-    def __init__(self, track):
+    def __init__(self, activity):
         super().__init__()
-        self._track = track
+        Layout.__init__(self)
+        self._activity = activity
 
-    def get_top_widget(self):
-        return self._top_widget
-
-    def load_data(self):
-        """Load track_stats object into the _main_widget."""
+    def build(self):
+        """Load activity_stats object into the _main_widget."""
         self._main_widget.foreach(
             lambda child: self._main_widget.remove(child)
         )
 
-        summary_layout = TrackSummaryLayout(self._track)
-        self._main_widget.attach(summary_layout, 0, 0, 1, 1)
-        summary_layout.build()
+        self._main_widget.attach(Gtk.Label(_("Loading data...")), 0, 0, 1, 1)
+
+        LayoutBuilder(self._on_build_layout_done).set_type(LayoutBuilder.Layouts.ACTIVITY_SUMMARY).set_activity(self._activity).make()
+
+    def _on_build_layout_done(self, layout):
+        self._main_widget.foreach(
+            lambda child: self._main_widget.remove(child)
+        )
+        self._main_widget.attach(layout, 0, 0, 1, 1)

@@ -17,11 +17,24 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from gi.repository import Gtk
 
-class Layout:
+from pyopentracks.views.layouts.layout import Layout
+
+
+class ErrorLayout(Gtk.Box, Layout):
+
+    def __init__(self):
+        super().__init__()
+        Layout.__init__(self)
+
+        self.set_spacing(10)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.set_homogeneous(False)
 
     def build(self):
-        raise NotImplementedError
-
-    def post_build(self):
-        pass
+        helptext = _("An error ocurred and Layout has not been able to be loaded")
+        labelp = Gtk.Label(label=helptext)
+        labelp.get_style_context().add_class("pyot-p-large")
+        self.pack_start(labelp, False, False, 0)
+        self.show_all()

@@ -38,6 +38,7 @@ class AppAnalytic(AppExternal):
         self._layout.append(AggregatedStatsMonth(), _("Monthly Aggregated Stats"))
         self._layout.append(AggregatedStatsYear(), _("Yearly Aggregated Stats"))
         self._layout.append(AggregatedStats(), _("All Aggregated Stats"))
+        self._layout.build()
 
     def get_layout(self):
         return self._layout

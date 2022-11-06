@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-
 from gi.repository import Gtk
 
 from dataclasses import dataclass
@@ -27,74 +26,12 @@ from pyopentracks.utils.utils import DateUtils as du
 from pyopentracks.utils.utils import DateTimeUtils as dtu
 from pyopentracks.utils.utils import StatsUtils as su
 from pyopentracks.utils.utils import DistanceUtils as distu
+from pyopentracks.utils.utils import TimeUtils as tu
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.graphs import BarsChart
 from pyopentracks.views.layouts.calendar_layout import CalendarLayout
+from pyopentracks.views.layouts.layout_builder import LayoutBuilder
 from pyopentracks.views.layouts.process_view import ProcessView
-
-
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_summary_sport_layout.ui")
-class SummarySport(Gtk.Box):
-    """Gtk.Box with total, averages and maximum stats for a sport.
-
-    From AggregatedStats model builds a layout with totals, averages and
-    maximums stats.
-    """
-
-    __gtype_name__ = "SummarySport"
-
-    _icon: Gtk.Image = Gtk.Template.Child()
-    _sport_name: Gtk.Label = Gtk.Template.Child()
-
-    _total_activities: Gtk.Label = Gtk.Template.Child()
-    _total_time: Gtk.Label = Gtk.Template.Child()
-    _total_moving_time: Gtk.Label = Gtk.Template.Child()
-    _total_distance: Gtk.Label = Gtk.Template.Child()
-    _total_gain: Gtk.Label = Gtk.Template.Child()
-
-    _avg_time: Gtk.Label = Gtk.Template.Child()
-    _avg_moving_time: Gtk.Label = Gtk.Template.Child()
-    _avg_distance: Gtk.Label = Gtk.Template.Child()
-    _avg_gain: Gtk.Label = Gtk.Template.Child()
-    _avg_speed: Gtk.Label = Gtk.Template.Child()
-    _avg_speed_label: Gtk.Label = Gtk.Template.Child()
-    _avg_heart_rate: Gtk.Label = Gtk.Template.Child()
-
-    _max_time: Gtk.Label = Gtk.Template.Child()
-    _max_moving_time: Gtk.Label = Gtk.Template.Child()
-    _max_distance: Gtk.Label = Gtk.Template.Child()
-    _max_gain: Gtk.Label = Gtk.Template.Child()
-    _max_speed: Gtk.Label = Gtk.Template.Child()
-    _max_speed_label: Gtk.Label = Gtk.Template.Child()
-    _max_heart_rate: Gtk.Label = Gtk.Template.Child()
-
-    def __init__(self, aggregated):
-        """Fill Gtk.Box with the AggregatedStats model (aggregated)."""
-        super().__init__()
-        self._icon.set_from_pixbuf(tau.get_icon_pixbuf(aggregated.category))
-        self._sport_name.set_label(
-            aggregated.category if aggregated.category else _("Unknown")
-        )
-        self._total_activities.set_label(str(aggregated.total_activities))
-        self._total_time.set_label(aggregated.total_time)
-        self._total_moving_time.set_label(aggregated.total_moving_time)
-        self._total_distance.set_label(aggregated.total_distance)
-        self._total_gain.set_label(aggregated.total_elevation_gain)
-        self._avg_time.set_label(aggregated.avg_time)
-        self._avg_moving_time.set_label(aggregated.avg_moving_time)
-        self._avg_distance.set_label(aggregated.avg_distance)
-        self._avg_gain.set_label(aggregated.avg_elevation_gain)
-        self._avg_speed.set_label(aggregated.avg_speed)
-        self._avg_speed_label.set_label(aggregated.speed_label)
-        self._avg_heart_rate.set_label(aggregated.avg_heart_rate)
-        self._max_time.set_label(aggregated.max_time)
-        self._max_moving_time.set_label(aggregated.max_moving_time)
-        self._max_distance.set_label(aggregated.max_distance)
-        self._max_gain.set_label(aggregated.max_elevation_gain)
-        self._max_speed.set_label(aggregated.max_speed)
-        self._max_speed_label.set_label(aggregated.speed_label)
-        self._max_heart_rate.set_label(aggregated.max_heart_rate)
-        self.show_all()
 
 
 class AggregatedStats(Gtk.Box):
@@ -126,7 +63,13 @@ class AggregatedStats(Gtk.Box):
             self.show_all()
             return
         for aggregated in aggregated_stats:
-            self.pack_start(SummarySport(aggregated), False, False, 0)
+            LayoutBuilder(lambda layout: self.pack_start(layout, False, False, 0))\
+                    .set_category(aggregated.category)\
+                    .set_type(LayoutBuilder.Layouts.SPORT_SUMMARY)\
+                    .set_args((aggregated,))\
+                    .make()
+            # self.pack_start(SummarySport(aggregated), False, False, 0)
+            self.show_all()
 
 
 @Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui")
@@ -250,29 +193,63 @@ class AnalyticMonthsStack(Gtk.Box):
                 0
             )
 
-            # Month chart.
-            list_t = []
+            # Month chart for distance's activity and time's activity.
+            # For distance's activity it will show total distance per activity.
+            # For time's activity it will show total time per activity.
+            list_distance = []
+            list_time = []
             for i in ms.stats:
-                list_t.append((i.category, i.total_distance_float))
-            chart = BarsChart(
-                results=dict(list_t),
-                colors=list(
-                    map(lambda a: tau.get_color(a.category), ms.stats)
-                ),
-                cb_annotate=lambda value: distu.m_to_str(value * 1000)
-            )
-            chart_box = Gtk.Box()
-            chart_box.set_margin_left(10)
-            chart_box.set_margin_right(10)
-            chart_box.get_style_context().add_class("pyot-stats-bg-color")
-            chart_box.pack_start(chart.get_canvas(), True, True, 10)
-            box.pack_start(chart_box, False, False, 0)
-            chart_box.show_all()
-            chart.draw_and_show()
+                if i.total_distance_float is not None:
+                    list_distance.append((i.category, i.total_distance_float))
+                elif i.total_moving_time_ms is not None:
+                    list_time.append((i.category, i.total_moving_time_ms))
+            
+            if len(list_distance) > 0:
+                chart_distance = BarsChart(
+                    results=dict(list_distance),
+                    colors=list(
+                        map(lambda a: tau.get_color(a.category), ms.stats)
+                    ),
+                    cb_annotate=lambda value: distu.m_to_str(value * 1000)
+                )
+
+                chart_box_distance = Gtk.Box()
+                chart_box_distance.set_margin_left(10)
+                chart_box_distance.set_margin_right(10)
+                chart_box_distance.get_style_context().add_class("pyot-stats-bg-color")
+                chart_box_distance.pack_start(chart_distance.get_canvas(), True, True, 10)
+
+                box.pack_start(chart_box_distance, False, False, 0)
+                chart_box_distance.show_all()
+                chart_distance.draw_and_show()
+
+            if len(list_time) > 0:
+                chart_time = BarsChart(
+                    results=dict(list_time),
+                    colors=list(
+                        map(lambda a: tau.get_color(a.category), ms.stats)
+                    ),
+                    cb_annotate=lambda value: tu.ms_to_str(value, True)
+                )
+
+                chart_box_time = Gtk.Box()
+                chart_box_time.set_margin_left(10)
+                chart_box_time.set_margin_right(10)
+                chart_box_time.get_style_context().add_class("pyot-stats-bg-color")
+                chart_box_time.pack_start(chart_time.get_canvas(), True, True, 10)
+
+                box.pack_start(chart_box_time, False, False, 0)
+                chart_box_time.show_all()
+                chart_time.draw_and_show()
 
             # Aggregated stats for every category.
             for a in ms.stats:
-                box.pack_start(SummarySport(a), False, False, 0)
+                LayoutBuilder(lambda layout: box.pack_start(layout, False, False, 0))\
+                    .set_category(a.category)\
+                    .set_type(LayoutBuilder.Layouts.SPORT_SUMMARY)\
+                    .set_args((a,))\
+                    .make()
+                # box.pack_start(SummarySport(a), False, False, 0)
         else:
             label = Gtk.Label(_("There are not stats for this date"))
             label.set_yalign(0.0)

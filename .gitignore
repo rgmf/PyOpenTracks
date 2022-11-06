@@ -3,3 +3,5 @@ buildir/*
 xdg_data_home/*
 **/__pycache__/
 .idea/*
+scripts/*.json
+scripts/*.db

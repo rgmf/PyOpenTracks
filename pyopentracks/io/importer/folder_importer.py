@@ -57,15 +57,26 @@ class FolderImporter(Importer):
             yield self._result
 
     def _import(self, filename: str, record: Record):
-        track = RecordProxy(record).to_track()
-        if DatabaseHelper.get_existed_tracks(track):
+        if not record or record.type not in (Record.Type.TRACK, Record.Type.SET):
             self._result.errors.append(
-                _(f"Error importing the file {filename}: track '{track.name}' already exists")
+                _(f"Error importing the file {filename}: it could not be parsed: there are not segments or sets")
             )
             return
 
-        trackid = DatabaseHelper.insert_track(track)
-        if trackid is None:
+        activity = RecordProxy(record).to_activity()
+        if DatabaseHelper.get_existed_activities(activity):
+            self._result.errors.append(
+                _(f"Error importing the file {filename}: activity '{activity.name}' already exists")
+            )
+            return
+
+        if record.type == Record.Type.TRACK:
+            activity_id = DatabaseHelper.insert_track_activity(activity)
+        else:
+            sets = RecordProxy(record).to_sets()
+            activity_id = DatabaseHelper.insert_set_activity(activity, sets)
+
+        if activity_id is None:
             message = _(
                 f"Error importing the file {filename}."
                 f"\nIt couldn't be inserted in the database."

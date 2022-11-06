@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 24 24"
+   fill="black"
+   width="48px"
+   height="48px"
+   version="1.1"
+   id="svg6"
+   sodipodi:docname="training_black_48dp.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs10" />
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="8.0833333"
+     inkscape:cx="18.556701"
+     inkscape:cy="24"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg6" />
+  <path
+     d="M0 0h24v24H0z"
+     fill="none"
+     id="path2" />
+  <rect
+     style="fill:#000000;stroke:none;stroke-width:2.75015;stroke-linecap:round"
+     id="rect849"
+     width="10.055884"
+     height="1.3236512"
+     x="-17.132935"
+     y="-13.300615"
+     transform="scale(-1)" />
+  <rect
+     style="fill:#000000;stroke:none;stroke-width:4.02886;stroke-linecap:round"
+     id="rect1055"
+     width="10.686534"
+     height="2.6730433"
+     x="7.2318544"
+     y="-6.8761058"
+     transform="rotate(90)" />
+  <rect
+     style="fill:#000000;stroke:none;stroke-width:3.49798;stroke-linecap:round"
+     id="rect1063"
+     width="8.0557795"
+     height="2.6730433"
+     x="8.5472317"
+     y="-3.5668292"
+     transform="rotate(90)" />
+  <rect
+     style="fill:#000000;stroke:none;stroke-width:4.02886;stroke-linecap:round"
+     id="rect1065"
+     width="10.686534"
+     height="2.6730433"
+     x="-18.052092"
+     y="17.321758"
+     transform="rotate(-90)" />
+  <rect
+     style="fill:#000000;stroke:none;stroke-width:3.49798;stroke-linecap:round"
+     id="rect1067"
+     width="8.0557795"
+     height="2.6730433"
+     x="-16.736715"
+     y="20.631035"
+     transform="rotate(-90)" />
+</svg>
