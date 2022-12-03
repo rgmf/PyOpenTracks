@@ -26,9 +26,9 @@ def import_to_database(database_file: str, json_file: str):
             if result:
                 print("nombre: " + record[0])
                 query_str = (
-                    "update activities set "
-                    f"name='{record[0]}' "
-                    f"where _id={result[0]}"
+                    'update activities set '
+                    f'name="{record[0]}" '
+                    f'where _id={result[0]}'
                 )
                 cursor.execute(query_str)
                 conn.commit()
