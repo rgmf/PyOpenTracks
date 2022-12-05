@@ -30,10 +30,11 @@ class AppSegments(AppExternal):
     This is the controller of the segment's views.
     """
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self._app = app
         self._layout = NotebookLayout()
-        segments_list_layout = SegmentsListLayout()
+        segments_list_layout = SegmentsListLayout(app=self)
         segments_list_layout.build()
         self._layout.append(segments_list_layout, _("Segment's List"))
         self._layout.build()
@@ -46,3 +47,6 @@ class AppSegments(AppExternal):
 
     def get_kwargs(self) -> dict:
         return {}
+
+    def get_window(self):
+        return self._app.get_window()

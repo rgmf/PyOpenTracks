@@ -20,23 +20,19 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk
 
 from pyopentracks.views.preferences.import_layout import PreferencesImportLayout
-from pyopentracks.views.preferences.opentracks_layout import PreferencesOpenTracksLayout
 from pyopentracks.views.preferences.zones_layout import PreferencesZonesLayout
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/preferences_layout.ui")
 class PreferencesLayout(Gtk.Paned):
-    __gtype_name__ = "PreferencesLayout"
-
-    _tree_view: Gtk.TreeView = Gtk.Template.Child()
 
     def __init__(self, dialog):
         super().__init__()
 
+        self._tree_view = Gtk.TreeView()
+
         self._layouts = [
             {"key": _("Training Zones"), "layout": PreferencesZonesLayout},
-            {"key": _("Import"), "layout": PreferencesImportLayout},
-            {"key": "OpenTracks", "layout": PreferencesOpenTracksLayout},
+            {"key": _("Import"), "layout": PreferencesImportLayout}
         ]
 
         self._dialog = dialog
@@ -55,11 +51,15 @@ class PreferencesLayout(Gtk.Paned):
         tree_selection = self._tree_view.get_selection()
         tree_selection.connect("changed", self._on_tree_selection_changed)
 
+        self.set_start_child(self._tree_view)
+        self.set_resize_start_child(False)
+        self.set_shrink_start_child(False)
+
     def _on_tree_selection_changed(self, selection):
         model, treeiter = selection.get_selected()
         if treeiter is None:
             return
         idx = model.get_value(treeiter, 0)
-        if self.get_child2():
-            self.remove(self.get_child2())
-        self.pack2(self._layouts[idx]["layout"](self._dialog), True, True)
+        self.set_end_child(self._layouts[idx]["layout"](self._dialog))
+        self.set_resize_end_child(True)
+        self.set_shrink_end_child(False)

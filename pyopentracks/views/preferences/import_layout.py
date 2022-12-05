@@ -20,52 +20,63 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk
 
 from pyopentracks.app_preferences import AppPreferences
+from pyopentracks.views.file_chooser import FolderChooserWindow
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/preferences_import_layout.ui")
 class PreferencesImportLayout(Gtk.Box):
-    __gtype_name__ = "PreferencesImportLayout"
-
-    _title: Gtk.Label = Gtk.Template.Child()
-    _help_text: Gtk.Label = Gtk.Template.Child()
-    _content_box: Gtk.Box = Gtk.Template.Child()
-    _switch: Gtk.Switch = Gtk.Template.Child()
-    _file_chooser: Gtk.FileChooserButton = Gtk.Template.Child()
 
     def __init__(self, dialog):
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
         self._dialog = dialog
 
-        self._title.set_text(_("Auto-import folder"))
+        self._title = Gtk.Label.new(_("Auto-import folder"))
         self._title.get_style_context().add_class("pyot-h3")
+        self._title.set_halign(Gtk.Align.CENTER)
+        self._title.set_margin_top(20)
 
-        self._help_text.set_text(_(
+        self._help_text = Gtk.Label.new(_(
             "Select a folder to import automatically new activity files. "
             "PyOpenTracks will check it for new files every time it opens."
         ))
         self._help_text.get_style_context().add_class("pyot-prefs-help")
+        self._help_text.set_halign(Gtk.Align.CENTER)
+        self._help_text.set_margin_bottom(20)
 
-        self._content_box.get_style_context().add_class("pyot-stats-bg-color")
-
-        is_auto_import_set = dialog.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
-
-        self._switch.set_active(is_auto_import_set)
+        self._content_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self._content_box.set_halign(Gtk.Align.CENTER)
+        self._switch = Gtk.Switch()
+        self._switch.set_valign(Gtk.Align.CENTER)
+        auto_import_folder = dialog.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
+        self._switch.set_active(auto_import_folder)
         self._switch.connect("notify::active", self._on_folder_pref_activated)
+        self._select_folder_button = Gtk.Button.new_with_label(
+            auto_import_folder if auto_import_folder else _("Select a folder...")
+        )
+        self._select_folder_button.set_sensitive(self._switch.get_active())
+        self._select_folder_button.connect("clicked", self._on_select_folder_button_clicked)
+        self._content_box.append(self._switch)
+        self._content_box.append(self._select_folder_button)
 
-        self._file_chooser.set_current_folder(is_auto_import_set)
-        self._file_chooser.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
-        self._file_chooser.connect("file-set", self._on_folder_pref_changed)
+        self.append(self._title)
+        self.append(self._help_text)
+        self.append(self._content_box)
+
+    def _on_select_folder_button_clicked(self, button):
+        def on_response(dialog, response):
+            if response == Gtk.ResponseType.ACCEPT:
+                folder_path = dialog.get_file().get_path()
+                button.set_label(folder_path)
+                self._dialog.set_pref(AppPreferences.AUTO_IMPORT_FOLDER, folder_path)
+
+        dialog = FolderChooserWindow(parent=self._dialog, on_response=on_response)
+        dialog.show()
 
     def _on_folder_pref_activated(self, switch, gparam):
         if switch.get_active():
-            self._file_chooser.set_sensitive(True)
+            self._select_folder_button.set_sensitive(True)
+            self._select_folder_button.set_sensitive(True)
         else:
-            self._file_chooser.set_sensitive(False)
-            self._file_chooser.set_current_folder("")
+            self._select_folder_button.set_sensitive(False)
+            self._select_folder_button.set_label(_("Select a folder..."))
             self._dialog.set_pref(AppPreferences.AUTO_IMPORT_FOLDER, "")
-
-    def _on_folder_pref_changed(self, chooser):
-        self._dialog.set_pref(
-            AppPreferences.AUTO_IMPORT_FOLDER, chooser.get_filename()
-        )

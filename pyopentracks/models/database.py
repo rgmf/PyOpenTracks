@@ -21,7 +21,6 @@ import sqlite3
 from os import path
 from typing import List
 
-from sympy import false
 from pyopentracks.models.section import Section
 
 from pyopentracks.models.segment_track_record import SegmentTrackRecord

@@ -18,6 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .model import Model
+from .location import Location
 
 
 class SegmentPoint(Model):
@@ -87,3 +88,9 @@ class SegmentPoint(Model):
     @property
     def altitude(self):
         return self._altitude
+
+    @property
+    def location(self) -> Location:
+        """Build and return a Location object."""
+        return Location(float(self._latitude), float(self._longitude))
+

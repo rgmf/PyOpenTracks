@@ -1,7 +1,7 @@
 {
   "app-id": "es.rgmf.pyopentracks",
   "runtime": "org.gnome.Platform",
-  "runtime-version": "3.38",
+  "runtime-version": "master",
   "sdk": "org.gnome.Sdk",
   "command": "pyopentracks",
   "finish-args": [
@@ -23,79 +23,49 @@
     "*.a"
   ],
   "modules": [
-    {
-        "name": "cogl",
-        "builddir": true,
-        "buildsystem": "autotools",
-        "sources": [
-          {
-            "type": "git",
-            "url": "https://gitlab.gnome.org/Archive/cogl.git",
-            "branch": "master"
-          }
-        ]
+      {
+	"name": "pip-install",
+	"buildsystem": "simple",
+	"build-options": {
+	  "build-args": [
+	    "--share=network"
+	  ]
+	},
+	"build-commands": [
+	  "pip3 install --prefix=/app matplotlib>=3.6.2",
+	  "pip3 install --prefix=/app python-dateutil>=2.8.1",
+	  "pip3 install --prefix=/app fitparse>=1.2.0",
+	  "pip3 install --prefix=/app python-dateutil"
+	]
       },
       {
-        "name": "clutter",
-        "builddir": true,
-        "buildsystem": "autotools",
-        "sources": [
-          {
-            "type": "git",
-            "url": "https://gitlab.gnome.org/Archive/clutter.git",
-            "branch": "master"
-          }
-        ]
-      },
-      {
-        "name": "clutter-gtk",
-        "builddir": true,
-        "buildsystem": "autotools",
-        "sources": [
-          {
-            "type": "git",
-            "url": "https://gitlab.gnome.org/Archive/clutter-gtk.git",
-            "branch": "master"
-          }
-        ]
-      },
-      {
-        "name": "libchamplain",
-        "builddir": true,
+        "name" : "libshumate",
         "buildsystem": "meson",
-        "sources": [
+        "config-opts": [
+          "-Ddemos=false",
+          "-Dgtk_doc=false",
+          "-Dvapi=false",
+          "-Dlibsoup3=true"
+        ],
+        "sources" : [
           {
-            "type": "git",
-            "url": "https://gitlab.gnome.org/GNOME/libchamplain.git",
-            "branch": "master"
+            "type" : "git",
+            "url" : "https://gitlab.gnome.org/GNOME/libshumate.git",
+            "branch" : "main"
           }
         ]
       },
       {
-        "name": "pip-install",
-        "buildsystem": "simple",
-        "build-options": {
-          "build-args": [
-            "--share=network"
-          ]
-        },
-        "build-commands": [
-          "pip3 install --prefix=/app matplotlib==3.3.4",
-          "pip3 install --prefix=/app python-dateutil>=2.8.1",
-          "pip3 install --prefix=/app fitparse>=1.2.0"
-        ]
-      },
-      {
-        "name": "pyopentracks",
-        "builddir": true,
-        "buildsystem": "meson",
-        "sources": [
-          {
-            "type": "git",
-            "url": "file:///home/roman/workspace/PyOpenTracks",
-            "branch": "main"
-          }
-        ]
+	"name": "pyopentracks",
+	"builddir": true,
+	"buildsystem": "meson",
+	"sources": [
+	  {
+	    "type": "git",
+	    "url": "file:///home/roman/workspace/PyOpenTracks",
+	    "branch": "main"
+	  }
+	]
       }
   ]
 }

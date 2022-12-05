@@ -22,11 +22,8 @@ from gi.repository import Gtk
 from pyopentracks.views.layouts.layout import Layout
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/notebook_layout.ui")
 class NotebookLayout(Gtk.Notebook, Layout):
     """Generic Gtk.Notebook."""
-
-    __gtype_name__ = "NotebookLayout"
 
     def __init__(self):
         """Init."""
@@ -34,7 +31,8 @@ class NotebookLayout(Gtk.Notebook, Layout):
         Layout.__init__(self)
 
     def build(self):
-        self.show_all()
+        #self.show_all()
+        pass
 
     def append(self, layout: Layout, label: str):
         """Add a new tab to the notebook.
@@ -46,13 +44,19 @@ class NotebookLayout(Gtk.Notebook, Layout):
         label -- the tab's label.
         """
         scrolled_win = Gtk.ScrolledWindow()
-        viewport = Gtk.Viewport()
-        viewport.add(layout)
-        scrolled_win.add(viewport)
+        scrolled_win.set_child(layout)
 
-        label_widget = Gtk.Label(label)
+        label_widget = Gtk.Label.new(label)
         self.append_page(scrolled_win, label_widget)
 
     def get_layouts(self):
-        for scrolled_win in self.get_children():
-            yield scrolled_win.get_children()[0].get_children()[0]
+        list_model = self.get_pages()
+        for i in range(list_model.get_n_items()):
+            notebook_page = list_model.get_item(i)
+            scrolled_win = notebook_page.get_child()
+            child = scrolled_win.get_first_child() if scrolled_win is not None else None
+            if isinstance(child, Gtk.Viewport):
+                yield child.get_first_child()
+            else:
+                yield child
+

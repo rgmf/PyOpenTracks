@@ -31,21 +31,28 @@ class QuestionDialog(Gtk.Dialog):
         Gtk.Dialog.__init__(
             self,
             title=title,
-            transient_for=parent,
-            flags=0
+            transient_for=parent
         )
-        self.add_buttons(
-            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OK, Gtk.ResponseType.OK
-        )
+        btn1 = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
+        btn1.set_margin_start(10)
+        btn1.set_margin_end(10)
+        btn1.set_margin_top(10)
+        btn1.set_margin_bottom(20)
+        btn2 = self.add_button(_("Ok"), Gtk.ResponseType.OK)
+        btn2.set_margin_end(20)
+        btn2.set_margin_top(10)
+        btn2.set_margin_bottom(20)
 
         self.set_default_size(150, 100)
 
         label = Gtk.Label(label=question)
 
         box = self.get_content_area()
-        box.add(label)
-        self.show_all()
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+        box.set_margin_start(20)
+        box.set_margin_end(20)
+        box.append(label)
 
 
 class MessageDialogError(Gtk.MessageDialog):
@@ -68,13 +75,13 @@ class MessageDialogError(Gtk.MessageDialog):
 
 
 class ImportExportResultDialog(Gtk.Dialog):
-    def __init__(self, parent, folder, title, text_label):
+    def __init__(self, parent, folder, title, text_label, on_response_cb):
         Gtk.Dialog.__init__(
             self,
             title=title,
-            transient_for=parent,
-            flags=0
+            transient_for=parent
         )
+        self._on_response_cb = on_response_cb
         self._handler = None
         self._folder = folder
         self._box = self.get_content_area()
@@ -82,9 +89,9 @@ class ImportExportResultDialog(Gtk.Dialog):
         self._label = None
         self._text_label = text_label
         self._list_box = None
+        self._button = self.add_button(_("Ok"), Gtk.ResponseType.ACCEPT)
         self._setup_ui()
         self._start()
-        self.connect("delete-event", self._on_destroy)
 
     def _on_destroy(self, widget, data):
         if self._handler:
@@ -94,32 +101,46 @@ class ImportExportResultDialog(Gtk.Dialog):
         self._label = Gtk.Label(
             label=f"{self._text_label}\n{self._folder}"
         )
+        self._label.set_margin_top(10)
+        self._label.set_margin_bottom(10)
+        self._label.set_margin_start(10)
+        self._label.set_margin_end(10)
         self._label.get_style_context().add_class("pyot-p-medium")
 
+        self._button.set_margin_top(10)
+        self._button.set_margin_bottom(10)
+        self._button.set_margin_start(10)
+        self._button.set_margin_end(10)
+
         scrolled_window = Gtk.ScrolledWindow()
-        viewport = Gtk.Viewport()
         self._list_box = Gtk.ListBox()
+        scrolled_window.set_child(self._list_box)
 
-        viewport.add(self._list_box)
-        scrolled_window.add(viewport)
+        self._box.append(self._progress)
+        self._box.append(self._label)
+        self._box.append(scrolled_window)
 
-        self._box.pack_start(self._progress, False, False, 0)
-        self._box.pack_start(self._label, True, True, 0)
-        self._box.pack_start(scrolled_window, True, True, 0)
+        self.connect("response", self._on_response)
 
         self.set_default_size(400, 300)
 
-        self.show_all()
         self._list_box.hide()
+        self._button.hide()
+
+    def _on_response(self, dialog, response):
+        if response == Gtk.ResponseType.ACCEPT:
+            self.close()
+        if self._on_response_cb:
+            self._on_response_cb(dialog, response)
 
     def _start(self):
-        raise NotImplementedError("ImportExportResultDialgo._start not implemented")
+        raise NotImplementedError("ImportExportResultDialog._start not implemented")
 
 
 class ImportResultDialog(ImportExportResultDialog):
 
-    def __init__(self, parent, filename):
-        super().__init__(parent, filename, _("Importing..."), _("Importing files:"))
+    def __init__(self, parent, filename, on_response_cb):
+        super().__init__(parent, filename, _("Importing..."), _("Importing files:"), on_response_cb)
 
     def _start(self):
         self._progress.set_fraction(0)
@@ -145,19 +166,18 @@ class ImportResultDialog(ImportExportResultDialog):
             for e in result.errors:
                 row = Gtk.ListBoxRow()
                 label = Gtk.Label(label=e, xalign=0.0)
-                row.add(label)
-                self._list_box.add(row)
-            self._list_box.show_all()
-
-        self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+                row.set_child(label)
+                self._list_box.append(row)
+            self._list_box.show()
+        self._button.show()
 
 
 class ExportResultDialog(ImportExportResultDialog):
-    def __init__(self, parent, folder):
+    def __init__(self, parent, folder, on_response_cb=None):
         self._total = 0
         self._exported = 0
         self._errors = []
-        super().__init__(parent, folder, _("Exporting..."), _("Exporting files to folder:"))
+        super().__init__(parent, folder, _("Exporting..."), _("Exporting files to folder:"), on_response_cb)
 
     def _start(self):
         handler = ExportAllHandler(self._folder, self._export_all_ended)
@@ -191,14 +211,14 @@ class ExportResultDialog(ImportExportResultDialog):
                 row = Gtk.ListBoxRow()
                 activity_name = e["activity_name"]
                 message = e["message"]
-                label = Gtk.Label(label=f"{activity_name}: {message}", xalign=0.0)
-                row.add(label)
-                self._list_box.add(row)
-            self._list_box.show_all()
-        self.add_buttons(Gtk.STOCK_OK, Gtk.ResponseType.OK)
+                label = Gtk.Label.new(f"{activity_name}: {message}")
+                label.set_xalign(0.0)
+                row.set_child(label)
+                self._list_box.append(row)
+            self._list_box.show()
+        self._button.show()
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/activity_edit_dialog.ui")
 class ActivityEditDialog(Gtk.Dialog):
     """Activity's dialog editor.
 
@@ -208,42 +228,69 @@ class ActivityEditDialog(Gtk.Dialog):
     It offers a method (get_activity) to get the activity's changes.
     """
 
-    __gtype_name__ = "ActivityEditDialog"
-
-    _name: Gtk.Entry = Gtk.Template.Child()
-    _description: Gtk.Entry = Gtk.Template.Child()
-    _activity_type: Gtk.ComboBox = Gtk.Template.Child()
-    _type_list_store: Gtk.ListStore = Gtk.Template.Child()
-    _altitude_correction: Gtk.CheckButton = Gtk.Template.Child()
-
     def __init__(self, parent, activity):
         Gtk.Dialog.__init__(
             self,
             title=_("Edit Activity"),
-            transient_for=parent,
-            flags=0
+            transient_for=parent
         )
         self._activity = activity
+        self._type_list_store = Gtk.ListStore.new([str, str])
+        self._box = self.get_content_area()
+        btn1 = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
+        btn1.set_margin_start(10)
+        btn1.set_margin_end(10)
+        btn1.set_margin_top(10)
+        btn1.set_margin_bottom(20)
+        btn2 = self.add_button(_("Ok"), Gtk.ResponseType.OK)
+        btn2.set_margin_end(20)
+        btn2.set_margin_top(10)
+        btn2.set_margin_bottom(20)
         self._set_data()
-        self.add_buttons(
-            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OK, Gtk.ResponseType.OK
-        )
-        self.show_all()
 
     def _set_data(self):
-        self._name.set_text(self._activity.name)
-        self._name.connect("changed", self._on_name_changed)
+        grid = Gtk.Grid()
+        grid.set_margin_start(20)
+        grid.set_margin_end(20)
+        grid.set_margin_top(20)
+        grid.set_margin_bottom(20)
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
 
-        self._description.set_text(self._activity.description)
-        self._description.connect("changed", self._on_description_changed)
+        name_entry = Gtk.Entry()
+        name_entry.set_text(self._activity.name)
+        name_entry.connect("changed", self._on_name_changed)
 
+        desc_entry = Gtk.Entry()
+        desc_entry.set_text(self._activity.description)
+        desc_entry.connect("changed", self._on_description_changed)
+
+        type_combo_box = Gtk.ComboBox.new_with_model(self._type_list_store)
+        renderer_text = Gtk.CellRendererText()
+        type_combo_box.pack_start(renderer_text, True)
+        type_combo_box.add_attribute(renderer_text, "text", 0)
         for idx, item in enumerate(TAU.get_activity_types()):
             self._type_list_store.append(item)
             if item[0] == self._activity.category:
-                self._activity_type_name = item[0]
-                self._activity_type.set_active(idx)
-        self._activity_type.connect("changed", self._on_activity_type_changed)
+                type_combo_box.set_active(idx)
+        type_combo_box.connect("changed", self._on_activity_type_changed)
+
+        l1 = Gtk.Label.new(_("Name"))
+        l1.set_xalign(0.0)
+        grid.attach(l1, 0, 0, 1, 1)
+        grid.attach(name_entry, 1, 0, 1, 1)
+
+        l2 = Gtk.Label.new(_("Description"))
+        l2.set_xalign(0.0)
+        grid.attach(l2, 0, 1, 1, 1)
+        grid.attach(desc_entry, 1, 1, 1, 1)
+
+        l3 = Gtk.Label.new(_("Category"))
+        l3.set_xalign(0.0)
+        grid.attach(l3, 0, 2, 1, 1)
+        grid.attach(type_combo_box, 1, 2, 1, 1)
+
+        self._box.append(grid)
 
     def _on_name_changed(self, entry):
         self._activity.name = entry.get_text()
@@ -260,42 +307,56 @@ class ActivityEditDialog(Gtk.Dialog):
     def get_activity(self):
         return self._activity
 
-    def correct_altitude(self):
-        return self._altitude_correction.get_active()
 
-
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/segment_edit_dialog.ui")
 class SegmentEditDialog(Gtk.Dialog):
     """Segment's dialog editor.
 
     It offers a method (get_segment) to get the segment's changes.
     """
 
-    __gtype_name__ = "SegmentEditDialog"
-
-    _name: Gtk.Entry = Gtk.Template.Child()
-
     def __init__(self, parent, segment):
         Gtk.Dialog.__init__(
             self,
             title=_("Edit Segment"),
-            transient_for=parent,
-            flags=0
+            transient_for=parent
         )
         self._segment = segment
+        self._box = self.get_content_area()
+        btn1 = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
+        btn1.set_margin_start(10)
+        btn1.set_margin_end(10)
+        btn1.set_margin_top(10)
+        btn1.set_margin_bottom(20)
+        btn2 = self.add_button(_("Ok"), Gtk.ResponseType.OK)
+        btn2.set_margin_end(20)
+        btn2.set_margin_top(10)
+        btn2.set_margin_bottom(20)
         self._set_data()
-        self.add_buttons(
-            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OK, Gtk.ResponseType.OK
-        )
-        self.show_all()
 
     def _set_data(self):
-        self._name.set_text(self._segment.name)
-        self._name.connect("changed", self._on_name_changed)
+        grid = Gtk.Grid()
+        grid.set_margin_start(20)
+        grid.set_margin_end(20)
+        grid.set_margin_top(20)
+        grid.set_margin_bottom(20)
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        name = Gtk.Entry()
+        name.set_text(self._segment.name)
+        name.connect("changed", self._on_name_changed)
+
+        label = Gtk.Label.new(_("Name"))
+        label.set_xalign(0.0)
+
+        grid.attach(label, 0, 0, 1, 1)
+        grid.attach(name, 1, 0, 1, 1)
+
+        self._box.append(grid)
 
     def _on_name_changed(self, entry):
         self._segment.name = entry.get_text()
 
     def get_segment(self):
         return self._segment
+

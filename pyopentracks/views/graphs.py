@@ -19,10 +19,9 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 
 import numpy as np
 
+from matplotlib.backends.backend_gtk4agg import (
+    FigureCanvasGTK4Agg as FigureCanvas)
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_gtk3agg import (
-    FigureCanvasGTK3Agg as FigureCanvas
-)
 
 
 class BarsChart:
@@ -56,7 +55,7 @@ class BarsChart:
 
         self._figure.canvas = FigureCanvas(self._figure)
         self._figure.canvas.set_size_request(w, h)
-        self._figure.canvas.set_has_window(False)
+        # self._figure.canvas.set_has_window(False)
 
     def _draw(self):
         labels = [label for label, _ in self._results.items()]
@@ -112,8 +111,8 @@ class BarsChart:
 
     def draw_and_show(self):
         self._draw()
-        self._figure.canvas.draw()
-        self._figure.canvas.show()
+        #self._figure.canvas.draw()
+        #self._figure.canvas.show()
 
 
 class StackedBarsChart:
@@ -261,6 +260,7 @@ class LinePlot:
         self._figure = Figure()
         self._figure.subplots()
         self._canvas = FigureCanvas(self._figure)
+        self._canvas.set_size_request(400, 200)
 
     def add_values(self, values):
         """Add values to the LinePlot object.
@@ -301,8 +301,9 @@ class LinePlot:
         return self._canvas
 
     def draw_and_show(self):
-        self._canvas.draw()
-        self._canvas.show()
+        # self._canvas.draw()
+        # self._canvas.show()
+        pass
 
     def connect(self, event, cb):
         if event == self.EVENT_X_CURSOR_POS:

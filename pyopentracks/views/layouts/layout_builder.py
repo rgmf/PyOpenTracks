@@ -28,7 +28,7 @@ from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.layouts.activity_summary_layout import (
     ActivitySummaryLayout, ClimbingSetsLayout, SetActivitySetsLayout, SetActivitySummaryLayout, TrackActivitySummaryLayout, TrainingSetsLayout
 )
-from pyopentracks.views.layouts.summary_sport_layout import SummarySport, SummaryTimeSport
+from pyopentracks.views.layouts.summary_sport_layout import SummaryMovingSport, SummaryTimeSport
 from pyopentracks.views.layouts.track_activity_data_analytic_layout import TrackActivityDataAnalyticLayout
 from pyopentracks.views.layouts.track_map_analytic_layout import TrackMapAnalyticLayout
 from pyopentracks.views.layouts.track_segments_layout import TrackSegmentsLayout
@@ -176,8 +176,8 @@ class SportSummaryLayoutBuilder:
         
 
         if self._category is None:
-            return SummarySport(*self._args if type(self._args) == tuple else self._args)
+            return SummaryMovingSport(*self._args if type(self._args) == tuple else self._args)
         elif self._category in ("rock_climbing", "training"):
             return SummaryTimeSport(*self._args if type(self._args) == tuple else self._args)
         else:
-            return SummarySport(*self._args if type(self._args) == tuple else self._args)
+            return SummaryMovingSport(*self._args if type(self._args) == tuple else self._args)

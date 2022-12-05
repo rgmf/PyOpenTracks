@@ -355,6 +355,16 @@ class TypeActivityUtils:
         return category not in TypeActivityUtils._pace
 
 
+class SegmentPointUtils:
+
+    @staticmethod
+    def to_locations(segmentpoints) -> List[Location]:
+        """Convert a list of track points to list of Location."""
+        if not segmentpoints:
+            return []
+        return [sp.location for sp in segmentpoints]
+
+
 class TrackPointUtils:
 
     @staticmethod

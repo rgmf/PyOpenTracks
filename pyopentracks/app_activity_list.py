@@ -44,12 +44,11 @@ class AppActivityList(AppExternal):
         if activities and len(activities) > 0:
             layout = ActivitiesLayout(app=self, activities=DatabaseHelper.get_activities())
             layout.build()
-            self._layout.pack_start(layout, True, True, 0)
+            self._layout.append(layout)
         else:
             layout = GreeterLayout()
             layout.build()
-            self._layout.pack_start(layout, True, True, 0)
-        self._layout.show_all()
+            self._layout.append(layout)
 
     def get_layout(self):
         return self._layout
@@ -68,12 +67,13 @@ class AppActivityList(AppExternal):
 
     def empty(self):
         self.register_actions([])
-        for child in self._layout.get_children():
+        child = self._layout.get_first_child()
+        while child is not None:
             self._layout.remove(child)
+            child = self._layout.get_first_child()
         layout = GreeterLayout()
         layout.build()
-        self._layout.pack_start(layout, True, True, 10)
-        self._layout.show_all()
+        self._layout.append(layout)
 
     def get_window(self):
         return self._app.get_window()

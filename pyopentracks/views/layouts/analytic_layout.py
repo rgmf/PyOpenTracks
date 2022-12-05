@@ -56,52 +56,61 @@ class AggregatedStats(Gtk.Box):
 
     def _aggregated_stats_ready(self, aggregated_stats):
         if not aggregated_stats:
-            lbl = Gtk.Label(label=_("There are not any aggregated statistics"))
+            lbl = Gtk.Label.new(_("There are not any aggregated statistics"))
+            lbl.set_xalign(0.5)
             lbl.set_yalign(0.0)
+            lbl.set_margin_top(20)
             lbl.get_style_context().add_class("pyot-h3")
-            self.pack_start(lbl, False, False, 0)
-            self.show_all()
+            self.append(lbl)
             return
         for aggregated in aggregated_stats:
-            LayoutBuilder(lambda layout: self.pack_start(layout, False, False, 0))\
+            LayoutBuilder(lambda layout: self.append(layout))\
                     .set_category(aggregated.category)\
                     .set_type(LayoutBuilder.Layouts.SPORT_SUMMARY)\
                     .set_args((aggregated,))\
                     .make()
-            # self.pack_start(SummarySport(aggregated), False, False, 0)
-            self.show_all()
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_month_layout.ui")
 class AggregatedStatsMonth(Gtk.Box):
     """Gtk.Box with years combo.
 
     It loads AnalyticMonthsStack when user select a year in the combo box.
     """
 
-    __gtype_name__ = "AggregatedStatsMonth"
-
-    _combo_years: Gtk.ComboBox = Gtk.Template.Child()
-    _year_list_store: Gtk.ListStore = Gtk.Template.Child()
-
     def __init__(self):
         """Get years and initialize the UI."""
-        super().__init__()
-        self._setup_ui(DatabaseHelper.get_years())
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
 
-    def _setup_ui(self, years):
+        self._year_list_store = Gtk.ListStore.new([str, str])
+        renderer  = Gtk.CellRendererText()
+        self._combo_years = Gtk.ComboBox.new_with_model(self._year_list_store)
+        self._combo_years.pack_start(renderer, True)
+        self._combo_years.add_attribute(renderer, "text", 0)
+        self._combo_years.set_vexpand(False)
+        self._combo_years.set_valign(Gtk.Align.START)
+        self._combo_years.set_margin_top(20)
+        self._combo_years.set_margin_bottom(20)
+        self._combo_years.set_margin_start(20)
+        self._combo_years.set_margin_end(20)
+
+        years = DatabaseHelper.get_years()
         for y in years:
-            self._year_list_store.append([y, y])
+            self._year_list_store.append([str(y), str(y)])
         self._combo_years.set_active(0)
         self._combo_years.connect("changed", self._on_year_changed)
 
         if years:
             self._months_stack = AnalyticMonthsStack(years[0])
-            self.pack_start(self._months_stack, False, False, 0)
+            self.append(self._combo_years)
+            self.append(self._months_stack)
         else:
-            label = Gtk.Label(_("There are not data"))
+            label = Gtk.Label.new(_("There are not data"))
+            label.set_xalign(0.5)
+            label.set_yalign(0.0)
+            label.set_hexpand(True)
+            label.set_margin_top(20)
             label.get_style_context().add_class("pyot-h3")
-            self.pack_start(label, False, False, 50)
+            self.append(label)
 
     def _on_year_changed(self, combo):
         iter_item = combo.get_active_iter()
@@ -111,23 +120,17 @@ class AggregatedStatsMonth(Gtk.Box):
             year = self._year_list_store[iter_item][1]
 
             self._months_stack = AnalyticMonthsStack(year)
-            self.pack_start(self._months_stack, False, False, 0)
+            self.append(self._months_stack)
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_months_stack_layout.ui")
 class AnalyticMonthsStack(Gtk.Box):
     """Gtk.Box with Gtk.StackSwitcher with months.
 
     It loads the following data by month (depending the selected month):
     - a calendar with activities per day and total time per week,
     - total distance chart by activity and
-    - SummarySport layout by activity.
+    - SummaryMovingSport or SummaryTimeSport layout by activity.
     """
-
-    __gtype_name__ = "AnalyticMonthsStack"
-
-    _stack_switcher: Gtk.StackSwitcher = Gtk.Template.Child()
-    _stack: Gtk.Stack = Gtk.Template.Child()
 
     @dataclass
     class MonthStats:
@@ -140,14 +143,35 @@ class AnalyticMonthsStack(Gtk.Box):
 
     def __init__(self, year):
         """Initialize the switcher and load data through ProcessView."""
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
+
+        self.set_vexpand(True)
+        self.set_hexpand(True)
+
+        self.set_margin_top(20)
+        self.set_margin_bottom(20)
+        self.set_margin_end(20)
+
         self._year = year
         self._data = {}
+
+        self._stack_switcher = Gtk.StackSwitcher()
+        self._stack_switcher.set_orientation(Gtk.Orientation.VERTICAL)
+        self._stack_switcher.set_vexpand(False)
+        self._stack_switcher.set_valign(Gtk.Align.START)
+
+        self._stack = Gtk.Stack()
+        self._stack.set_margin_start(20)
+        self._stack.set_margin_end(20)
         self._stack.connect(
             "notify::visible-child",
             self._visible_child_changed
         )
         self._stack_switcher.set_stack(self._stack)
+
+        self.append(self._stack_switcher)
+        self.append(self._stack)
+
         ProcessView(
             self._on_stack_data_ready, self._data_loading, (year,)
         ).start()
@@ -171,14 +195,13 @@ class AnalyticMonthsStack(Gtk.Box):
             ms = self._data[idx]
             box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
             box.get_style_context().add_class("pyot-bg")
-            self._stack.add_titled(box, self._year + str(ms.month), ms.month_name)
-        self.show_all()
+            self._stack.add_titled(box, str(self._year) + str(ms.month), ms.month_name)
         self._stack.set_visible_child_name(self._year + str(du.get_today().month))
 
     def _visible_child_changed(self, stack, gparamstring):
         box = self._stack.get_visible_child()
         child_name = self._stack.get_visible_child_name()
-        if box and len(box.get_children()) > 0:
+        if box and box.get_first_child():
             return
         if not child_name or child_name not in self._data:
             return
@@ -186,12 +209,7 @@ class AnalyticMonthsStack(Gtk.Box):
         ms = self._data[child_name]
         if ms.stats:
             # Calendar.
-            box.pack_start(
-                CalendarLayout(int(ms.month), int(self._year)),
-                False,
-                False,
-                0
-            )
+            box.append(CalendarLayout(int(ms.month), int(self._year)))
 
             # Month chart for distance's activity and time's activity.
             # For distance's activity it will show total distance per activity.
@@ -214,13 +232,12 @@ class AnalyticMonthsStack(Gtk.Box):
                 )
 
                 chart_box_distance = Gtk.Box()
-                chart_box_distance.set_margin_left(10)
-                chart_box_distance.set_margin_right(10)
+                chart_box_distance.set_margin_start(10)
+                chart_box_distance.set_margin_end(10)
                 chart_box_distance.get_style_context().add_class("pyot-stats-bg-color")
-                chart_box_distance.pack_start(chart_distance.get_canvas(), True, True, 10)
+                chart_box_distance.append(chart_distance.get_canvas())
 
-                box.pack_start(chart_box_distance, False, False, 0)
-                chart_box_distance.show_all()
+                box.append(chart_box_distance)
                 chart_distance.draw_and_show()
 
             if len(list_time) > 0:
@@ -233,43 +250,57 @@ class AnalyticMonthsStack(Gtk.Box):
                 )
 
                 chart_box_time = Gtk.Box()
-                chart_box_time.set_margin_left(10)
-                chart_box_time.set_margin_right(10)
+                chart_box_time.set_margin_start(10)
+                chart_box_time.set_margin_end(10)
                 chart_box_time.get_style_context().add_class("pyot-stats-bg-color")
-                chart_box_time.pack_start(chart_time.get_canvas(), True, True, 10)
+                chart_box_time.append(chart_time.get_canvas())
 
-                box.pack_start(chart_box_time, False, False, 0)
-                chart_box_time.show_all()
+                box.append(chart_box_time)
                 chart_time.draw_and_show()
 
             # Aggregated stats for every category.
             for a in ms.stats:
-                LayoutBuilder(lambda layout: box.pack_start(layout, False, False, 0))\
+                LayoutBuilder(lambda layout: box.append(layout))\
                     .set_category(a.category)\
                     .set_type(LayoutBuilder.Layouts.SPORT_SUMMARY)\
                     .set_args((a,))\
                     .make()
-                # box.pack_start(SummarySport(a), False, False, 0)
         else:
-            label = Gtk.Label(_("There are not stats for this date"))
+            label = Gtk.Label.new(_("There are not stats for this date"))
+            label.set_xalign(0.5)
             label.set_yalign(0.0)
             label.get_style_context().add_class("pyot-h3")
-            box.pack_start(label, False, False, 0)
-            box.show_all()
+            label.set_margin_top(20)
+            label.set_margin_bottom(20)
+            label.set_margin_start(20)
+            label.set_margin_end(20)
+            box.append(label)
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/analytic_year_layout.ui")
 class AggregatedStatsYear(Gtk.Box):
     """Gtk.Box with a combo box with year to load AnalyticTotalsYear."""
-
-    __gtype_name__ = "AggregatedStatsYear"
-
-    _combo_years: Gtk.ComboBox = Gtk.Template.Child()
-    _year_list_store: Gtk.ListStore = Gtk.Template.Child()
 
     def __init__(self):
         """Load years in the combo box and load last AnalyticTotalsYear."""
         super().__init__()
+
+        self.set_vexpand(True)
+        self.set_hexpand(True)
+
+        self.set_margin_top(20)
+        self.set_margin_bottom(20)
+        self.set_margin_end(20)
+
+        self._year_list_store = Gtk.ListStore.new([str, str])
+        renderer = Gtk.CellRendererText()
+        self._combo_years = Gtk.ComboBox.new_with_model(self._year_list_store)
+        self._combo_years.pack_start(renderer, True)
+        self._combo_years.add_attribute(renderer, "text", 0)
+        self._combo_years.set_vexpand(False)
+        self._combo_years.set_valign(Gtk.Align.START)
+        self._combo_years.set_margin_bottom(20)
+        self._combo_years.set_margin_start(20)
+
         self._setup_ui(DatabaseHelper.get_years())
 
     def _setup_ui(self, years):
@@ -280,11 +311,15 @@ class AggregatedStatsYear(Gtk.Box):
 
         if years:
             self._year_totals = AnalyticTotalsYear(years[0])
-            self.pack_start(self._year_totals, False, False, 0)
+            self.append(self._combo_years)
+            self.append(self._year_totals)
         else:
-            label = Gtk.Label(_("There are not data"))
+            label = Gtk.Label.new(_("There are not data"))
+            label.set_xalign(0.5)
+            label.set_yalign(0.0)
+            label.set_hexpand(True)
             label.get_style_context().add_class("pyot-h3")
-            self.pack_start(label, False, False, 50)
+            self.append(label)
 
     def _on_year_changed(self, combo):
         iter_item = combo.get_active_iter()
@@ -294,7 +329,7 @@ class AggregatedStatsYear(Gtk.Box):
             year = self._year_list_store[iter_item][1]
 
             self._year_totals = AnalyticTotalsYear(year)
-            self.pack_start(self._year_totals, False, False, 0)
+            self.append(self._year_totals)
 
 
 class AnalyticTotalsYear(Gtk.Box):
@@ -316,18 +351,17 @@ class AnalyticTotalsYear(Gtk.Box):
 
     def _ready(self, aggregated_list):
         if not aggregated_list:
-            lbl = Gtk.Label(label=_("There are not activities this year"))
-            lbl.set_yalign(0.0)
+            lbl = Gtk.Label.new(_("There are not activities"))
+            lbl.set_yalign(0.5)
             lbl.set_xalign(0.0)
             lbl.get_style_context().add_class("pyot-h3")
-            self.pack_start(lbl, False, False, 50)
-            self.show_all()
+            self.append(lbl)
             return
         grid = Gtk.Grid()
         grid.set_column_homogeneous(True)
         grid.set_row_spacing(10)
         grid.set_column_spacing(10)
-        grid.set_margin_left(50)
+        grid.set_margin_start(50)
         self._build_headers(
             grid,
             _("Sport"),
@@ -362,8 +396,7 @@ class AnalyticTotalsYear(Gtk.Box):
             grid.attach(box_hr_max, 6, i + 1, 1, 1)
             grid.attach(box_hr_avg, 7, i + 1, 1, 1)
             grid.attach(box_speed_pace_avg, 8, i + 1, 1, 1)
-        self.pack_start(grid, True, True, 10)
-        self.show_all()
+        self.append(grid)
 
     def _build_headers(self, grid, *header_labels):
         i = 0
@@ -374,8 +407,12 @@ class AnalyticTotalsYear(Gtk.Box):
         box = Gtk.Box(spacing=20, orientation=Gtk.Orientation.VERTICAL)
         box.get_style_context().add_class("pyot-bg")
         box.set_homogeneous(False)
-        lbl = Gtk.Label(label=value, xalign=0.5, yalign=0.5)
-        box.pack_start(lbl, True, True, 10)
+        lbl = Gtk.Label.new(value)
+        lbl.set_margin_top(10)
+        lbl.set_margin_bottom(10)
+        lbl.set_margin_start(10)
+        lbl.set_margin_end(10)
+        box.append(lbl)
         return box
 
     def _build_icon_box(self, category):
@@ -384,16 +421,28 @@ class AnalyticTotalsYear(Gtk.Box):
         box.set_homogeneous(False)
         icon = Gtk.Image()
         icon.set_from_pixbuf(tau.get_icon_pixbuf(category))
-        lbl = Gtk.Label((category if category else _("Unknown")))
-        box.pack_start(icon, False, False, 0)
-        box.pack_start(lbl, False, False, 0)
+        icon.set_pixel_size(24)
+        icon.set_margin_top(10)
+        icon.set_margin_start(10)
+        icon.set_margin_end(10)
+        lbl = Gtk.Label.new((category if category else _("Unknown")))
+        lbl.set_margin_bottom(10)
+        lbl.set_margin_start(10)
+        lbl.set_margin_end(10)
+        box.append(icon)
+        box.append(lbl)
         return box
 
     def _build_info_box(self, value):
         box = Gtk.Box(spacing=20, orientation=Gtk.Orientation.VERTICAL)
         box.get_style_context().add_class("pyot-bg")
         box.set_homogeneous(False)
-        lbl = Gtk.Label(label=value, xalign=0.0, yalign=0.5)
+        lbl = Gtk.Label.new(str(value))
+        lbl.set_margin_top(10)
+        lbl.set_margin_bottom(10)
+        lbl.set_margin_start(10)
+        lbl.set_margin_end(10)
         lbl.get_style_context().add_class("pyot-h3")
-        box.pack_start(lbl, True, True, 0)
+        box.append(lbl)
         return box
+

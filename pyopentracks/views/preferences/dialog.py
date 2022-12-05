@@ -29,12 +29,10 @@ class PreferencesDialog(Gtk.Dialog):
             self,
             title=_("Preferences"),
             transient_for=parent,
-            flags=0
+            use_header_bar=True
         )
-        self.add_buttons(
-            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OK, Gtk.ResponseType.OK
-        )
+        self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
+        self.add_button(_("Ok"), Gtk.ResponseType.OK)
         self._preferences = {}
         self._app = app
         self._box = self.get_content_area()
@@ -44,7 +42,9 @@ class PreferencesDialog(Gtk.Dialog):
 
     def _setup_ui(self):
         self.set_default_size(800, 600)
-        self._box.pack_start(PreferencesLayout(self), True, True, 0)
+        preferences_layout = PreferencesLayout(self)
+        preferences_layout.set_vexpand(True)
+        self._box.append(preferences_layout)
 
     def get_pref(self, pref):
         if pref in self._preferences:
@@ -59,3 +59,4 @@ class PreferencesDialog(Gtk.Dialog):
 
     def get_updated_preferences(self):
         return self._preferences
+

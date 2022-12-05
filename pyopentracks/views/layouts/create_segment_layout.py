@@ -21,7 +21,6 @@ from gi.repository import Gtk, GObject
 from pyopentracks.models.stats import Stats
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/create_segment_layout.ui")
 class CreateSegmentLayout(Gtk.Box, GObject.GObject):
     """A layout with a form and information about a segment to be created.
 
@@ -33,56 +32,67 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
     click on create button.
     """
 
-    __gtype_name__ = "CreateSegmentLayout"
-
     __gsignals__ = {
         "track-activity-stats-segment-ok": (GObject.SIGNAL_RUN_FIRST, None, (str, float, float, float)),
         "track-activity-stats-segment-cancel": (GObject.SIGNAL_RUN_FIRST, None, ())
     }
 
-    _title_label: Gtk.Label = Gtk.Template.Child()
-    _name_entry: Gtk.Entry = Gtk.Template.Child()
-
-    _distance_img: Gtk.Image = Gtk.Template.Child()
-    _distance_label: Gtk.Label = Gtk.Template.Child()
-
-    _gain_img: Gtk.Image = Gtk.Template.Child()
-    _gain_label: Gtk.Label = Gtk.Template.Child()
-
-    _loss_img: Gtk.Image = Gtk.Template.Child()
-    _loss_label: Gtk.Label = Gtk.Template.Child()
-
-    _left_button: Gtk.Button = Gtk.Template.Child()
-    _right_button: Gtk.Button = Gtk.Template.Child()
-
     def __init__(self):
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=20)
 
         self._stats = None
 
-        self._title_label.set_text(_("Create New Segment"))
+        self._title_label = Gtk.Label.new(_("Create New Segment"))
         self._title_label.get_style_context().add_class("pyot-h3")
 
+        self._name_entry = Gtk.Entry()
         self._name_entry.set_placeholder_text(_("Type Segment's Name"))
         self._name_entry.connect(
             "changed",
             lambda w: self._right_button.set_sensitive(bool(self._name_entry.get_text().strip()))
         )
 
-        self._distance_img.set_from_resource("/es/rgmf/pyopentracks/icons/send-symbolic.svg")
-        self._gain_img.set_from_resource("/es/rgmf/pyopentracks/icons/up-symbolic.svg")
-        self._loss_img.set_from_resource("/es/rgmf/pyopentracks/icons/down-symbolic.svg")
+        box_with_stats = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
 
-        self._left_button.set_label(_("Cancel"))
+        box_distance = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self._distance_img = Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/send-symbolic.svg")
+        self._distance_label = Gtk.Label()
+        box_distance.append(self._distance_img)
+        box_distance.append(self._distance_label)
+
+        box_gain = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self._gain_img = Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/up-symbolic.svg")
+        self._gain_label = Gtk.Label()
+        box_gain.append(self._gain_img)
+        box_gain.append(self._gain_label)
+
+        box_loss = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        self._loss_img = Gtk.Image.new_from_resource("/es/rgmf/pyopentracks/icons/down-symbolic.svg")
+        self._loss_label = Gtk.Label()
+        box_loss.append(self._loss_img)
+        box_loss.append(self._loss_label)
+
+        box_with_stats.append(box_distance)
+        box_with_stats.append(box_gain)
+        box_with_stats.append(box_loss)
+
+        box_with_buttons = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self._left_button = Gtk.Button.new_with_label(_("Cancel"))
         self._left_button.connect("clicked", self._left_button_clicked_cb)
-
-        self._right_button.set_label(_("Create"))
+        self._right_button = Gtk.Button.new_with_label(_("Create"))
         self._right_button.set_sensitive(False)
         self._right_button.connect("clicked", self._right_button_clicked_cb)
+        box_with_buttons.append(self._left_button)
+        box_with_buttons.append(self._right_button)
+
+        self.append(self._title_label)
+        self.append(self._name_entry)
+        self.append(box_with_stats)
+        self.append(box_with_buttons)
 
     def _left_button_clicked_cb(self, button):
         self.emit("track-activity-stats-segment-cancel")
-        self.destroy()
+        self._name_entry.set_text("")
 
     def _right_button_clicked_cb(self, button):
         self.emit(
@@ -92,10 +102,11 @@ class CreateSegmentLayout(Gtk.Box, GObject.GObject):
             float(self._stats.gain_elevation_m) if self._stats.gain_elevation_m else 0,
             float(self._stats.loss_elevation_m) if self._stats.loss_elevation_m else 0
         )
-        self.destroy()
+        self._name_entry.set_text("")
 
     def set_stats(self, stats: Stats):
         self._stats = stats
         self._distance_label.set_text(stats.total_distance)
         self._gain_label.set_text(stats.gain_elevation)
         self._loss_label.set_text(stats.loss_elevation)
+

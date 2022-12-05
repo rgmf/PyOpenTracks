@@ -45,8 +45,8 @@ def export_to_file(database_file: str, json_file: str):
         conn = sqlite3.connect(database_file)
         cursor = conn.cursor()
 
-        #query_str = "select a.name, s.starttime, s.stoptime from activities a, stats s where a.statsid=s._id;"
-        query_str = "select name, starttime, stoptime from tracks;"
+        query_str = "select a.name, s.starttime, s.stoptime from activities a, stats s where a.statsid=s._id;"
+        #query_str = "select name, starttime, stoptime from tracks;"
         cursor.execute(query_str)
         record = cursor.fetchall()
         with open(json_file, "w") as fd:

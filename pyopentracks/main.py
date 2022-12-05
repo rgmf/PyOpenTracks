@@ -20,10 +20,8 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 import sys
 import gi
 
-gi.require_version("Gtk", "3.0")
-gi.require_version('Champlain', '0.12')
-gi.require_version('GtkChamplain', '0.12')
-gi.require_version('GtkClutter', '1.0')
+gi.require_version('Gtk', '4.0')
+gi.require_version('Shumate', '1.0')
 
 from .app import Application
 
