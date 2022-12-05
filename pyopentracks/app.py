@@ -27,7 +27,7 @@ from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.app_window import PyopentracksWindow
 from pyopentracks.views.file_chooser import (
-    FileChooserWindow, FolderChooserWindow
+    ImportFileChooserDialog, ImportFolderChooserWindow, FolderChooserWindow
 )
 from pyopentracks.models.migrations import Migration
 from pyopentracks.models.database import Database
@@ -74,23 +74,26 @@ class Application(Gtk.Application):
         Gtk.Application.do_startup(self)
 
     def do_activate(self):
-        stylecontext = Gtk.StyleContext()
-        provider = Gtk.CssProvider()
-        provider.load_from_resource("/es/rgmf/pyopentracks/ui/gtk_style.css")
-        stylecontext.add_provider_for_screen(
-            Gdk.Screen.get_default(),
-            provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
         win = self.props.active_window
         if not win:
             win = PyopentracksWindow(application=self)
         self._window = win
+
+        provider = Gtk.CssProvider()
+        provider.load_from_resource("/es/rgmf/pyopentracks/ui/gtk_style.css")
+        style_context = self._window.get_style_context()
+        if style_context is not None:
+            style_context.add_provider_for_display(
+                Gdk.Display.get_default(),
+                provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
+
         self._setup_menu()
         self._setup_settings()
         self._setup_database()
         self._load_main_app()
-        # self._auto_import()
+
         win.present()
         win.set_menu(self._menu)
 
@@ -105,6 +108,10 @@ class Application(Gtk.Application):
         self.activate()
         return 0
 
+    def on_quit(self, action, param):
+        self._window.on_quit()
+        self.quit()
+
     def on_open_file(self, action, param):
         # dialog = FileChooserWindow(parent=self._window)
         # response = dialog.run()
@@ -112,10 +119,6 @@ class Application(Gtk.Application):
         #     self.load_file(dialog.get_filename(), self._window.load_activity_stats)
         # dialog.destroy()
         pass
-
-    def on_quit(self, action, param):
-        self._window.on_quit()
-        self.quit()
 
     def load_file(self, filename: str, cb):
         """Load the GPX filename and call cb.
@@ -161,19 +164,22 @@ class Application(Gtk.Application):
         )
 
     def preferences_button_clicked(self, prefs_btn):
+        def on_response(dialog, response):
+            if response == Gtk.ResponseType.OK:
+                updated_prefs = dialog.get_updated_preferences()
+                for pref, value in updated_prefs.items():
+                    self.set_pref(pref, value)
+            dialog.close()
+
         dialog = PreferencesDialog(parent=self._window, app=self)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            updated_prefs = dialog.get_updated_preferences()
-            for pref, value in updated_prefs.items():
-                self.set_pref(pref, value)
-        dialog.destroy()
+        dialog.show()
+        dialog.connect("response", on_response)
 
     def analytic_button_clicked(self, btn):
         self._load_app(AppAnalytic)
 
     def segments_button_clicked(self, btn):
-        self._load_app(AppSegments)
+        self._load_app(AppSegments, {"app": self})
 
     def open_external_app(self, class_var, dict_args):
         self._load_app(class_var, dict_args)
@@ -239,78 +245,37 @@ class Application(Gtk.Application):
         db_version = migration.migrate()
         self._preferences.set_pref(AppPreferences.DB_VERSION, db_version)
 
-    # def _auto_import(self):
-    #     folder = self._preferences.get_pref(AppPreferences.AUTO_IMPORT_FOLDER)
-    #     if not folder:
-    #         return
-    #     handler = AutoImportHandler()
-    #     if self._preferences.get_pref(AppPreferences.OPENTRACKS_GAIN_LOSS_FILTER):
-    #         handler.with_opentracks_gain_loss_correction()
-    #     handler.connect("total-files-to-autoimport", self._auto_import_importing)
-    #     handler.import_folder(folder, self._auto_import_new_tracks)
-
-    # def _auto_import_importing(self, handler: AutoImportHandler, total_files):
-    #     if total_files == 0:
-    #         return
-    #     self._window.show_infobar(
-    #         itype=Gtk.MessageType.INFO,
-    #         message=_(f"{total_files} new tracks. Importing them..."),
-    #         buttons=[]
-    #     )
-
-    # def _auto_import_new_tracks(self):
-    #     self._window.clean_top_widget()
-    #     self._window.show_infobar(
-    #         itype=Gtk.MessageType.QUESTION,
-    #         message=_(
-    #             "There are new tracks imported. "
-    #             "Do you want to re-load all tracks to "
-    #             "see the new ones?"
-    #         ),
-    #         buttons=[
-    #             {
-    #                 "text": _("Cancel"),
-    #                 "cb": lambda b: self._window.clean_top_widget()
-    #             },
-    #             {
-    #                 "text": _("Re-load"),
-    #                 "cb": lambda b: self._load_tracks()
-    #             }
-    #         ]
-    #     )
-
     def _end_load_file_cb(self, gpxParserHandler):
         self._window.loading(1.0)
 
     def _on_folder_import(self, action, param):
-        self._on_import(FolderChooserWindow(parent=self._window))
+        dialog = ImportFolderChooserWindow(parent=self._window, on_response=self._on_import)
+        dialog.show()
 
     def _on_file_import(self, action, param):
-        self._on_import(FileChooserWindow(parent=self._window))
+        dialog = ImportFileChooserDialog(parent=self._window, on_response=self._on_import)
+        dialog.show()
 
-    def _on_import(self, dialog):
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            filename = dialog.get_filename()
-            dialog.destroy()
+    def _on_import(self, dialog, response):
+        if response == Gtk.ResponseType.ACCEPT:
+            filename = dialog.get_file()
             import_dialog = ImportResultDialog(
                 parent=self._window,
-                filename=filename
+                filename=filename.get_path(),
+                on_response_cb=self._on_import_response
             )
-            import_dialog.run()
-            import_dialog.destroy()
+            import_dialog.show()
+
+    def _on_import_response(self, dialog, response):
+        if response == Gtk.ResponseType.DELETE_EVENT:
             self._load_main_app()
-        else:
-            dialog.destroy()
 
     def _on_export_all(self, action, param):
-        dialog = FolderChooserWindow(parent=self._window)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            folder = dialog.get_filename()
-            dialog.destroy()
-            export_dialog = ExportResultDialog(parent=self._window, folder=folder)
-            export_dialog.run()
-            export_dialog.destroy()
-        else:
-            dialog.destroy()
+        def on_response(dialog, response):
+            if response == Gtk.ResponseType.ACCEPT:
+                folder = dialog.get_file().get_path()
+                export_dialog = ExportResultDialog(parent=self._window, folder=folder)
+                export_dialog.show()
+
+        dialog = FolderChooserWindow(parent=self._window, on_response=on_response)
+        dialog.show()

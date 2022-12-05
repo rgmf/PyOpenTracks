@@ -42,7 +42,7 @@ class Result:
     @property
     def is_ok(self):
         """Return True if importing was ok."""
-        return self._code == ResultCode.OK
+        return self.code == ResultCode.OK
 
     @property
     def is_error(self):

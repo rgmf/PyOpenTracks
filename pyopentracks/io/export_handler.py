@@ -25,7 +25,7 @@ from gi.repository import GLib, GObject
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.utils.utils import TimeUtils
-from pyopentracks.io.parser.result import Result
+from pyopentracks.io.parser.result import Result, ResultCode
 
 
 class ExportActivity():
@@ -69,8 +69,8 @@ class ExportActivity():
         except Exception as e:
             message = _(f"Error exporting the track {self._activity.name}: {e}")
             pyot_logging.get_logger(__name__).exception(message)
-            return Result(code=Result.ERROR, message=message)
-        return Result(code=Result.OK, message=_(f"Activity {self._activity.name} exported correctly"))
+            return Result(code=ResultCode.ERROR, message=message)
+        return Result(code=ResultCode.OK, message=_(f"Activity {self._activity.name} exported correctly"))
 
     @property
     def _header(self):
@@ -153,8 +153,8 @@ class ExportAllHandler(GObject.GObject):
         threading.Thread(target=self._export_in_thread, daemon=True).start()
 
     def _export_in_thread(self):
-        activities = DatabaseHelper.get_activitties()
+        activities = DatabaseHelper.get_activities()
         self.emit("total-activities-to-export", len(activities))
-        for activity in DatabaseHelper.get_activities():
+        for activity in activities:
             result = ExportActivity(activity.id, self._folder).run()
             GLib.idle_add(self._callback, result)

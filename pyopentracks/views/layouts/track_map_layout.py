@@ -16,132 +16,194 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-from abc import abstractmethod
+import math
+
 from typing import List
 
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, Gdk, GObject, Shumate
 
-from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.models.location import Location
-from pyopentracks.models.segment_point import SegmentPoint
-from pyopentracks.models.track_point import TrackPoint
-from pyopentracks.views.layouts.process_view import ProcessView
-from pyopentracks.views.maps.base_map import BaseMap
-from pyopentracks.views.maps.interactive_track_map import InteractiveTrackMap
-from pyopentracks.views.maps.track_map import TrackMap
+from pyopentracks.utils.utils import TrackPointUtils
 
 
-class MapLayout(Gtk.Box):
-    """Base MapLayout.
+class TrackMapLayout(Shumate.SimpleMap):
+    """A Shumate.SimpleMap to show a track on it.
 
-    This class is used to add a champlain's map in a Gtk widget.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self._map = self._build_map()
-
-        self.set_orientation(Gtk.Orientation.VERTICAL)
-        self.set_margin_start(20)
-        self.set_margin_end(20)
-        self.set_margin_top(20)
-        self.set_margin_bottom(20)
-
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.add(self._map)
-        self.pack_start(scrolled_window, False, True, 0)
-
-        self.show_all()
-
-    @abstractmethod
-    def _build_map(self) -> BaseMap:
-        pass
-
-    @abstractmethod
-    def add_polyline_from_points(self, points) -> None:
-        pass
-
-
-class SegmentMapLayout(MapLayout):
-    """A MapLayout with a segment's polyline."""
-
-    def __init__(self):
-        super().__init__()
-
-    def _build_map(self) -> BaseMap:
-        return BaseMap()
-
-    def add_polyline_from_points(self, points: List[SegmentPoint]) -> None:
-        self._map.add_polyline([(p.latitude, p.longitude) for p in points])
-
-
-class TrackMapLayout(MapLayout):
-    """A MapLayout with a map with track points.
-
-    When you create the map a label with a loading message is shown
-    until you add the polyline.
-
-    An interactive map can be asked so user can select segments.
-
-    Signals:
-    segment-selected -- this signal will be emitted when user select a segment.
+    This map contains:
+    - A Shumate.PathLayer with the points of the track.
+    - A Shumate.Marker with a generic location.
+    - A Shumate.Marker with the initial point.
+    - A Shumate.Marker with the end point.
     """
 
     def __init__(self):
         super().__init__()
 
-    def _build_map(self) -> BaseMap:
-        return TrackMap()
+        map_source = Shumate.MapSourceRegistry.new_with_defaults().get_by_id(Shumate.MAP_SOURCE_OSM_MAPNIK)
+        self.set_map_source(map_source)
 
-    def add_polyline_from_points(self, points: List[TrackPoint]) -> None:
-        self._map.add_polyline(points)
+        self._start_marker = self._add_marker_from_icon_name("location-start")
+        self._start_marker.hide()
+        self._end_marker = self._add_marker_from_icon_name("location-end")
+        self._end_marker.hide()
+        self._location_marker = self._add_marker_from_icon_name("view-pin-symbolic")
+        self._location_marker.hide()
+
+        self._path_layer = Shumate.PathLayer.new(self.get_viewport())
+        self.add_overlay_layer(self._path_layer)
+
+    def add_polyline_from_points(self, points: List[Location]) -> None:
+        if points is None or len(points) == 0:
+            return
+        self._path_layer.remove_all()
+        for point in points:
+            shumate_location = Shumate.Point.new()
+            shumate_location.set_location(point.latitude, point.longitude)
+            self._path_layer.add_node(shumate_location)
+        self.set_start_marker(points[0])
+        self.set_end_marker(points[-1])
+        self._set_center_and_zoom(points)
+
+    def _add_marker_from_icon_name(self, icon_name: str, location: Location = None) -> Shumate.Marker:
+        marker = Shumate.Marker.new()
+        marker.set_child(Gtk.Image.new_from_icon_name(icon_name))
+        if location is not None:
+            marker.set_location(location.latitude, location.longitude)
+
+        marker_layer = Shumate.MarkerLayer.new(self.get_viewport())
+        marker_layer.add_marker(marker)
+
+        self.add_overlay_layer(marker_layer)
+
+        return marker
+
+    def _set_center_and_zoom(self, points: List[Location]) -> None:
+        """Set map center and zoom based on the path layer bounds.
+
+        Link: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+        FixMe: Improve calculations if poles / 180th meridian is crossed
+        """
+
+        def get_latitude_derivation(latitude):
+            radians = math.radians(latitude)
+            return math.asinh(math.tan(radians)) / math.pi / 2
+
+        def get_latitude_derivation_reverse(latitude_derivation):
+            radians = math.atan(math.sinh(latitude_derivation * 2 * math.pi))
+            return math.degrees(radians)
+
+        x_coordinates, y_coordinates = zip(*[(point.latitude, point.longitude) for point in points])
+        min_latitude = min(x_coordinates)
+        min_longitude = min(y_coordinates)
+        max_latitude = max(x_coordinates)
+        max_longitude = max(y_coordinates)
+
+        min_latitude_derivation = get_latitude_derivation(min_latitude)
+        max_latitude_derivation = get_latitude_derivation(max_latitude)
+        mean_latitude_derivation = (min_latitude_derivation + max_latitude_derivation) / 2
+
+        latitude_fraction = max_latitude_derivation - min_latitude_derivation
+        longitude_fraction = (max_longitude - min_longitude) / 360
+
+        tile_size = self.get_map_source().get_tile_size()
+        map_height = 363 * 0.95  # self.get_allocated_height() | Offset
+        map_width = 599 * 0.95  # self.get_allocated_width() | Offset
+
+        max_zoom_level = self.get_map_source().get_max_zoom_level()
+        latitude_zoom_level = math.log(map_height / tile_size / latitude_fraction) / math.log(2)
+        longitude_zoom_level = math.log(map_width / tile_size / longitude_fraction) / math.log(2)
+        zoom_level = min(max_zoom_level, latitude_zoom_level, longitude_zoom_level)
+
+        self.get_map().go_to_full(
+            get_latitude_derivation_reverse(mean_latitude_derivation),
+            (min_longitude + max_longitude) / 2,
+            zoom_level
+        )
 
     def add_polyline_from_activity_id(self, activity_id):
-        """Load track points from activity's id."""
-        ProcessView(self.add_polyline_from_points, DatabaseHelper.get_track_points, (activity_id,)).start()
+        print(activity_id)
 
     def highlight(self, locations: List[Location]):
-        self._map.add_highlight_polyline(locations)
 
-    def set_location_marker(self, location, tag):
-        """Show a marker in the location with the tag."""
-        self._map.set_location_marker(location, tag)
+        print("hightlight")
+
+    def set_start_marker(self, location: Location):
+        self._start_marker.set_location(location.latitude, location.longitude)
+        self._start_marker.show()
+
+    def set_end_marker(self, location: Location):
+        self._end_marker.set_location(location.latitude, location.longitude)
+        self._end_marker.show()
+
+    def set_location_marker(self, location: Location, tag: str):
+        self._location_marker.set_location(location.latitude, location.longitude)
+        self._location_marker.show()
 
 
-class TrackInteractiveMapLayout(MapLayout, GObject.GObject):
-    """It's a MapLayout with interactive feature.
-
-    It offers to the users the possibility of select a segment.
-    """
+class TrackInteractiveMapLayout(Gtk.Box, GObject.GObject):
 
     __gsignals__ = {
         "segment-selected": (GObject.SIGNAL_RUN_FIRST, None, (int, int))
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, track_points):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=20)
         GObject.GObject.__init__(self)
 
-    def _build_map(self) -> BaseMap:
-        map = InteractiveTrackMap()
-        map.get_segment().connect("segment-ready", self._segment_ready_cb)
-        return map
+        self._track_points = track_points
 
-    def add_polyline_from_points(self, points: List[TrackPoint]) -> None:
-        self._map.add_polyline(points)
+        self._map_layout = TrackMapLayout()
+        self._map_layout.add_polyline_from_points(TrackPointUtils.to_locations(track_points))
+        self._map_layout.set_vexpand(True)
 
-    def get_segment(self):
-        return self._map.get_segment()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+        box.set_margin_start(20)
+        box.set_margin_end(20)
 
-    def reset(self):
-        self._map.clear_segment()
+        label = Gtk.Label.new(_("Select a segment"))
+        label.get_style_context().add_class("pyot-h3")
 
-    def _segment_ready_cb(self, segment, track_point_begin_id, track_point_end_id):
-        """Call back executed when a MapSegment is selected and ready.
+        self._scale_from = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, len(self._track_points) - 1, 1)
+        self._scale_to = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, len(self._track_points) - 1, 1)
+        self._scale_to.set_value(len(self._track_points) - 1)
 
-        Arguments:
-        segment -- MapSegment object.
-        track_point_begin_id -- begin segment TrackPoint's id property.
-        track_point_end_id -- end's segment TrackPoint's id property.
-        """
-        self.emit("segment-selected", track_point_begin_id, track_point_end_id)
+        self._scale_from.connect("value-changed", self._scale_changed)
+        self._scale_to.connect("value-changed", self._scale_changed)
+
+        button = Gtk.Button.new_with_label(_("Ok"))
+        button.set_halign(Gtk.Align.END)
+        button.connect(
+            "clicked",
+            lambda *_: self.emit(
+                "segment-selected",
+                self._track_points[int(self._scale_from.get_value())].id,
+                self._track_points[int(self._scale_to.get_value())].id
+            )
+        )
+
+        box.append(label)
+        box.append(self._scale_from)
+        box.append(self._scale_to)
+        box.append(button)
+
+        self.append(box)
+        self.append(self._map_layout)
+
+    def _scale_changed(self, range):
+        i = int(range.get_value())
+
+        if range == self._scale_from and self._scale_to.get_value() <= i:
+            self._scale_to.set_value(i)
+        elif range == self._scale_to and self._scale_from.get_value() >= i:
+            self._scale_from.set_value(i)
+
+        ifrom = int(self._scale_from.get_value())
+        ito = int(self._scale_to.get_value())
+
+        self._map_layout.set_start_marker(self._track_points[ifrom].location)
+        self._map_layout.set_end_marker(self._track_points[ito].location)
+
+    def get_selected_track_points(self):
+        return self._track_points[int(self._scale_from.get_value()):int(self._scale_to.get_value())]

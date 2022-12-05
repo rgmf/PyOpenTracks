@@ -25,29 +25,50 @@ from pyopentracks.observers.data_update_observer import DataUpdateObserver
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.segments_track_layout import SegmentsTrackLayout
 from pyopentracks.views.layouts.track_map_layout import TrackMapLayout
+from pyopentracks.utils.utils import TrackPointUtils
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_segments_layout.ui")
 class TrackSegmentsLayout(Gtk.Box, DataUpdateObserver, Layout):
-    __gtype_name__ = "TrackSegmentsLayout"
-
-    _scrolled_window: Gtk.ScrolledWindow = Gtk.Template.Child()
-    _content_box: Gtk.Box = Gtk.Template.Child()
-    _refresh_info_box: Gtk.Box = Gtk.Template.Child()
-    _refresh_button: Gtk.Button = Gtk.Template.Child()
-    _refresh_message_label: Gtk.Label = Gtk.Template.Child()
 
     def __init__(self, activity):
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
         Layout.__init__(self)
 
-        self.get_style_context().add_class("pyot-bg")
-        self._activity= activity
+        self._map_layout = None
 
-        self._refresh_message_label.set_label(
+        self.get_style_context().add_class("pyot-bg")
+
+        self._refresh_info_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        self._refresh_info_box.set_margin_top(20)
+        self._refresh_info_box.set_margin_bottom(20)
+        self._refresh_info_box.set_margin_start(20)
+        self._refresh_info_box.set_margin_end(20)
+        self._refresh_button = Gtk.Button()
+        self._refresh_button.set_icon_name("refresh-symbolic")
+        self._refresh_button.connect("clicked", self._refresh)
+        self._refresh_message_label = Gtk.Label.new(
             _("New segments have been created, refresh to see them (it can take a long time)")
         )
-        self._refresh_button.connect("clicked", self._refresh)
+        self._refresh_info_box.append(self._refresh_button)
+        self._refresh_info_box.append(self._refresh_message_label)
+        self._refresh_info_box.hide()
+        self._refresh_button.hide()
+        self._refresh_message_label.hide()
+
+        self._content_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self._content_box.set_vexpand(True)
+        self._content_box.set_homogeneous(True)
+        self._scrolled_window = Gtk.ScrolledWindow()
+        self._scrolled_window.set_margin_top(20)
+        self._scrolled_window.set_margin_bottom(20)
+        self._scrolled_window.set_margin_start(20)
+        self._scrolled_window.set_margin_end(20)
+        self._content_box.append(self._scrolled_window)
+
+        self.append(self._refresh_info_box)
+        self.append(self._content_box)
+
+        self._activity = activity
 
         self._segments_layout = SegmentsTrackLayout(activity)
         self._segments_layout.build()
@@ -55,13 +76,12 @@ class TrackSegmentsLayout(Gtk.Box, DataUpdateObserver, Layout):
 
     def build(self):
         self._map_layout = TrackMapLayout()
-        self._scrolled_window.add(self._segments_layout)
-        self._content_box.pack_start(self._map_layout, True, True, 0)
+        self._scrolled_window.set_child(self._segments_layout)
+        self._content_box.append(self._map_layout)
         if self._activity.all_track_points:
-            self._map_layout.add_polyline_from_points(self._activity.all_track_points)
+            self._map_layout.add_polyline_from_points(TrackPointUtils.to_locations(self._activity.all_track_points))
         else:
             self._map_layout.add_polyline_from_activity_id(self._activity.id)
-        self.show_all()
 
     def data_updated_notified(self):
         self._refresh_info_box.show()
@@ -78,12 +98,10 @@ class TrackSegmentsLayout(Gtk.Box, DataUpdateObserver, Layout):
         after_update_rows = self._segments_layout.get_number_rows()
         if after_update_rows > before_update_rows:
             self._refresh_info_box.hide()
-            for child in self._scrolled_window.get_children():
-                self._scrolled_window.remove(child)
-            self._scrolled_window.add(self._segments_layout)
-            self.show_all()
+            self._scrolled_window.set_child(self._segments_layout)
 
     def _segment_track_selected(self, widget, segment_id, segment_track_id):
         self._map_layout.highlight(
             [Location(sp.latitude, sp.longitude) for sp in DatabaseHelper.get_segment_points(segment_id)]
         )
+

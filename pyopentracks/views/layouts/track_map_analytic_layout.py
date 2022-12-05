@@ -17,10 +17,12 @@ You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import gi
+
 from gi.repository import Gtk
 
-from matplotlib.backends.backend_gtk3agg import (
-    FigureCanvasGTK3Agg as FigureCanvas
+from matplotlib.backends.backend_gtk4agg import (
+    FigureCanvasGTK4Agg as FigureCanvas
 )
 
 from pyopentracks.utils import logging as pyot_logging
@@ -29,49 +31,64 @@ from pyopentracks.models.activity import Activity
 from pyopentracks.stats.track_activity_stats import TrackActivityStats
 from pyopentracks.utils.utils import TrackPointUtils
 from pyopentracks.views.graphs import LinePlot
+from pyopentracks.views.layouts.track_map_layout import TrackInteractiveMapLayout
 from pyopentracks.views.layouts.create_segment_layout import CreateSegmentLayout
 from pyopentracks.views.layouts.layout import Layout
-from pyopentracks.views.layouts.track_map_layout import TrackInteractiveMapLayout
 from pyopentracks.views.layouts.activity_summary_layout import TrackActivitySummaryStatsLayout
 from pyopentracks.io.proxy.proxy import TrackActivityStatsProxy
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_map_analytic_layout.ui")
 class TrackMapAnalyticLayout(Gtk.Box, Layout):
-    __gtype_name__ = "TrackMapAnalyticLayout"
-
-    _button_box: Gtk.ButtonBox = Gtk.Template.Child()
-    _create_button: Gtk.Button = Gtk.Template.Child()
-    _clear_button: Gtk.Button = Gtk.Template.Child()
-    _create_box: Gtk.Box = Gtk.Template.Child()
-    _create_frame: Gtk.Frame = Gtk.Template.Child()
-    _content_box: Gtk.Box = Gtk.Template.Child()
 
     def __init__(self, activity: Activity, new_segment_created_cb=None):
         """Activity must have the sections with the track points."""
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
         Layout.__init__(self)
 
         self.get_style_context().add_class("pyot-bg")
+
+        self._button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self._button_box.set_halign(Gtk.Align.END)
+        self._button_box.set_margin_top(20)
+        self._button_box.set_margin_bottom(20)
+        self._button_box.set_margin_start(20)
+        self._button_box.set_margin_end(20)
+        self._create_button = Gtk.Button.new_with_label(_("Create segment"))
+        self._create_button.connect("clicked", self._create_button_clicked)
+        self._clear_button = Gtk.Button.new_with_label(_("Discard segment"))
+        self._clear_button.connect("clicked", self._clear_button_clicked)
+        self._clear_button.set_margin_start(10)
+        self._button_box.append(self._create_button)
+        self._button_box.append(self._clear_button)
+
+        self._create_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._create_box.set_margin_top(20)
+        self._create_box.set_margin_bottom(20)
+        self._create_frame = Gtk.Frame()
+        self._create_frame.set_halign(Gtk.Align.CENTER)
+        self._create_frame.set_hexpand(False)
+        self._create_box.append(self._create_frame)
+
+        self._content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
+        self.append(self._button_box)
+        self.append(self._create_box)
+        self.append(self._content_box)
+
         self._activity = activity
         self._stats = None
         self._track_points = []
         self._new_segment_created_cb = new_segment_created_cb
-        self._clear_button.set_label(_("Clear segment"))
-        self._clear_button.connect("clicked", self._clear_button_clicked)
-        self._create_button.set_label(_("Create segment"))
-        self._create_button.connect("clicked", self._create_button_clicked)
         self._button_box.hide()
 
     def set_new_segment_created_cb(self, cb):
         self._new_segment_created_cb = cb
 
     def build(self):
-        self._map_layout = TrackInteractiveMapLayout()
+        self._map_layout = TrackInteractiveMapLayout(self._activity.all_track_points)
+        self._map_layout.set_vexpand(True)
         self._map_layout.connect("segment-selected", self._segment_selected)
-        self._map_layout.add_polyline_from_points(self._activity.all_track_points)
-        self._content_box.pack_start(self._map_layout, True, True, 0)
-        self.show_all()
+        self._content_box.append(self._map_layout)
 
     def _clear_button_clicked(self, widget):
         self._reset()
@@ -79,13 +96,18 @@ class TrackMapAnalyticLayout(Gtk.Box, Layout):
     def _reset(self):
         self._create_box.hide()
         self._button_box.hide()
-        self._map_layout.reset()
+        self._map_layout.show()
         self._reset_stats()
 
     def _reset_stats(self):
-        for child in self._content_box.get_children():
+        child = self._content_box.get_first_child()
+        while child is not None:
             if isinstance(child, TrackActivitySummaryStatsLayout) or isinstance(child, FigureCanvas):
+                sibling = child.get_next_sibling()
                 self._content_box.remove(child)
+                child = sibling
+            else:
+                child = child.get_next_sibling()
 
     def _create_button_clicked(self, widget):
         if self._stats is None or self._track_points is None:
@@ -95,14 +117,15 @@ class TrackMapAnalyticLayout(Gtk.Box, Layout):
             )
             return
 
-        for child in self._create_frame.get_children():
-            self._create_frame.remove(child)
-
         self._button_box.hide()
         self._create_box.show()
 
         create_segment = CreateSegmentLayout()
-        self._create_frame.add(create_segment)
+        create_segment.set_margin_top(20)
+        create_segment.set_margin_bottom(20)
+        create_segment.set_margin_start(20)
+        create_segment.set_margin_end(20)
+        self._create_frame.set_child(create_segment)
         create_segment.connect("track-activity-stats-segment-cancel", self._cancel_segment)
         create_segment.connect("track-activity-stats-segment-ok", self._create_segment)
         create_segment.set_stats(self._stats)
@@ -121,18 +144,19 @@ class TrackMapAnalyticLayout(Gtk.Box, Layout):
         self._reset_stats()
         self._button_box.show()
 
-        self._track_points = map_layout.get_segment().track_points
+        self._track_points = map_layout.get_selected_track_points()
 
         plot = LinePlot()
-        plot.add_values(TrackPointUtils.extract_dict_values(map_layout.get_segment().track_points, 1))
+        plot.add_values(TrackPointUtils.extract_dict_values(self._track_points, 1))
         plot.draw_and_show()
 
-        self._content_box.pack_start(plot.get_canvas(), True, True, 0)
+        self._content_box.append(plot.get_canvas())
 
         track_activity_stats = TrackActivityStats()
-        track_activity_stats.compute(map_layout.get_segment().track_points)
+        track_activity_stats.compute(self._track_points)
         self._stats = TrackActivityStatsProxy(track_activity_stats).to_stats()
 
-        self._content_box.pack_start(TrackActivitySummaryStatsLayout(self._stats, self._activity.category, 4), False, False, 0)
+        self._content_box.append(TrackActivitySummaryStatsLayout(self._stats, self._activity.category, 4))
 
-        self.show_all()
+        map_layout.hide()
+

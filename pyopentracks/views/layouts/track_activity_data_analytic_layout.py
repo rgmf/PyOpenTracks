@@ -36,54 +36,56 @@ def build_box(value):
     box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
     box.get_style_context().add_class("pyot-stats-bg-color")
     box.set_homogeneous(False)
-    box.pack_start(Gtk.Label(label=value, xalign=0.0, yalign=0.0), True, True, 0)
+    label = Gtk.Label.new(value)
+    label.set_xalign(0.0)
+    label.set_yalign(0.0)
+    box.append(label)
     return box
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_activity_data_analytic_layout.ui")
 class TrackActivityDataAnalyticLayout(Gtk.Box, Layout):
-    __gtype_name__ = "TrackActivityDataAnalyticLayout"
 
     def __init__(self, activity: Activity, preferences: AppPreferences):
         super().__init__()
         Layout.__init__(self)
+        self.set_homogeneous(True)
         self.get_style_context().add_class("pyot-bg")
         self._activity: Activity = activity
         self._preferences = preferences
 
     def build(self):
-        self.pack_start(TrackActivityIntervalsLayout(self._activity.category, self._activity.sections), True, True, 0)
-        self.pack_start(
+        self.append(TrackActivityIntervalsLayout(self._activity.category, self._activity.sections))
+        self.append(
             TrackActivityZonesLayout(
                 self._activity.sections,
                 self._preferences.get_pref(self._preferences.HEART_RATE_MAX),
                 self._preferences.get_pref(self._preferences.HEART_RATE_ZONES)
-            ),
-            True, True, 0
+            )
         )
-        self.show_all()
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_activity_intervals_layout.ui")
 class TrackActivityIntervalsLayout(Gtk.Box):
-    __gtype_name__ = "TrackActivityIntervalsLayout"
-
-    _title_label: Gtk.Label = Gtk.Template.Child()
-    _intervals_combo_box: Gtk.ComboBox = Gtk.Template.Child()
-    _intervals_list_store: Gtk.ListStore = Gtk.Template.Child()
-    _intervals_grid: Gtk.Grid = Gtk.Template.Child()
 
     def __init__(self, category, sections: List[Section]):
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
         self._category = category
         self._track_points = list(chain(*[ section.track_points for section in sections ]))
         self._is_speed_activity = TypeActivityUtils.is_speed(self._category)
 
-        self._title_label.set_text(_("Intervals"))
+        self._intervals_grid = Gtk.Grid()
+        self._intervals_grid.set_row_spacing(5)
+        self._intervals_grid.set_column_spacing(5)
+        self._intervals_grid.set_margin_start(10)
+        self._intervals_grid.set_margin_end(10)
+        self._intervals_grid.set_margin_top(10)
+        self._intervals_grid.set_margin_bottom(10)
+
+        self._title_label = Gtk.Label.new(_("Intervals"))
         self._title_label.get_style_context().add_class("pyot-h3")
         self._title_label.get_style_context().add_class("pyot-stats-bg-color")
 
+        self._intervals_list_store = Gtk.ListStore.new([int, str])
         if not self._is_speed_activity:
             self._intervals_list_store.append([100, "100 m"])
             self._intervals_list_store.append([200, "200 m"])
@@ -98,23 +100,40 @@ class TrackActivityIntervalsLayout(Gtk.Box):
         self._intervals_list_store.append([10000, "10 km"])
         self._intervals_list_store.append([20000, "20 km"])
         self._intervals_list_store.append([50000, "50 km"])
+
+        self._intervals_combo_box = Gtk.ComboBox.new_with_model(self._intervals_list_store)
+        self._intervals_combo_box.set_halign(Gtk.Align.START)
+        self._intervals_combo_box.set_hexpand(False)
+        self._intervals_combo_box.set_margin_start(10)
+        self._intervals_combo_box.set_margin_end(10)
+        self._intervals_combo_box.set_margin_top(10)
+        self._intervals_combo_box.set_margin_bottom(10)
+        renderer_text = Gtk.CellRendererText()
+        self._intervals_combo_box.pack_start(renderer_text, True)
+        self._intervals_combo_box.add_attribute(renderer_text, "text", 1)
         self._intervals_combo_box.set_active(5)
         self._intervals_combo_box.connect("changed", self._build)
+
+        self.append(self._title_label)
+        self.append(self._intervals_combo_box)
+        self.append(self._intervals_grid)
 
         self._build(self._intervals_combo_box)
 
     def _build(self, combobox):
-        for child in self._intervals_grid.get_children():
+        child = self._intervals_grid.get_first_child()
+        while child is not None:
             self._intervals_grid.remove(child)
+            child = self._intervals_grid.get_first_child()
 
-        self._intervals_grid.attach(Gtk.Label(_("Distance")), 0, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Time")), 1, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Speed") if self._is_speed_activity else _("Pace")), 2, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Max.\nSpeed") if self._is_speed_activity else _("Max.\nPace")), 3, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Avg.\nHeart Rate")), 4, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Max.\nHeart Rate")), 5, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Gain")), 6, 0, 1, 1)
-        self._intervals_grid.attach(Gtk.Label(_("Loss")), 7, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Distance")), 0, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Time")), 1, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Speed") if self._is_speed_activity else _("Pace")), 2, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Max.\nSpeed") if self._is_speed_activity else _("Max.\nPace")), 3, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Avg.\nHeart Rate")), 4, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Max.\nHeart Rate")), 5, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Gain")), 6, 0, 1, 1)
+        self._intervals_grid.attach(Gtk.Label.new(_("Loss")), 7, 0, 1, 1)
 
         if not self._track_points:
             return
@@ -132,31 +151,28 @@ class TrackActivityIntervalsLayout(Gtk.Box):
         return interval_stats.intervals
 
     def _on_data_ready(self, intervals):
-        top = 1
+        row = 1
         for interval in intervals:
-            self._intervals_grid.attach(build_box(interval.distance_str), 0, top, 1, 1)
-            self._intervals_grid.attach(build_box(interval.time_str), 1, top, 1, 1)
-            self._intervals_grid.attach(build_box(interval.avg_speed_str), 2, top, 1, 1)
-            self._intervals_grid.attach(build_box(interval.max_speed_str), 3, top, 1, 1)
-            self._intervals_grid.attach(build_box(interval.avg_hr_str), 4, top, 1, 1)
-            self._intervals_grid.attach(build_box(interval.max_hr_str), 5, top, 1, 1)
-            self._intervals_grid.attach(build_box(interval.gain_elevation_str), 6, top, 1, 1)
-            self._intervals_grid.attach(build_box(interval.loss_elevation_str), 7, top, 1, 1)
-            top += 1
-
-        self.show_all()
+            self._intervals_grid.attach(build_box(interval.distance_str), 0, row, 1, 1)
+            self._intervals_grid.attach(build_box(interval.time_str), 1, row, 1, 1)
+            self._intervals_grid.attach(build_box(interval.avg_speed_str), 2, row, 1, 1)
+            self._intervals_grid.attach(build_box(interval.max_speed_str), 3, row, 1, 1)
+            self._intervals_grid.attach(build_box(interval.avg_hr_str), 4, row, 1, 1)
+            self._intervals_grid.attach(build_box(interval.max_hr_str), 5, row, 1, 1)
+            self._intervals_grid.attach(build_box(interval.gain_elevation_str), 6, row, 1, 1)
+            self._intervals_grid.attach(build_box(interval.loss_elevation_str), 7, row, 1, 1)
+            row += 1
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/track_activity_zones_layout.ui")
 class TrackActivityZonesLayout(Gtk.Box):
-    __gtype_name__ = "TrackActivityZonesLayout"
 
     _title_label: Gtk.Label = Gtk.Template.Child()
     _hr_max_info_label: Gtk.Label = Gtk.Template.Child()
     _zones_grid: Gtk.Grid = Gtk.Template.Child()
 
     def __init__(self, sections: List[Section], hr_max: int, hr_zones: List[int]):
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+
         self._sections: List[Section] = sections
         self._hr_max = hr_max
         self._hr_percentage_zones: List[int] = hr_zones
@@ -168,22 +184,28 @@ class TrackActivityZonesLayout(Gtk.Box):
             )
         )
 
-        self._title_label.set_text(_("Heart Rate Zones"))
+        self._title_label = Gtk.Label.new(_("Heart Rate Zones"))
         self._title_label.get_style_context().add_class("pyot-h3")
         self._title_label.get_style_context().add_class("pyot-stats-bg-color")
+        self.append(self._title_label)
+
         if not (self._hr_max > 0 and list(filter(lambda i: i > 0, self._hr_percentage_zones))):
-            self._hr_max_info_label.set_text(_("Set you heart rate zones in the preferences"))
+            self._hr_max_info_label = Gtk.Label.new(_("Set you heart rate zones in the preferences"))
+            self.append(self._hr_max_info_label)
             return
 
-        self._hr_max_info_label.set_text(_("Max. Heart Rate: ") + str(self._hr_max) + "ppm")
+        self._hr_max_info_label = Gtk.Label.new(_("Max. Heart Rate: ") + str(self._hr_max) + "ppm")
         self._hr_max_info_label.get_style_context().add_class("pyot-h3")
+        self._hr_max_info_label.set_margin_top(20)
+        self._hr_max_info_label.set_margin_bottom(20)
+        self.append(self._hr_max_info_label)
 
-        self._zones_grid.attach(Gtk.Label(_("Zone")), 0, 0, 1, 1)
-        self._zones_grid.attach(Gtk.Label(_("Description")), 1, 0, 1, 1)
-        self._zones_grid.attach(Gtk.Label(_("Bottom")), 2, 0, 1, 1)
-        self._zones_grid.attach(Gtk.Label(_("Up")), 3, 0, 1, 1)
-        self._zones_grid.attach(Gtk.Label(_("Time")), 4, 0, 1, 1)
-        self._zones_grid.attach(Gtk.Label(_("%")), 5, 0, 1, 1)
+        self._zones_grid = Gtk.Grid()
+        self._zones_grid.set_halign(Gtk.Align.CENTER)
+        self._zones_grid.set_row_spacing(5)
+        self._zones_grid.set_column_spacing(5)
+
+        self.append(self._zones_grid)
 
         ProcessView(self._on_data_ready, self._data_loading, None).start()
 
@@ -197,9 +219,15 @@ class TrackActivityZonesLayout(Gtk.Box):
     def _on_data_ready(self, data: tuple):
         stats, total_time = data
         if not list(filter(lambda i: len(i) > 1 and i[1] > 0, stats.items())):
-            self._zones_grid.attach(Gtk.Label(_("There are not heart reate data")), 0, 1, 6, 1)
-            self.show_all()
+            self._zones_grid.attach(Gtk.Label.new(_("There are not heart reate data")), 0, 1, 6, 1)
             return
+
+        self._zones_grid.attach(Gtk.Label.new(_("Zone")), 0, 0, 1, 1)
+        self._zones_grid.attach(Gtk.Label.new(_("Description")), 1, 0, 1, 1)
+        self._zones_grid.attach(Gtk.Label.new(_("Bottom")), 2, 0, 1, 1)
+        self._zones_grid.attach(Gtk.Label.new(_("Up")), 3, 0, 1, 1)
+        self._zones_grid.attach(Gtk.Label.new(_("Time")), 4, 0, 1, 1)
+        self._zones_grid.attach(Gtk.Label.new(_("%")), 5, 0, 1, 1)
 
         bars_result = {}
         for idx, value in stats.items():
@@ -226,11 +254,9 @@ class TrackActivityZonesLayout(Gtk.Box):
             cb_annotate=lambda v: str(v) + "%"
         )
         chart_box = Gtk.Box()
-        chart_box.set_margin_left(10)
-        chart_box.set_margin_right(10)
+        chart_box.set_margin_start(10)
+        chart_box.set_margin_end(10)
         chart_box.get_style_context().add_class("pyot-stats-bg-color")
-        chart_box.pack_start(chart.get_canvas(), True, True, 10)
-        self.pack_start(chart_box, False, False, 0)
+        chart_box.append(chart.get_canvas())
+        self.append(chart_box)
         chart.draw_and_show()
-
-        self.show_all()

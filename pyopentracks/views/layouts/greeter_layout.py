@@ -43,5 +43,5 @@ class GreeterLayout(Gtk.Box, Layout):
         labelh1.get_style_context().add_class("pyot-h1")
         labelp = Gtk.Label(label=helptext)
         labelp.get_style_context().add_class("pyot-p-large")
-        self.pack_start(labelh1, False, False, 0)
-        self.pack_start(labelp, False, False, 0)
+        self.append(labelh1)
+        self.append(labelp)

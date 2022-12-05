@@ -16,11 +16,6 @@
       <summary>Last Open Folder Path</summary>
       <description>Last open or visited folder to import, save, open...</description>
     </key>
-    <key name="opentracks-gain-loss-filter" type="b">
-      <default>true</default>
-      <summary>OpenTracks gain and loss filtering</summary>
-      <description>PyOpenTracks can filter and improve barometric values of elevation gain and loss when activities were recorded with OpenTracks.</description>
-    </key>
     <key name="heart-rate-max" type="i">
       <default>-1</default>
       <summary>Training heart rate maximum</summary>

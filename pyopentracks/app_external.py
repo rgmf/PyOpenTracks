@@ -18,7 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
 
-from gi.repository import GObject
+from gi.repository import Gtk, GObject
 
 from pyopentracks.app_interfaces import Action
 
@@ -43,3 +43,7 @@ class AppExternal(GObject.GObject):
     def get_kwargs(self) -> dict:
         """Return the dictionary of arguments needed to rebuild the external app"""
         raise "get_kwargs must be implemented"
+
+    def get_window(self) -> Gtk.Window:
+        raise "get_window must be implemented"
+

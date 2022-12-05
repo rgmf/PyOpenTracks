@@ -16,42 +16,61 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio
 
 from pyopentracks.app_preferences import AppPreferences
 
 
-class CustomFileChooserDialog(Gtk.FileChooserDialog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class CustomFileChooserDialog:
+    def __init__(self, title, parent, action, accept_label, cancel_label, on_response):
+        self._on_response_cb = on_response
         self._preferences = AppPreferences()
         self._current_folder = self._preferences.get_pref(AppPreferences.LAST_FOLDER)
-        self.set_current_folder(self._current_folder)
+        self._dialog = Gtk.FileChooserNative.new(
+            title=title,
+            parent=parent,
+            action=action,
+            accept_label=accept_label,
+            cancel_label=cancel_label
+        )
+        if self._current_folder and os.path.isdir(self._current_folder):
+            self._dialog.set_current_folder(Gio.File.new_for_path(self._current_folder))
+        self._dialog.connect("response", self._on_response)
 
-    def run(self):
-        response = super().run()
-        if response == Gtk.ResponseType.OK:
-            self._preferences.set_pref(
-                AppPreferences.LAST_FOLDER,
-                "" if self.get_current_folder() is None else self.get_current_folder()
-            )
-        return response
+    def _on_response(self, dialog, response):
+        if response == Gtk.ResponseType.ACCEPT:
+            folder = os.path.dirname(dialog.get_file().get_path())
+            self._preferences.set_pref(AppPreferences.LAST_FOLDER, "" if folder is None else folder)
+        self._on_response_cb(dialog, response)
+
+    def show(self):
+        self._dialog.show()
+
+    def set_current_name(self, name):
+        self._dialog.set_current_name(name)
+
+    def add_filter(self, filter):
+        self._dialog.add_filter(filter)
+
+    def set_do_overwrite_confirmation(self, value: bool):
+        self._dialog.set_do_overwrite_confirmation(value)
 
     @property
     def current_folder(self):
         return self._current_folder
 
 
-class FileChooserWindow(CustomFileChooserDialog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.set_title(_("Select a track file"))
-        self.add_buttons(
-            Gtk.STOCK_CANCEL,
-            Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OPEN,
-            Gtk.ResponseType.OK,
+class ImportFileChooserDialog(CustomFileChooserDialog):
+    def __init__(self, parent, on_response):
+        super().__init__(
+            _("Select a track file"),
+            parent,
+            Gtk.FileChooserAction.OPEN,
+            _("Import"),
+            _("Cancel"),
+            on_response=on_response
         )
         self._add_filters()
 
@@ -72,45 +91,44 @@ class FileChooserWindow(CustomFileChooserDialog):
         filter_only_fit.add_pattern("*.fit")
         self.add_filter(filter_only_fit)
 
-        # filter_py = Gtk.FileFilter()
-        # filter_py.set_name(_("KML files"))
-        # filter_py.add_mime_type("application/vnd.google-earth.kml+xml")
-        # self.add_filter(filter_py)
-        #
-        # filter_py = Gtk.FileFilter()
-        # filter_py.set_name(_("KMZ files"))
-        # filter_py.add_mime_type("application/vnd.google-earth.kmz")
-        # self.add_filter(filter_py)
-
         filter_any = Gtk.FileFilter()
         filter_any.set_name(_("Any files"))
         filter_any.add_pattern("*")
         self.add_filter(filter_any)
 
 
-class FolderChooserWindow(CustomFileChooserDialog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.set_title(_("Select a folder"))
-        self.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
-        self.add_buttons(
-            Gtk.STOCK_CANCEL,
-            Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OPEN,
-            Gtk.ResponseType.OK,
+class ImportFolderChooserWindow(CustomFileChooserDialog):
+    def __init__(self, parent, on_response):
+        super().__init__(
+            _("Select a folder"),
+            parent,
+            Gtk.FileChooserAction.SELECT_FOLDER,
+            _("Import Folder"),
+            _("Cancel"),
+            on_response
         )
 
 
-class ExportSegmentChooserWindow(CustomFileChooserDialog):
-    def __init__(self, current_name=_("Untitled.fit"), *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.set_title(_("Export Segment FIT File..."))
-        self.set_action(Gtk.FileChooserAction.SAVE)
+class ExportSegmentChooserDialog(CustomFileChooserDialog):
+    def __init__(self, parent, on_response, current_name=_("Untitled.fit")):
+        super().__init__(
+            _("Export Segment FIT File"),
+            parent,
+            Gtk.FileChooserAction.SAVE,
+            _("Export"),
+            _("Cancel"),
+            on_response
+        )
         self.set_current_name(current_name)
-        self.set_do_overwrite_confirmation(True)
-        self.add_buttons(
-            Gtk.STOCK_CANCEL,
-            Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_SAVE_AS,
-            Gtk.ResponseType.OK,
+
+
+class FolderChooserWindow(CustomFileChooserDialog):
+    def __init__(self, parent, on_response):
+        super().__init__(
+            _("Select a folder"),
+            parent,
+            Gtk.FileChooserAction.SELECT_FOLDER,
+            _("Ok"),
+            _("Cancel"),
+            on_response
         )

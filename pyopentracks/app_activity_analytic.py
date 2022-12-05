@@ -80,8 +80,7 @@ class AppActivityAnalytic(AppExternal):
                 child_layout.build()
                 child_layout.post_build()
         layout.build()
-        self._layout.pack_start(layout, True, True, 0)
-        self._layout.show_all()
+        self._layout.append(layout)
 
     def _on_sections_ready(self, sections):
         self._activity.sections = sections

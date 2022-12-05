@@ -24,19 +24,7 @@ from pyopentracks.views.layouts.info_layout import InfoLayout
 from pyopentracks.app_preferences import AppPreferences
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/window.ui")
 class PyopentracksWindow(Gtk.ApplicationWindow):
-    __gtype_name__ = "PyopentracksWindow"
-
-    _primary_menu_btn: Gtk.MenuButton = Gtk.Template.Child()
-    _preferences_menu_btn: Gtk.Button = Gtk.Template.Child()
-    _analytic_menu_btn: Gtk.Button = Gtk.Template.Child()
-    _segments_menu_btn: Gtk.Button = Gtk.Template.Child()
-
-    _back_btn: Gtk.Button = Gtk.Template.Child()
-    _edit_btn: Gtk.Button = Gtk.Template.Child()
-    _del_btn: Gtk.Button = Gtk.Template.Child()
-    _detail_btn: Gtk.Button = Gtk.Template.Child()
 
     class MenuButton(Enum):
         MAIN = 0
@@ -52,16 +40,44 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.connect("size-allocate", self._on_window_state_event)
-        self.connect("delete-event", self._on_destroy)
+
         self._width = None
         self._height = None
         self._is_maximized = None
         self._load_window_state()
-        self.set_title("PyOpenTracks")
         self._app = kwargs["application"]
         self._container = AppWindowContainer()
-        self.add(self._container)
+
+        self.set_title("PyOpenTracks")
+        self.set_child(self._container)
+
+        self._primary_menu_btn = Gtk.MenuButton()
+        self._primary_menu_btn.set_icon_name("open-menu-pyot")
+        self._preferences_menu_btn = Gtk.Button()
+        self._preferences_menu_btn.set_icon_name("settings-symbolic")
+        self._analytic_menu_btn = Gtk.Button()
+        self._analytic_menu_btn.set_icon_name("stats-symbolic")
+        self._segments_menu_btn = Gtk.Button()
+        self._segments_menu_btn.set_icon_name("map-symbolic")
+        self._back_btn = Gtk.Button()
+        self._back_btn.set_icon_name("left-symbolic")
+        self._del_btn = Gtk.Button()
+        self._del_btn.set_icon_name("trash-symbolic")
+        self._edit_btn = Gtk.Button()
+        self._edit_btn.set_icon_name("edit-symbolic")
+        self._detail_btn = Gtk.Button()
+        self._detail_btn.set_icon_name("paper-symbolic")
+
+        self._header_bar = Gtk.HeaderBar()
+        self.set_titlebar(self._header_bar)
+        self._header_bar.pack_end(self._primary_menu_btn)
+        self._header_bar.pack_end(self._preferences_menu_btn)
+        self._header_bar.pack_end(self._analytic_menu_btn)
+        self._header_bar.pack_end(self._segments_menu_btn)
+        self._header_bar.pack_start(self._back_btn)
+        self._header_bar.pack_start(self._del_btn)
+        self._header_bar.pack_start(self._edit_btn)
+        self._header_bar.pack_start(self._detail_btn)
 
         self._menu_buttons = {
             PyopentracksWindow.MenuButton.MAIN: self._primary_menu_btn,
@@ -158,22 +174,18 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             return
 
         if total == 1.0:
-            top_widget.foreach(
-                lambda child: (
-                    top_widget.remove(child)
-                    if isinstance(child, Gtk.ProgressBar) else None
-                )
-            )
+            child = top_widget.get_first_child()
+            if child is not None and isinstance(child, Gtk.ProgressBar):
+                top_widget.remove(child)
             return
 
-        if (len(top_widget.get_children()) == 0 or not
-                isinstance(top_widget.get_children()[0], Gtk.ProgressBar)):
+        if top_widget.get_first_child() is None or not isinstance(top_widget.get_first_child(), Gtk.ProgressBar):
             progress = Gtk.ProgressBar()
-            top_widget.pack_start(progress, True, False, 0)
+            progress.set_hexpand(True)
+            top_widget.append(progress)
             progress.set_fraction(total)
-            top_widget.show_all()
         else:
-            progress = top_widget.get_children()[0]
+            progress = top_widget.get_first_child()
             progress.set_fraction(total)
 
     def clean_top_widget(self):
@@ -192,7 +204,6 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             self.maximize()
         else:
             self.set_default_size(self._width, self._height)
-            self.move(0, 0)
 
     def _save_state(self):
         prefs = AppPreferences()
@@ -208,23 +219,26 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._save_state()
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/app_window_container.ui")
 class AppWindowContainer(Gtk.Box):
-    __gtype_name__ = "AppWindowContainer"
-
-    _top_widget: Gtk.Box = Gtk.Template.Child()
-    _content_widget: Gtk.Box = Gtk.Template.Child()
 
     def __init__(self):
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+
+        self._top_widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._content_widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
+        self.append(self._top_widget)
+        self.append(self._content_widget)
 
     def set_layout(self, new_child):
-        for c in self._content_widget.get_children():
-            self._content_widget.remove(c)
-        self._content_widget.pack_start(new_child, True, True, 0)
+        child = self._content_widget.get_first_child()
+        while child is not None:
+            self._content_widget.remove(child)
+            child = self._content_widget.get_first_child()
+        self._content_widget.append(new_child)
 
     def get_top_widget(self):
         return self._top_widget
 
     def get_layout(self):
-        return self._content_widget.get_children()[0] if self._content_widget.get_children() else None
+        return self._content_widget.get_first_child() if self._content_widget.get_first_child() else None

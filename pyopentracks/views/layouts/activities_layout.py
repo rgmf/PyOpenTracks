@@ -33,13 +33,7 @@ from pyopentracks.views.layouts.process_view import QueuedProcessesView
 from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 
 
-@Gtk.Template(resource_path="/es/rgmf/pyopentracks/ui/activities_layout.ui")
 class ActivitiesLayout(Gtk.Paned, Layout):
-    __gtype_name__ = "ActivitiesLayout"
-
-    _tree_view_widget: Gtk.TreeView = Gtk.Template.Child()
-    _activity_stats_widget: Gtk.ScrolledWindow = Gtk.Template.Child()
-    _entry_search_widget: Gtk.Entry = Gtk.Template.Child()
 
     def __init__(self, app, activities):
         """Init function for the list of activities.
@@ -51,12 +45,32 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         super().__init__()
         Layout.__init__(self)
 
+        self._box_with_tree = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._box_with_tree.set_size_request(300, -1)
+        self._entry_search_widget = Gtk.Entry()
+        scrolled_window_for_tree = Gtk.ScrolledWindow()
+        scrolled_window_for_tree.set_vexpand(True)
+        self._tree_view_widget = Gtk.TreeView()
+        scrolled_window_for_tree.set_child(self._tree_view_widget)
+        self._box_with_tree.append(self._entry_search_widget)
+        self._box_with_tree.append(scrolled_window_for_tree)
+        self._activity_stats_widget = Gtk.ScrolledWindow()
+
+        self.set_start_child(self._box_with_tree)
+        self.set_resize_start_child(False)
+        self.set_shrink_start_child(False)
+
+        self.set_end_child(self._activity_stats_widget)
+        self.set_resize_end_child(True)
+        self.set_shrink_end_child(False)
+
         self._app = app
         self._treepath_selected = None
 
         self._show_message(_("Select an activity to view its stats..."))
 
         self._activities = activities
+
         self._list_store = Gtk.ListStore(int, str, GdkPixbuf.Pixbuf)
         for activity in self._activities:
             self._list_store.append([
@@ -89,41 +103,45 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         self._entry_search_widget.connect("icon-press", self._on_search_text_icon_pressed)
 
     def build(self):
-        self.show_all()
+        pass
 
     def on_remove_bulk(self, widget, treeiter_list):
+
+        def on_response(dialog, response):
+            dialog.close()
+            if response != Gtk.ResponseType.OK:
+                return
+
+            def deletion_done():
+                childiters = [
+                    self._tree_model_filter.convert_iter_to_child_iter(treeiter)
+                    for treeiter in treeiter_list
+                ]
+                for childiter in childiters:
+                    self._list_store.remove(childiter)
+                self._treepath_selected = None
+                self._tree_view_widget.set_sensitive(True)
+                self._select_first_row()
+
+            def delete_in_thread():
+                total = len(treeiter_list)
+                done = 0
+                for treeiter in treeiter_list:
+                    self._remove_item_from_db(treeiter)
+                    done = done + 1
+                    self._app.get_window().loading(done / total)
+                GLib.idle_add(deletion_done)
+
+            self._tree_view_widget.set_sensitive(False)
+            threading.Thread(target=delete_in_thread, daemon=True).start()
+
         dialog = QuestionDialog(
             parent=self._app.get_window(),
             title=_("Remove Activities"),
-            question=_(f"Do you really want to remove all selected activities")
+            question=_(f"Do you really want to remove all selected activities?")
         )
-        response = dialog.run()
-        dialog.destroy()
-        if response == Gtk.ResponseType.CANCEL:
-            return
-
-        def deletion_done():
-            childiters = [
-                self._tree_model_filter.convert_iter_to_child_iter(treeiter)
-                for treeiter in treeiter_list
-            ]
-            for childiter in childiters:
-                self._list_store.remove(childiter)
-            self._treepath_selected = None
-            self._tree_view_widget.set_sensitive(True)
-            self._select_first_row()
-
-        def delete_in_thread():
-            total = len(treeiter_list)
-            done = 0
-            for treeiter in treeiter_list:
-                self._remove_item_from_db(treeiter)
-                done = done + 1
-                self._app.get_window().loading(done / total)
-            GLib.idle_add(deletion_done)
-
-        self._tree_view_widget.set_sensitive(False)
-        threading.Thread(target=delete_in_thread, daemon=True).start()
+        dialog.show()
+        dialog.connect("response", on_response)
 
     def on_remove(self, widget, treeiter):
         """Callback to remove the treeiter item from list store.
@@ -135,18 +153,22 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in
                     the Gtk.TreeView through the model.
         """
+        def on_response(dialog, response):
+            if response != Gtk.ResponseType.OK:
+                dialog.close()
+                return
+            self._remove_item_from_db(treeiter)
+            self._remove_item_from_list_store(treeiter)
+            dialog.close()
+
         activity_name = self._tree_model_filter.get_value(treeiter, 1)
         dialog = QuestionDialog(
             parent=self._app.get_window(),
             title=_("Remove Activity"),
-            question=_(f"Do you really want to remove activity {activity_name}")
+            question=_(f"Do you really want to remove activity {activity_name}?")
         )
-        response = dialog.run()
-        dialog.destroy()
-        if response == Gtk.ResponseType.CANCEL:
-            return
-        self._remove_item_from_db(treeiter)
-        self._remove_item_from_list_store(treeiter)
+        dialog.show()
+        dialog.connect("response", on_response)
 
     def on_edit(self, widget, treeiter):
         """Callback to edit the treeiter item from list store.
@@ -158,44 +180,26 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in
                     the Gtk.TreeView through the model.
         """
+        def on_response(dialog, response):
+            if response != Gtk.ResponseType.OK:
+                dialog.close()
+                return
+
+            activity = dialog.get_activity()
+            self._tree_model_filter.set_value(treeiter, 1, activity.name)
+            self._tree_model_filter.set_value(
+                treeiter, 2, TypeActivityUtils.get_icon_pixbuf(activity.category, 32, 32)
+            )
+            DatabaseHelper.update(activity)
+            self._select_row(self._tree_model_filter.get_path(treeiter), force=True)
+            dialog.close()
+
         activity_id = self._tree_model_filter.get_value(treeiter, 0)
 
         activity = DatabaseHelper.get_activity_by_id(activity_id)
         dialog = ActivityEditDialog(parent=self._app.get_window(), activity=activity)
-        response = dialog.run()
-        dialog.destroy()
-        if response != Gtk.ResponseType.OK:
-            return
-
-        activity = dialog.get_activity()
-        self._tree_model_filter.set_value(treeiter, 1, activity.name)
-        self._tree_model_filter.set_value(
-            treeiter, 2, TypeActivityUtils.get_icon_pixbuf(activity.category, 32, 32)
-        )
-        DatabaseHelper.update(activity)
-
-        funcs = []
-        if dialog.correct_altitude():
-            altitude_correction = AltitudeCorrection(activity.id)
-            funcs.append({"func": altitude_correction.run, "args": None})
-
-        if funcs:
-            self._app.get_window().show_infobar(
-                itype=Gtk.MessageType.INFO,
-                message=_(
-                    "Doing corrections. When it finishes then the activity will "
-                    "be reloaded"
-                ),
-                buttons=[
-                    {
-                     "text": _("Ok"),
-                     "cb": lambda b: self._app.get_window().clean_top_widget()
-                    }
-                ]
-            )
-            QueuedProcessesView(self._on_correction_done, funcs).start()
-        else:
-            self._select_row(self._tree_model_filter.get_path(treeiter), force=True)
+        dialog.show()
+        dialog.connect("response", on_response)
 
     def on_analytic(self, widget, treeiter):
         """Callback to open analytic for the treeiter item.
@@ -207,32 +211,6 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         """
         activity = DatabaseHelper.get_activity_by_id(self._tree_model_filter.get_value(treeiter, 0))
         self._app.open_external_app(AppActivityAnalytic, {"activity": activity})
-        # self._app_window.load_app(AppAnalytic(activity))
-
-    def _on_correction_done(self, results):
-        if results is None:
-            self._app.get_window().clean_top_widget()
-            self._app.get_window().show_infobar(
-                itype=Gtk.MessageType.ERROR,
-                message=_(
-                    "An error was triggered and correction wasn't done."
-                ),
-                buttons=[
-                    {
-                        "text": _("Ok"),
-                        "cb": lambda b: self._app.get_window().clean_top_widget()
-                    }
-                ]
-            )
-            return
-
-        activity = results[0]
-        self._app.get_window().clean_top_widget()
-        iter = self._tree_model_filter.get_iter_first()
-        while iter and self._tree_model_filter.get_value(iter, 0) != activity.id:
-            iter = self._tree_model_filter.iter_next(iter)
-        if self._treepath_selected == self._tree_model_filter.get_path(iter):
-            self._select_row(self._tree_model_filter.get_path(iter), force=True)
 
     def _select_first_row(self):
         if len(self._tree_model_filter) > 0:
@@ -282,12 +260,12 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         Arguments:
         widget -- the widget to add to ScrolledWindow _activity_stats_widget.
         """
-        if self._activity_stats_widget and self._activity_stats_widget.get_child():
-            self._activity_stats_widget.remove(
-                self._activity_stats_widget.get_child()
-            )
-        self._activity_stats_widget.add(widget)
-        self.show_all()
+        # TODO I need to know how to remove the child now in Gtk4
+        # if self._activity_stats_widget and self._activity_stats_widget.get_child():
+        #     self._activity_stats_widget.remove(
+        #         self._activity_stats_widget.get_child()
+        #     )
+        self._activity_stats_widget.set_child(widget)
 
     def _remove_item_from_db(self, treeiter):
         """Remove from the model the item pointed by treeiter
