@@ -7,3 +7,4 @@ scripts/*.json
 scripts/*.db
 .flatpak-builder/*
 flatpakdir/*
+.pyopentracks-dev/*
