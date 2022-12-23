@@ -48,17 +48,24 @@ If you install PyOpenTracks by installing .deb package then you have to be caref
 You can install PyOpenTracks through the deb package and test developing version (building and running the deveoping version) but this one need a change so both not use the same gsettings: change `path` attribute from `schema` tag on `data/es.rgmf.pyopentracks.gschema.xml`. Before pushing changes you has to restore this change.
 
 # Flatpak
+There are two JSON manifests:
+
+- es.rgmf.pyopentracks.json
+- es.rgmf.pyopentracks-dev.json
+
+You should use the second one to development and the first one to send it to production.
+
 ## Pre
-You need to install `flatpak` and `flatpak-builder` from your distro repositories of from you want.
+You need to install `flatpak` and `flatpak-builder` from your distro repositories or whatever you want.
 
 Then, you maybe want to add the Flathub repository:
 `flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo`
 
 And then, you'll need execute the following:
 
-`flatpak install flathub org.gnome.Sdk//3.38`
+`flatpak install flathub org.gnome.Sdk//master`
 
-`flatpak install flathub org.gnome.Platform//3.38`
+`flatpak install flathub org.gnome.Platform//master`
 
 
 ## Build
@@ -80,6 +87,14 @@ You can build and install locally at the same time with the following command:
 ## Execute the locally installation
 `flatpak run es.rgmf.pyopentracks`
 
+If you get an error like this: 
+
+"Failed to register: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: org.freedesktop.DBus.Error.ServiceUnknown"
+
+Then, execute the command like this:
+
+`flatpak run --socket=session-bus es.rgmf.pyopentracks`
+
 ## Settings values on Flatpak environment
 After install PyOpenTracks through Flatpak, the settings values in the following file:
 
@@ -94,3 +109,4 @@ After install PyOpenTracks through Flatpak, the database and local app data are 
 If you want or need to add icons you can do it using these two resources:
 - https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
 - Icon Library: https://gitlab.gnome.org/World/design/icon-library
+

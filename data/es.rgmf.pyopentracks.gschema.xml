@@ -46,7 +46,7 @@
       <summary>Window's y position</summary>
       <description>The window's y position.</description>
     </key>
-    <key name="win-state-is-mamixmized" type="b">
+    <key name="win-state-is-maximized" type="b">
       <default>false</default>
       <summary>Window's maximized</summary>
       <description>The window's maximized state.</description>

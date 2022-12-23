@@ -5,3 +5,5 @@ xdg_data_home/*
 .idea/*
 scripts/*.json
 scripts/*.db
+.flatpak-builder/*
+flatpakdir/*

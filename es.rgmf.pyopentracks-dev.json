@@ -1,5 +1,5 @@
 {
-  "app-id": "es.rgmf.pyopentracks",
+  "app-id": "es.rgmf.pyopentracks-dev",
   "runtime": "org.gnome.Platform",
   "runtime-version": "43",
   "sdk": "org.gnome.Sdk",
@@ -63,7 +63,7 @@
 	  {
 	    "type": "git",
 	    "url": "file:///home/roman/workspace/PyOpenTracks",
-	    "branch": "main"
+	    "branch": "state_window"
 	  }
 	]
       }
