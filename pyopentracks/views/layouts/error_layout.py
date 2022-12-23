@@ -38,3 +38,4 @@ class ErrorLayout(Gtk.Box, Layout):
         labelp.get_style_context().add_class("pyot-p-large")
         self.pack_start(labelp, False, False, 0)
         self.show_all()
+

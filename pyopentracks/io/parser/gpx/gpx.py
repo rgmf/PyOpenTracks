@@ -16,12 +16,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from itertools import chain
+
 from xml.etree.ElementTree import XMLParser
 from pyopentracks.io.parser.parser import Parser
 from pyopentracks.io.parser.recorded_with import RecordedWith
 from pyopentracks.io.parser.records import Point, Record, Segment
 
-from pyopentracks.utils.utils import TimeUtils
+from pyopentracks.utils.utils import TimeUtils, LocationUtils
 
 
 class PreParser:
@@ -217,7 +219,16 @@ class GpxPath(Gpx):
     """GPX parser for files with only latitude and longitude points."""
 
     def parse(self) -> Record:
-        pass
+        points = list(chain(*[ s.points for s in self._record.segments ]))
+        last_point = points.pop(0)
+        last_point.distance = 0
+        for point in points:
+            point.distance = LocationUtils.distance_between(
+                last_point.latitude, last_point.longitude,
+                point.latitude, point.longitude
+            )
+            last_point = point
+        return self._record
 
 
 class GpxOpenTracks(GpxStandard):

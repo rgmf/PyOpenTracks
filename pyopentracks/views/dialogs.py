@@ -55,23 +55,43 @@ class QuestionDialog(Gtk.Dialog):
         box.append(label)
 
 
-class MessageDialogError(Gtk.MessageDialog):
+class MessageDialogError(Gtk.Window):
 
-    def __init__(self, **kwargs):
-        super().__init__(
-            **kwargs,
-            flags=0,
-            message_type=Gtk.MessageType.ERROR,
-            buttons=Gtk.ButtonsType.OK
-        )
-        image = Gtk.Image()
-        image.set_from_icon_name("dialog-error", Gtk.IconSize.DIALOG)
-        image.show()
-        self.set_image(image)
+    def __init__(self, transient_for, title, text):
+        super().__init__()
 
-    def show(self):
-        self.run()
-        self.destroy()
+        self.set_transient_for(transient_for)
+        self.set_modal(True)
+        self.set_default_size(600, 400)
+
+        button = Gtk.Button.new_with_label(_("Ok"))
+        button.connect("clicked", lambda *_: self.destroy())
+
+        header_bar = Gtk.HeaderBar()
+        header_bar.pack_start(button)
+        self.set_titlebar(header_bar)
+
+        scrolled_window = Gtk.ScrolledWindow()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        title_lbl = Gtk.Label.new(title)
+        title_lbl.get_style_context().add_class("pyot-h3")
+        title_lbl.set_margin_top(30)
+        box_image_text = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        box_image_text.set_halign(Gtk.Align.CENTER)
+        box_image_text.set_margin_start(20)
+        box_image_text.set_margin_end(20)
+        image = Gtk.Image.new_from_icon_name("error-app-symbolic")
+        image.set_pixel_size(24)
+        text_lbl = Gtk.Label.new(text)
+        text_lbl.set_wrap(True)
+        box_image_text.append(image)
+        box_image_text.append(text_lbl)
+        box.append(title_lbl)
+        box.append(box_image_text)
+
+        scrolled_window.set_child(box)
+
+        self.set_child(scrolled_window)
 
 
 class ImportExportResultDialog(Gtk.Dialog):

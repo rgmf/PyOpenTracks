@@ -64,9 +64,9 @@ class Record:
         return Record.Type.UNKNOWN
 
     def __repr__(self) -> str:
-        return '<Record: uuid (%s) name (%s) description (%s) time (%d) category (%s) recorded_width (%s) segments (%d) sets (%d)>' % (
+        return '<Record: uuid (%s) name (%s) description (%s) start time (%d) category (%s) recorded_width (%s) segments (%d) sets (%d)>' % (
             self.uuid if self.uuid else "None", self.name, self.description,
-            self.time, self.category, self.recorded_with.__repr__(),
+            self.start_time, self.category, self.recorded_with.__repr__(),
             len(self.segments), len(self.sets)
         )
 

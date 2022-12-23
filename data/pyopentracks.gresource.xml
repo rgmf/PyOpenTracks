@@ -38,5 +38,6 @@
     <file>icons/bronze-medal.svg</file>
 
     <file>icons/percentage-symbol.svg</file>
+    <file>icons/error-app-symbolic.svg</file>
   </gresource>
 </gresources>

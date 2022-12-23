@@ -104,7 +104,7 @@ class ActivitySummaryLayoutBuilder:
         if len(self._activity.sections) == 0:
             self._activity.sections = DatabaseHelper.get_sections(self._activity.id)
 
-        if len(self._activity.stats.sets) == 0:
+        if self._activity.stats and len(self._activity.stats.sets) == 0:
             self._activity.stats.sets = DatabaseHelper.get_sets(self._activity.stats.id)
 
         if len(self._activity.sections) > 0:

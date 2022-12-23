@@ -23,21 +23,25 @@ from gi.repository import Gtk, Gio, Gdk, GLib
 
 from pyopentracks.app_interfaces import Action
 from pyopentracks.app_activity_list import AppActivityList
+from pyopentracks.app_activity_info import AppActivityInfo
 from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.app_window import PyopentracksWindow
 from pyopentracks.views.file_chooser import (
-    ImportFileChooserDialog, ImportFolderChooserWindow, FolderChooserWindow
+    ImportFileChooserDialog, ImportFolderChooserWindow, FolderChooserWindow, FileChooserWindow
 )
 from pyopentracks.models.migrations import Migration
 from pyopentracks.models.database import Database
 from pyopentracks.views.preferences.dialog import PreferencesDialog
 from pyopentracks.views.dialogs import (
     ImportResultDialog,
-    ExportResultDialog
+    ExportResultDialog,
+    MessageDialogError
 )
 from pyopentracks.app_analytic import AppAnalytic
 from pyopentracks.app_segments import AppSegments
+from pyopentracks.io.parser.factory import ParserFactory
+from pyopentracks.io.proxy.proxy import RecordProxy
 
 
 class Application(Gtk.Application):
@@ -113,28 +117,25 @@ class Application(Gtk.Application):
         self.quit()
 
     def on_open_file(self, action, param):
-        # dialog = FileChooserWindow(parent=self._window)
-        # response = dialog.run()
-        # if response == Gtk.ResponseType.OK:
-        #     self.load_file(dialog.get_filename(), self._window.load_activity_stats)
-        # dialog.destroy()
-        pass
+        dialog = FileChooserWindow(parent=self._window, on_response=self._load_file)
+        dialog.show()
 
-    def load_file(self, filename: str, cb):
-        """Load the GPX filename and call cb.
+    def _load_file(self, dialog, response):
+        if response != Gtk.ResponseType.ACCEPT:
+            return
 
-        It loads activity from GPX filename and call to the cb callback
-        passing it the activity object.
-
-        Arguments:
-        filename -- absolute path to a GPX file.
-        cb -- the callback to call after loading.
-        """
-        # self._window.loading(0.5)
-        # gpx_parser_handle = ParserHandlerInThread()
-        # gpx_parser_handle.connect("end-parse", self._end_load_file_cb)
-        # gpx_parser_handle.parse(filename, cb)
-        pass
+        try:
+            filename = dialog.get_file().get_path()
+            record = ParserFactory.make(filename).parse()
+            activity = RecordProxy(record).to_activity()
+            self._load_app(AppActivityInfo, {"activity": activity})
+        except Exception as e:
+            print(type(e))
+            MessageDialogError(
+                transient_for=self.get_window(),
+                text=_(f"File {filename} cannot be opened: {e}"),
+                title=_("Error opening a file")
+            ).show()
 
     def get_pref(self, pref):
         return self._preferences.get_pref(pref)
