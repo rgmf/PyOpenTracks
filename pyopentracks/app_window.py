@@ -48,6 +48,8 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         self._app = kwargs["application"]
         self._container = AppWindowContainer()
 
+        self.connect("close-request", self._on_window_close_request)
+
         self.set_title("PyOpenTracks")
         self.set_child(self._container)
 
@@ -211,9 +213,10 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         prefs.set_pref(AppPreferences.WIN_STATE_HEIGHT, self._height)
         prefs.set_pref(AppPreferences.WIN_STATE_IS_MAXIMIZED, self._is_maximized)
 
-    def _on_window_state_event(self, widget, event):
-        self._width, self._height = self.get_size()
+    def _on_window_close_request(self, window):
+        self._width, self._height = self.get_default_size()
         self._is_maximized = self.is_maximized()
+        self._save_state()
 
     def _on_destroy(self, widget, event):
         self._save_state()

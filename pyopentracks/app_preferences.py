@@ -49,7 +49,7 @@ class AppPreferences:
         elif pref == AppPreferences.WIN_STATE_HEIGHT:
             return self._settings.get_int("win-state-height")
         elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
-            return self._settings.get_boolean("win-state-is-mamixmized")
+            return self._settings.get_boolean("win-state-is-maximized")
         elif pref == AppPreferences.HEART_RATE_MAX:
             return self._settings.get_int("heart-rate-max")
         elif pref == AppPreferences.HEART_RATE_ZONES:
@@ -67,7 +67,7 @@ class AppPreferences:
         elif pref == AppPreferences.WIN_STATE_HEIGHT:
             self._settings.set_int("win-state-height", new_value)
         elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
-            self._settings.set_boolean("win-state-is-mamixmized", new_value)
+            self._settings.set_boolean("win-state-is-maximized", new_value)
         elif pref == AppPreferences.HEART_RATE_MAX:
             self._settings.set_int("heart-rate-max", new_value)
         elif pref == AppPreferences.HEART_RATE_ZONES:
@@ -85,7 +85,7 @@ class AppPreferences:
         elif pref == AppPreferences.WIN_STATE_HEIGHT:
             self._settings.get_default_value("win-state-height")
         elif pref == AppPreferences.WIN_STATE_IS_MAXIMIZED:
-            self._settings.get_default_value("win-state-is-mamixmized")
+            self._settings.get_default_value("win-state-is-maximized")
         elif pref == AppPreferences.HEART_RATE_MAX:
             self._settings.get_default_value("heart-rate-max")
         elif pref == AppPreferences.HEART_RATE_ZONES:
