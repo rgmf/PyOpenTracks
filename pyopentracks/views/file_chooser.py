@@ -122,6 +122,41 @@ class ExportSegmentChooserDialog(CustomFileChooserDialog):
         self.set_current_name(current_name)
 
 
+class FileChooserWindow(CustomFileChooserDialog):
+    def __init__(self, parent, on_response):
+        super().__init__(
+            _("Select a file"),
+            parent,
+            Gtk.FileChooserAction.OPEN,
+            _("Ok"),
+            _("Cancel"),
+            on_response
+        )
+        self._add_filters()
+
+    def _add_filters(self):
+        filter_gpx_fit = Gtk.FileFilter()
+        filter_gpx_fit.set_name(_("GPX and FIT files"))
+        filter_gpx_fit.add_mime_type("application/gpx+xml")
+        filter_gpx_fit.add_pattern("*.fit")
+        self.add_filter(filter_gpx_fit)
+
+        filter_only_gpx = Gtk.FileFilter()
+        filter_only_gpx.set_name(_("GPX files"))
+        filter_only_gpx.add_mime_type("application/gpx+xml")
+        self.add_filter(filter_only_gpx)
+
+        filter_only_fit = Gtk.FileFilter()
+        filter_only_fit.set_name(_("FIT files"))
+        filter_only_fit.add_pattern("*.fit")
+        self.add_filter(filter_only_fit)
+
+        filter_any = Gtk.FileFilter()
+        filter_any.set_name(_("Any files"))
+        filter_any.add_pattern("*")
+        self.add_filter(filter_any)
+
+
 class FolderChooserWindow(CustomFileChooserDialog):
     def __init__(self, parent, on_response):
         super().__init__(

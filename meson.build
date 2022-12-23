@@ -9,6 +9,10 @@ i18n = import('i18n')
 
 application_id = 'es.rgmf.pyopentracks'
 
+if get_option('profile') == 'development'
+	application_id = 'es.rgmf.pyopentracks.dev'
+endif
+
 subdir('data')
 subdir('pyopentracks')
 subdir('po')

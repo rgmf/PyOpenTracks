@@ -30,7 +30,7 @@ from pyopentracks.views.layouts.track_map_layout import TrackMapLayout
 
 
 class ActivitySummaryLayout:
-    """Utility class to creates somw Gtk widgets useful for common summary layouts."""
+    """Utility class to creates some Gtk widgets useful for common summary layouts."""
 
     @staticmethod
     def info_activity(activity: Activity):

@@ -107,6 +107,14 @@ After install PyOpenTracks through Flatpak, the database and local app data are 
 
 `~/.var/app/es.rgmf.pyopentracks/data/PyOpenTracks/`
 
+# Preparing for production with Flatpak
+Before build PyOpenTracks for production you have to change some values from `es.rgmf.pyopenracks.json` flatpak manifest file:
+
+- Change the app-id from "es.rgmf.pyopentracks.dev" to "es.rgmf.pyopentracks".
+- Remove tags with the "devel" value.
+- Remove "--socket=session-bus" from "finish-args" array.
+- Change "config-opts" value from "-Dprofile=development" to "--Dprofile=default" o simply remove it from there.
+
 # Icons
 If you want or need to add icons you can do it using these two resources:
 - https://specifications.freedesktop.org/icon-naming-spec/icon-naming-spec-latest.html
