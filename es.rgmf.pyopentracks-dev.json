@@ -9,7 +9,8 @@
     "--share=ipc",
     "--socket=fallback-x11",
     "--socket=wayland",
-    "--filesystem=host"
+    "--filesystem=host",
+    "--filesystem=xdg-run/gvfsd"
   ],
   "cleanup": [
     "/include",
@@ -61,9 +62,8 @@
 	"buildsystem": "meson",
 	"sources": [
 	  {
-	    "type": "git",
-	    "url": "file:///home/roman/workspace/PyOpenTracks",
-	    "branch": "state_window"
+	    "type": "dir",
+	    "path": ".pyopentracks-dev"
 	  }
 	]
       }

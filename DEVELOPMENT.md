@@ -55,6 +55,8 @@ There are two JSON manifests:
 
 You should use the second one to development and the first one to send it to production.
 
+If you want to use flatpak to test your changes all you have to do is execute the `flatpak.sh` script.
+
 ## Pre
 You need to install `flatpak` and `flatpak-builder` from your distro repositories or whatever you want.
 

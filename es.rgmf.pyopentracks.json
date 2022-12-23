@@ -9,7 +9,8 @@
     "--share=ipc",
     "--socket=fallback-x11",
     "--socket=wayland",
-    "--filesystem=host"
+    "--filesystem=host",
+    "--filesystem=xdg-run/gvfsd"
   ],
   "cleanup": [
     "/include",
@@ -23,49 +24,49 @@
     "*.a"
   ],
   "modules": [
-      {
-	"name": "pip-install",
-	"buildsystem": "simple",
-	"build-options": {
-	  "build-args": [
-	    "--share=network"
-	  ]
-	},
-	"build-commands": [
-	  "pip3 install --prefix=/app matplotlib>=3.6.2",
-	  "pip3 install --prefix=/app python-dateutil>=2.8.1",
-	  "pip3 install --prefix=/app fitparse>=1.2.0",
-	  "pip3 install --prefix=/app python-dateutil"
-	]
-      },
-      {
-        "name" : "libshumate",
-        "buildsystem": "meson",
-        "config-opts": [
-          "-Ddemos=false",
-          "-Dgtk_doc=false",
-          "-Dvapi=false",
-          "-Dlibsoup3=true"
-        ],
-        "sources" : [
-          {
-            "type" : "git",
-            "url" : "https://gitlab.gnome.org/GNOME/libshumate.git",
-            "branch" : "main"
-          }
+    {
+      "name": "pip-install",
+      "buildsystem": "simple",
+      "build-options": {
+        "build-args": [
+          "--share=network"
         ]
       },
-      {
-	"name": "pyopentracks",
-	"builddir": true,
-	"buildsystem": "meson",
-	"sources": [
-	  {
-	    "type": "git",
-	    "url": "file:///home/roman/workspace/PyOpenTracks",
-	    "branch": "main"
-	  }
-	]
-      }
+      "build-commands": [
+        "pip3 install --prefix=/app matplotlib>=3.6.2",
+        "pip3 install --prefix=/app python-dateutil>=2.8.1",
+        "pip3 install --prefix=/app fitparse>=1.2.0",
+        "pip3 install --prefix=/app python-dateutil"
+      ]
+    },
+    {
+      "name": "libshumate",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Ddemos=false",
+        "-Dgtk_doc=false",
+        "-Dvapi=false",
+        "-Dlibsoup3=true"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://gitlab.gnome.org/GNOME/libshumate.git",
+          "branch": "main"
+        }
+      ]
+    },
+    {
+      "name": "pyopentracks",
+      "builddir": true,
+      "buildsystem": "meson",
+      "sources": [
+        {
+          "type": "git",
+          "url": "file:///home/roman/workspace/PyOpenTracks",
+          "branch": "main"
+        }
+      ]
+    }
   ]
 }
