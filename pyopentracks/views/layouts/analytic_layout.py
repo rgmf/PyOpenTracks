@@ -215,19 +215,21 @@ class AnalyticMonthsStack(Gtk.Box):
             # For distance's activity it will show total distance per activity.
             # For time's activity it will show total time per activity.
             list_distance = []
+            colors_distance = []
             list_time = []
+            colors_time = []
             for i in ms.stats:
                 if i.total_distance_float is not None:
                     list_distance.append((i.category, i.total_distance_float))
+                    colors_distance.append(tau.get_color(i.category))
                 elif i.total_moving_time_ms is not None:
                     list_time.append((i.category, i.total_moving_time_ms))
+                    colors_time.append(tau.get_color(i.category))
             
             if len(list_distance) > 0:
                 chart_distance = BarsChart(
                     results=dict(list_distance),
-                    colors=list(
-                        map(lambda a: tau.get_color(a.category), ms.stats)
-                    ),
+                    colors=colors_distance,
                     cb_annotate=lambda value: distu.m_to_str(value * 1000)
                 )
 
@@ -243,9 +245,7 @@ class AnalyticMonthsStack(Gtk.Box):
             if len(list_time) > 0:
                 chart_time = BarsChart(
                     results=dict(list_time),
-                    colors=list(
-                        map(lambda a: tau.get_color(a.category), ms.stats)
-                    ),
+                    colors=colors_time,
                     cb_annotate=lambda value: tu.ms_to_str(value, True)
                 )
 

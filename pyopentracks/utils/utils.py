@@ -300,7 +300,7 @@ class TypeActivityUtils:
 
         "rock_climbing": {"icon": "icons/climbing_black_48dp.svg", "color": "#483e37"},
 
-        "training": {"icon": "icons/training_black_48dp.svg", "color": "#483e37"},
+        "training": {"icon": "icons/training_black_48dp.svg", "color": "#704e89"},
     }
 
     _pace = [
