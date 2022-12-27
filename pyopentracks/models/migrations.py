@@ -62,8 +62,9 @@ class Migration:
                 avgcadence FLOAT,
                 normalizedpower FLOAT,
                 maxpower FLOAT,
-                avgtemperature FLOAT,
+                mintemperature FLOAT,
                 maxtemperature FLOAT,
+                avgtemperature FLOAT,
                 totalcalories INTEGER,
                 FOREIGN KEY (_id) REFERENCES activities (statsid) ON UPDATE CASCADE ON DELETE CASCADE
             );

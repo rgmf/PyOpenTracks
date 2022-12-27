@@ -29,7 +29,7 @@ class Record:
 
     __slots__ = (
         "uuid", "name", "description", "start_time", "end_time", "category", "sub_category",
-        "avghr", "maxhr", "avg_temperature", "max_temperature", "total_calories",
+        "avghr", "maxhr", "min_temperature", "max_temperature", "avg_temperature", "total_calories",
         "recorded_with", "segments", "sets"
     )
 
@@ -48,8 +48,9 @@ class Record:
         self.sub_category: str = ""
         self.avghr: float = None
         self.maxhr: float = None
-        self.avg_temperature: float = None
+        self.min_temperature: float = None
         self.max_temperature: float = None
+        self.avg_temperature: float = None
         self.total_calories: int = None
         self.recorded_with: RecordedWith = RecordedOptions[0]
         self.segments: list[Segment] = []
@@ -62,6 +63,12 @@ class Record:
         if len(self.sets) > 0:
             return Record.Type.SET
         return Record.Type.UNKNOWN
+
+    def set_min_temperature(self, temperature):
+        if temperature is None:
+            return
+        if self.min_temperature is None or self.min_temperature > temperature:
+            self.min_temperature = temperature
 
     def __repr__(self) -> str:
         return '<Record: uuid (%s) name (%s) description (%s) start time (%d) category (%s) recorded_width (%s) segments (%d) sets (%d)>' % (

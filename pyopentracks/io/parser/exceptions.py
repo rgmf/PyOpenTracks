@@ -50,3 +50,21 @@ class FitParserException(Exception):
 
     def __str__(self):
         return f"{self._filename} -> {self._message}"
+
+
+class GpxParserException(Exception):
+    """Exception raised for GPX parsing errors.
+
+    Attributes:
+        filename -- the filename
+        message  -- explanation of the error
+    """
+
+    def __init__(self, filename, message="Error parsing GPX file"):
+        self._filename = filename
+        self._message = message
+        super().__init__(self._message)
+
+    def __str__(self):
+        return f"{self._filename} -> {self._message}"
+

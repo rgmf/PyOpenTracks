@@ -93,16 +93,22 @@ class FitTrackActivity(Fit):
         gain_loss_manager = GainLossManager()
         segment_points: List[Point] = []
         last_point = None
-        for mesg in [m for m in self._fitfile.messages if m.name in ("record", "event")]:
+        for mesg in [m for m in self._fitfile.messages if m.name in ("record", "event", "session")]:
             if mesg.name == "record" and not is_event_stopped:
                 point = FitRecordMessage(mesg, gain_loss_manager).point
                 last_altitude = point.altitude
                 gain_loss_manager.add(last_altitude)
                 is_moving = self._is_moving(point, last_point)
+                record.set_min_temperature(point.temperature)
                 last_point = point
                 segment_points.extend([point] if is_moving and point.is_location_valid() else [])
             elif mesg.name == "event":
                 is_event_stopped = self._compute_mesg_event(mesg, is_event_stopped)
+            elif mesg.name == "session":
+                fit_session_mesg = FitSessionMessage(mesg)
+                record.total_calories = fit_session_mesg.total_calories
+                record.avg_temperature = fit_session_mesg.avg_temperature
+                record.max_temperature = fit_session_mesg.max_temperature
 
             if (is_event_stopped or not is_moving) and len(segment_points) > self._points_for_segment:
                 segment = Segment()

@@ -51,7 +51,7 @@ class RecordProxy:
             activity_stats = TrackActivityStats()
             activity_stats.compute(activity.sections)
 
-            activity.stats = TrackActivityStatsProxy(activity_stats).to_stats()
+            activity.stats = TrackActivityStatsProxy(self._record, activity_stats).to_stats()
         elif self._record.type == Record.Type.SET:
             activity.stats = SetsProxy(self._record).to_stats()
 
@@ -105,9 +105,10 @@ class PointProxy:
 
 class TrackActivityStatsProxy:
 
-    __slots__ = "_track_activity_stats"
+    __slots__ = ("_record", "_track_activity_stats")
 
-    def __init__(self, track_activity_stats: TrackActivityStats):
+    def __init__(self, record: Record, track_activity_stats: TrackActivityStats):
+        self._record = record
         self._track_activity_stats = track_activity_stats
 
     def to_stats(self):
@@ -131,9 +132,10 @@ class TrackActivityStatsProxy:
             self._track_activity_stats.avg_cadence,
             None,
             None,
-            None,
-            None,
-            None
+            self._record.min_temperature,
+            self._record.max_temperature,
+            self._record.avg_temperature,
+            self._record.total_calories
         )
 
 
@@ -175,7 +177,8 @@ class SetsProxy:
             None,
             None,
             None,
-            self._record.avg_temperature,
+            self._record.min_temperature,
             self._record.max_temperature,
+            self._record.avg_temperature,
             self._record.total_calories
         )

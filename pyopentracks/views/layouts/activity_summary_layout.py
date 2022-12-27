@@ -117,7 +117,7 @@ class TrackActivitySummaryLayout(Gtk.ScrolledWindow, Layout):
     def __init__(self, activity: Activity):
         super().__init__()
 
-        self._main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
 
         self._top_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self._top_box.set_vexpand(True)
@@ -328,6 +328,18 @@ class TrackActivitySummaryStatsLayout(ActivitySummaryStatsLayout):
             # Avg. cadence
             self._add_item(stats.avg_cadence_label, stats.avg_cadence(category))
 
+        if stats.min_temperature_value is not None or stats.max_temperature_value is not None or stats.avg_temperature_value is not None:
+            # Min. temperature
+            self._add_item(stats.min_temperature_label, stats.min_temperature)
+            # Max. temperature
+            self._add_item(stats.max_temperature_label, stats.max_temperature)
+            # Avg. temperature
+            self._add_item(stats.avg_temperature_label, stats.avg_temperature)
+
+        if stats.total_calories_value is not None:
+            # Total calories
+            self._add_item(stats.total_calories_label, stats.total_calories)
+
 
 class SetActivitySummaryStatsLayout(ActivitySummaryStatsLayout):
     """A Gtk.Grid with all sets's activity stats."""
@@ -352,13 +364,15 @@ class SetActivitySummaryStatsLayout(ActivitySummaryStatsLayout):
             # Avg. heart rate
             self._add_item(stats.avg_hr_label, stats.avg_hr)
 
-        if stats._avg_temperature is not None or stats._max_temperature is not None:
+        if stats.min_temperature_value is not None or stats.max_temperature_value is not None or stats.avg_temperature_value is not None:
+            # Min. temperature
+            self._add_item(stats.min_temperature_label, stats.min_temperature)
             # Max. temperature
             self._add_item(stats.max_temperature_label, stats.max_temperature)
             # Avg. temperature
             self._add_item(stats.avg_temperature_label, stats.avg_temperature)
 
-        if stats.total_calories is not None:
+        if stats.total_calories_value is not None:
             # Total calories
             self._add_item(stats.total_calories_label, stats.total_calories)
 

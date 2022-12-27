@@ -105,7 +105,7 @@ After install PyOpenTracks through Flatpak, the settings values in the following
 ## PyOpenTracks data on Flatpak environment
 After install PyOpenTracks through Flatpak, the database and local app data are in the following folder:
 
-`~/.var/app/es.rgmf.pyopentracks/data/PyOpenTracks/`
+`~/.var/app/es.rgmf.pyopentracks.dev/data/PyOpenTracks/`
 
 # Preparing for production with Flatpak
 Before build PyOpenTracks for production you have to change some values from `es.rgmf.pyopenracks.json` flatpak manifest file:
