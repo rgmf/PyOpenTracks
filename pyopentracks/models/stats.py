@@ -266,9 +266,8 @@ class Stats(Model):
     def max_cadence_rpm(self):
         return self._maxcadence_rpm
 
-    @property
-    def max_cadence(self):
-        return se.cadence_to_str(self._maxcadence_rpm)
+    def max_cadence(self, category: str):
+        return se.cadence_to_str(self._maxcadence_rpm, category)
 
     @property
     def max_cadence_label(self):
@@ -278,9 +277,8 @@ class Stats(Model):
     def avg_cadence_rpm(self):
         return self._avgcadence_rpm
 
-    @property
-    def avg_cadence(self):
-        return se.cadence_to_str(self._avgcadence_rpm)
+    def avg_cadence(self, category: str):
+        return se.cadence_to_str(self._avgcadence_rpm, category)
 
     @property
     def avg_cadence_label(self):

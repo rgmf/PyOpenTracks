@@ -39,12 +39,14 @@ class AggregatedStats:
         self._avg_elevation_gain_m = args[9]
         self._avg_speed_mps = args[10]
         self._avg_heart_rate_bpm = args[11]
-        self._max_time_ms = args[12]
-        self._max_moving_time_ms = args[13]
-        self._max_distance_m = args[14]
-        self._max_elevation_gain_m = args[15]
-        self._max_speed_mps = args[16]
-        self._max_heart_rate_bpm = args[17]
+        self._avg_cadence_rpm = args[12]
+        self._max_time_ms = args[13]
+        self._max_moving_time_ms = args[14]
+        self._max_distance_m = args[15]
+        self._max_elevation_gain_m = args[16]
+        self._max_speed_mps = args[17]
+        self._max_heart_rate_bpm = args[18]
+        self._max_cadence_rpm = args[19]
 
     @property
     def category(self):
@@ -107,6 +109,10 @@ class AggregatedStats:
         return se.hr_to_str(self._avg_heart_rate_bpm)
 
     @property
+    def avg_cadence(self):
+        return se.cadence_to_str(self._avg_cadence_rpm, self._category)
+
+    @property
     def max_time(self):
         return tu.ms_to_str(self._max_time_ms)
 
@@ -129,6 +135,10 @@ class AggregatedStats:
     @property
     def max_heart_rate(self):
         return se.hr_to_str(self._max_heart_rate_bpm)
+
+    @property
+    def max_cadence(self):
+        return se.cadence_to_str(self._max_cadence_rpm, self._category)
 
     @property
     def activities_label(self):
@@ -157,3 +167,8 @@ class AggregatedStats:
     @property
     def heart_rate_label(self):
         return _("Heart Rate")
+
+    @property
+    def cadence_label(self):
+        return _("Cadence")
+

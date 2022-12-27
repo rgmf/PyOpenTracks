@@ -126,6 +126,8 @@ class SummaryMovingSport(SummarySport):
         grid.attach(self._value(str(self._aggregated.avg_speed)), 1, 4, 1, 1)
         grid.attach(self._label(_("Heart Rate")), 0, 5, 1, 1)
         grid.attach(self._value(str(self._aggregated.avg_heart_rate)), 1, 5, 1, 1)
+        grid.attach(self._label(_("Cadence")), 0, 6, 1, 1)
+        grid.attach(self._value(str(self._aggregated.avg_cadence)), 1, 6, 1, 1)
         box.append(grid)
 
         self._h_stats_box.append(box)
@@ -150,6 +152,8 @@ class SummaryMovingSport(SummarySport):
         grid.attach(self._value(str(self._aggregated.max_speed)), 1, 4, 1, 1)
         grid.attach(self._label(_("Heart Rate")), 0, 5, 1, 1)
         grid.attach(self._value(str(self._aggregated.max_heart_rate)), 1, 5, 1, 1)
+        grid.attach(self._label(_("Cadence")), 0, 6, 1, 1)
+        grid.attach(self._value(str(self._aggregated.max_cadence)), 1, 6, 1, 1)
         box.append(grid)
 
         self._h_stats_box.append(box)

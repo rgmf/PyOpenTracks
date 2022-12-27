@@ -187,11 +187,11 @@ class SegmentTrack(Model):
 
     @property
     def avgcadence(self):
-        return SensorUtils.cadence_to_str(self._avgcadence)
+        return SensorUtils.cadence_to_str(self._avgcadence, self.activity.category)
 
     @property
     def maxcadence(self):
-        return SensorUtils.cadence_to_str(self._maxcadence)
+        return SensorUtils.cadence_to_str(self._maxcadence, self.activity.category)
 
     @activity.setter
     def activity(self, activity):

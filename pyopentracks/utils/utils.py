@@ -477,16 +477,22 @@ class SensorUtils:
         return str(int(hr_bpm)) + " bpm" if hr_bpm is not None else "-"
 
     @staticmethod
-    def cadence_to_str(cadence_rpm: float) -> str:
+    def cadence_to_str(cadence_rpm: float, category: str) -> str:
         """From float representation cadence to cadence string.
 
         Arguments:
         cadence_rpm -- cadence in rpm.
+        category -- category of the activity.
 
         Returns:
         An string representing the cadence.
         """
-        return str(int(cadence_rpm)) + " rpm" if cadence_rpm is not None else "-"
+        if not cadence_rpm:
+            return "-"
+        if TypeActivityUtils.is_speed(category):
+            return str(int(cadence_rpm)) + " rpm"
+        else:
+            return str(int(float(cadence_rpm) * 2)) + " spm"
 
     @staticmethod
     def temperature_to_str(temperature: float) -> str:

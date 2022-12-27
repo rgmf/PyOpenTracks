@@ -375,12 +375,14 @@ class Database:
                     AVG(stats.elevationgain) avg_gain,
                     SUM(stats.totaldistance) / (SUM(stats.movingtime) / 1000) avg_speed,
                     AVG(stats.avghr) avg_heart_rate,
+                    AVG(stats.avgcadence) avg_cadence,
                     MAX(stats.totaltime) max_time,
                     MAX(stats.movingtime) max_moving_time,
                     MAX(stats.totaldistance) max_distance,
                     MAX(stats.elevationgain) max_gain,
                     MAX(stats.maxspeed) max_speed,
-                    MAX(stats.maxhr) max_heart_rate
+                    MAX(stats.maxhr) max_heart_rate,
+                    MAX(stats.maxcadence) max_cadence
                 FROM stats, activities
                 WHERE stats._id=activities.statsid
                 {where}

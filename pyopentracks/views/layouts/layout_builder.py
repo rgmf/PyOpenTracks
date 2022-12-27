@@ -173,8 +173,6 @@ class SportSummaryLayoutBuilder:
         self._args = args
 
     def make(self):
-        
-
         if self._category is None:
             return SummaryMovingSport(*self._args if type(self._args) == tuple else self._args)
         elif self._category in ("rock_climbing", "training"):
