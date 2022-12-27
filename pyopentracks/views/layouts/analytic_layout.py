@@ -200,6 +200,8 @@ class AnalyticMonthsStack(Gtk.Box):
 
     def _visible_child_changed(self, stack, gparamstring):
         box = self._stack.get_visible_child()
+        box.set_vexpand(False)
+        box.set_valign(Gtk.Align.START)
         child_name = self._stack.get_visible_child_name()
         if box and box.get_first_child():
             return
