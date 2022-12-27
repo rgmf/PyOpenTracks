@@ -229,3 +229,4 @@ class TrackPoint(Model):
     @temperature.setter
     def temperature(self, temperature):
         self._temperature = temperature
+

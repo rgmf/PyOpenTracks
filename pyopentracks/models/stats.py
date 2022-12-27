@@ -61,9 +61,10 @@ class Stats(Model):
         self._avgcadence_rpm = args[16] if args else None
         self._power_normalized_w = args[17] if args else None
         self._power_max_w = args[18] if args else None
-        self._avg_temperature = args[19] if args else None
+        self._min_temperature = args[19] if args else None
         self._max_temperature = args[20] if args else None
-        self._total_calories = args[21] if args else None
+        self._avg_temperature = args[21] if args else None
+        self._total_calories = args[22] if args else None
 
         self._sets: List[Set] = []
 
@@ -72,7 +73,7 @@ class Stats(Model):
         """Returns the query for inserting a Stats register."""
         return """
         INSERT INTO stats VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """
 
@@ -98,7 +99,7 @@ class Stats(Model):
             self._minelevation_m, self._maxelevation_m, self._elevationgain_m,
             self._elevationloss_m, self._maxhr_bpm, self._avghr_bpm,
             self._maxcadence_rpm, self._avgcadence_rpm, self._power_normalized_w,
-            self._power_max_w, self._avg_temperature, self._max_temperature,
+            self._power_max_w, self._min_temperature, self._max_temperature, self._avg_temperature,
             self._total_calories
         )
 
@@ -311,6 +312,18 @@ class Stats(Model):
     @property
     def avg_temperature(self):
         return se.temperature_to_str(self._avg_temperature)
+
+    @property
+    def min_temperature_label(self):
+        return _("Min. Temperature")
+
+    @property
+    def min_temperature_value(self):
+        return self._min_temperature
+
+    @property
+    def min_temperature(self):
+        return se.temperature_to_str(self._min_temperature)
 
     @property
     def max_temperature_label(self):

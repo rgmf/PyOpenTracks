@@ -21,7 +21,7 @@ from itertools import chain
 
 from pyopentracks.io.parser.fit.messages import FitSportMessage
 from pyopentracks.io.parser.parser import Parser
-from pyopentracks.io.parser.exceptions import FitParserException, ParserExtensionUnknownException
+from pyopentracks.io.parser.exceptions import FitParserException, ParserExtensionUnknownException, GpxParserException
 from pyopentracks.io.parser.gpx.gpx import GpxOpenTracks, GpxPath, GpxStandard, PreParser as GpxPreParser
 from pyopentracks.io.parser.fit.fit import FIT_SUPPORTED_SPORTS, FitSetActivity, FitTrackActivity, PreParser as FitPreParser
 
@@ -59,7 +59,10 @@ class GpxFactory(Factory):
 
     def make(self, filename: str) -> Parser:
         record = GpxPreParser(filename).parse()
-        if not list(filter(lambda rp: rp.time, list(chain(*[ s.points for s in record.segments ])))):
+        all_points = list(chain(*[ s.points for s in record.segments ]))
+        if not list(filter(lambda p: p.time or (p.latitude and p.longitude), all_points)):
+            raise GpxParserException(filename, "there are not valid points in the GPX file")
+        elif not list(filter(lambda p: p.time, all_points)):
             return GpxPath(record)
         elif record.recorded_with.is_opentracks():
             return GpxOpenTracks(record)
@@ -77,4 +80,5 @@ class FitFactory(Factory):
         elif sport_message.category.lower() in FIT_SUPPORTED_SPORTS["with_sets"]:
             return FitSetActivity(fitfile, file_id)
         else:
-            raise FitParserException(f"{sport_message} sport not supported")
+            raise FitParserException(filename, f"{sport_message} sport not supported")
+

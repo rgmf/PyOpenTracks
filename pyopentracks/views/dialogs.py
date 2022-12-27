@@ -134,6 +134,7 @@ class ImportExportResultDialog(Gtk.Dialog):
 
         scrolled_window = Gtk.ScrolledWindow()
         self._list_box = Gtk.ListBox()
+        self._list_box.set_vexpand(True)
         scrolled_window.set_child(self._list_box)
 
         self._box.append(self._progress)
