@@ -339,9 +339,9 @@ class TestSensorUtils(unittest.TestCase):
         self.assertEqual(SensorUtils.hr_to_str(95.87), "95 bpm")
 
     def test_cadence_to_str(self):
-        self.assertEqual(SensorUtils.cadence_to_str(None), "-")
-        self.assertEqual(SensorUtils.cadence_to_str(0), "0 rpm")
-        self.assertEqual(SensorUtils.cadence_to_str(95.87), "95 rpm")
+        self.assertEqual(SensorUtils.cadence_to_str(None, "cycling"), "-")
+        self.assertEqual(SensorUtils.cadence_to_str(0, "cycling"), "0 rpm")
+        self.assertEqual(SensorUtils.cadence_to_str(95.87, "cycling"), "95 rpm")
 
 
 class TestStatsUtils(unittest.TestCase):

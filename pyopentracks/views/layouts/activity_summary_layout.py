@@ -324,9 +324,9 @@ class TrackActivitySummaryStatsLayout(ActivitySummaryStatsLayout):
 
         if stats.max_cadence_rpm is not None or stats.avg_cadence_rpm is not None:
             # Max. cadence
-            self._add_item(stats.max_cadence_label, stats.max_cadence)
+            self._add_item(stats.max_cadence_label, stats.max_cadence(category))
             # Avg. cadence
-            self._add_item(stats.avg_cadence_label, stats.avg_cadence)
+            self._add_item(stats.avg_cadence_label, stats.avg_cadence(category))
 
 
 class SetActivitySummaryStatsLayout(ActivitySummaryStatsLayout):

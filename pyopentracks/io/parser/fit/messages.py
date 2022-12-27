@@ -330,6 +330,8 @@ class FitRecordMessage:
         values = record.get_values()
         self._point = Point()
 
+        print(values)
+
         self._point.latitude, self._point.longitude = self._lat_and_lon(values)
         self._point.distance = values["distance"] if "distance" in values else None
         self._point.time = dt_to_aware_locale_ms(values["timestamp"]) if "timestamp" in values else None
@@ -338,6 +340,8 @@ class FitRecordMessage:
         self._point.gain, self._point.loss = manager.get_and_reset()
         self._point.heart_rate = values["heart_rate"] if "heart_rate" in values else None
         self._point.cadence = values["cadence"] if "cadence" in values else None
+        if self._point.cadence is not None:
+            self._point.cadence += values["fractional_cadence"] if "fractional_cadence" in values else 0
         self._point.power = values["power"] if "power" in values else None
         self._point.temperature = values["temperature"] if "temperature" else None
 
