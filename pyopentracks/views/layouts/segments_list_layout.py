@@ -28,8 +28,7 @@ from pyopentracks.utils.utils import (
     SegmentPointUtils
 )
 from pyopentracks.views.dialogs import (
-    QuestionDialog,
-    MessageDialogError,
+    PyotDialog,
     SegmentEditDialog
 )
 from pyopentracks.models.database_helper import DatabaseHelper
@@ -312,18 +311,19 @@ class SegmentsListLayout(Gtk.Box):
     def _button_delete_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()
         if iter_item is None:
-            MessageDialogError(
-                transient_for=self._app.get_window(),
-                text=_("There are not any segment selected"),
-                title=_("Error deleting a segment")
-            ).show()
+            PyotDialog(self._app.get_window())\
+                .with_title(_("There are not any segment selected"))\
+                .with_image_and_text("error-app-symbolic", _("Error deleting a segment"))\
+                .with_accept_button()\
+                .show()
             return
 
-        def on_response(dialog, response):
-            if response != Gtk.ResponseType.OK:
-                dialog.close()
-                return
+        dialog = PyotDialog(self._app.get_window())
 
+        def on_cancel(button):
+            dialog.destroy()
+
+        def on_ok(button):
             segmentid = self._segments_list_store[iter_item][0]
             DatabaseHelper.delete(DatabaseHelper.get_segment_by_id(segmentid))
             self._title_label.set_text(_("Loading segments..."))
@@ -334,27 +334,21 @@ class SegmentsListLayout(Gtk.Box):
 
             self._on_data_ready(self._data_loading())
 
-            dialog.close()
+            dialog.destroy()
 
-        dialog = QuestionDialog(
-            parent=self._app.get_window(),
-            title=_("Remove Segment"),
-            question=_(f"Do you really want to remove the segment? This will remove all data about this segment.")
-        )
-        dialog.show()
-        dialog.connect("response", on_response)
+        dialog.with_title(_("Remove Segment"))\
+            .with_image_and_text("question-round-symbolic", _(f"Do you really want to remove the segment? This will remove all data about this segment."))\
+            .with_cancel_button(on_cancel)\
+            .with_ok_button(on_ok)\
+            .show()
 
     def _button_edit_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()
         if iter_item is None:
             return
 
-        def on_response(dialog, response):
-            if response != Gtk.ResponseType.OK:
-                dialog.close()
-                return
-
-            segment = dialog.get_segment()
+        def on_ok_button_clicked(button):
+            segment = dialog.get_object()
             self._segments_list_store.set_value(iter_item, 1, segment.name)
             if self._label_segment_name:
                 self._label_segment_name.set_label(segment.name)
@@ -362,9 +356,11 @@ class SegmentsListLayout(Gtk.Box):
             dialog.close()
 
         segmentid = self._segments_list_store[iter_item][0]
-        dialog = SegmentEditDialog(parent=self._app.get_window(), segment=DatabaseHelper.get_segment_by_id(segmentid))
+        dialog = SegmentEditDialog(
+            self._app.get_window(),
+            DatabaseHelper.get_segment_by_id(segmentid),
+            on_ok_button_clicked)
         dialog.show()
-        dialog.connect("response", on_response)
 
     def _button_export_clicked_cb(self, btn):
         iter_item = self._combobox_segments.get_active_iter()

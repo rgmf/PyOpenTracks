@@ -54,6 +54,7 @@ class TrackActivityStats:
 
         self._hr = SensorNormalization()
         self._cadence = SensorNormalization()
+        self._temperature = SensorNormalization()
 
     @property
     def start_time(self):
@@ -139,6 +140,30 @@ class TrackActivityStats:
     def avg_cadence(self):
         return self._cadence.avg
 
+    @property
+    def min_temperature(self):
+        return self._temperature.min
+
+    @property
+    def min_temperature_str(self):
+        return SensorUtils.temperature_to_str(self._temperature.min)
+
+    @property
+    def max_temperature(self):
+        return self._temperature.max
+
+    @property
+    def max_temperature_str(self):
+        return SensorUtils.temperature_to_str(self._temperature.max)
+
+    @property
+    def avg_temperature(self):
+        return self._temperature.avg
+
+    @property
+    def avg_temperature_str(self):
+        return SensorUtils.temperature_to_str(self._temperature.avg)
+
     def compute(self, obj: any):
         if not isinstance(obj, list) or not obj:
             pyot_logging.get_logger(__name__).debug(
@@ -172,6 +197,7 @@ class TrackActivityStats:
             self._last_section_time_ms = None
             self._hr.reset()
             self._cadence.reset()
+            self._temperature.reset()
 
         self._avg_speed_mps = self._total_distance_m / (self._total_time_ms / 1000) if self._total_time_ms else 0
         self._avg_moving_speed_mps = self._total_distance_m / (self._moving_time_ms / 1000) if self._moving_time_ms else 0
@@ -191,6 +217,7 @@ class TrackActivityStats:
         self._add_time(track_point.time_ms)
         self._hr.add(track_point.heart_rate, track_point.time_ms)
         self._cadence.add(track_point.cadence, track_point.time_ms)
+        self._temperature.add(track_point.temperature, track_point.time_ms)
 
         self._last_latitude = track_point.latitude
         self._last_longitude = track_point.longitude
@@ -508,6 +535,7 @@ class MaxSpeedNormalizationWithMinDistance(MaxSpeedNormalization):
 class SensorNormalization:
 
     def __init__(self):
+        self._min = None
         self._max = None
         self._prev = None
         self._prev_time_ms = None
@@ -520,6 +548,7 @@ class SensorNormalization:
             return
         value = float(value)
 
+        self._min = self._compute_min(value)
         self._max = self._compute_max(value)
 
         if self._prev_time_ms is None:
@@ -543,10 +572,26 @@ class SensorNormalization:
         return round(self._total / self._total_time_s)
 
     @property
+    def min(self):
+        if self._min:
+            return round(self._min)
+        return None
+
+    @property
     def max(self):
         if self._max:
             return round(self._max)
         return None
+
+    def _compute_min(self, new_value):
+        if new_value is None:
+            return self._min
+        if self._min is None:
+            return new_value
+        if new_value < self._min:
+            return new_value
+        else:
+            return self._min
 
     def _compute_max(self, new_value):
         if new_value is None:
@@ -557,3 +602,4 @@ class SensorNormalization:
             return new_value
         else:
             return self._max
+

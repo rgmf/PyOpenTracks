@@ -22,26 +22,37 @@ from gi.repository import Gtk
 from pyopentracks.views.preferences.layout import PreferencesLayout
 
 
-class PreferencesDialog(Gtk.Dialog):
+class PreferencesDialog(Gtk.Window):
 
-    def __init__(self, parent, app):
-        Gtk.Dialog.__init__(
-            self,
-            title=_("Preferences"),
-            transient_for=parent,
-            use_header_bar=True
-        )
-        self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
-        self.add_button(_("Ok"), Gtk.ResponseType.OK)
+    def __init__(self, parent, app, on_ok_button_clicked_cb):
+        super().__init__()
+
+        # General attributes
         self._preferences = {}
         self._app = app
-        self._box = self.get_content_area()
         self._auto_import_folder = None
 
-        self._setup_ui()
-
-    def _setup_ui(self):
+        # Window configuration
+        self.set_title(_("PyOpenTracks: Preferences"))
+        self.set_transient_for(parent)
+        self.set_modal(True)
         self.set_default_size(800, 600)
+        header_bar = Gtk.HeaderBar()
+        self.set_titlebar(header_bar)
+
+        # Header bar with buttons
+        cancel_button = Gtk.Button.new_with_label(_("Cancel"))
+        cancel_button.connect("clicked", lambda b: self.destroy())
+        ok_button = Gtk.Button.new_with_label(_("Ok"))
+        ok_button.connect("clicked", on_ok_button_clicked_cb)
+        header_bar.pack_start(cancel_button)
+        header_bar.pack_end(ok_button)
+
+        # Child of the window: a vertical box
+        self._box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        self.set_child(self._box)
+
+        # Load layout to the box
         preferences_layout = PreferencesLayout(self)
         preferences_layout.set_vexpand(True)
         self._box.append(preferences_layout)

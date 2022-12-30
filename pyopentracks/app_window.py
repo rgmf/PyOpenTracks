@@ -120,20 +120,6 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         )
         self._primary_menu_btn.set_menu_model(menu)
 
-    def show_infobar(self, itype, message, buttons):
-        """Shows information about a task ont top widget.
-
-        This method can be used to show a message to the user with
-        the result of a background task.
-        """
-        top_widget = self._container.get_top_widget()
-        if not top_widget:
-            return
-
-        layout = InfoLayout(itype, message, buttons)
-        top_widget.pack_start(layout, False, False, 0)
-        top_widget.show_all()
-
     def set_visibility_menu_buttons(self, visible: bool):
         self._primary_menu_btn.set_visible(visible)
         self._preferences_menu_btn.set_visible(visible)
@@ -162,39 +148,9 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
             return
         self._container.set_layout(app.get_layout())
 
-    def loading(self, total):
-        """Handle a progress bar on the top of the loaded Layout.
-
-        Show a progress bar or upload an existing one on top of the
-        loaded Layout.
-
-        total -- a float number between 0.0 and 1.0 indicating the
-                 progress of the loading process.
-        """
-        top_widget = self._container.get_top_widget()
-        if not top_widget:
-            return
-
-        if total == 1.0:
-            child = top_widget.get_first_child()
-            if child is not None and isinstance(child, Gtk.ProgressBar):
-                top_widget.remove(child)
-            return
-
-        if top_widget.get_first_child() is None or not isinstance(top_widget.get_first_child(), Gtk.ProgressBar):
-            progress = Gtk.ProgressBar()
-            progress.set_hexpand(True)
-            top_widget.append(progress)
-            progress.set_fraction(total)
-        else:
-            progress = top_widget.get_first_child()
-            progress.set_fraction(total)
-
-    def clean_top_widget(self):
-        widget = self._container.get_top_widget()
-        widget.foreach(lambda child: widget.remove(child))
-
     def on_quit(self):
+        self._width, self._height = self.get_default_size()
+        self._is_maximized = self.is_maximized()
         self._save_state()
 
     def _load_window_state(self):
@@ -214,12 +170,7 @@ class PyopentracksWindow(Gtk.ApplicationWindow):
         prefs.set_pref(AppPreferences.WIN_STATE_IS_MAXIMIZED, self._is_maximized)
 
     def _on_window_close_request(self, window):
-        self._width, self._height = self.get_default_size()
-        self._is_maximized = self.is_maximized()
-        self._save_state()
-
-    def _on_destroy(self, widget, event):
-        self._save_state()
+        self.on_quit()
 
 
 class AppWindowContainer(Gtk.Box):
@@ -245,3 +196,4 @@ class AppWindowContainer(Gtk.Box):
 
     def get_layout(self):
         return self._content_widget.get_first_child() if self._content_widget.get_first_child() else None
+

@@ -36,7 +36,7 @@ from pyopentracks.views.preferences.dialog import PreferencesDialog
 from pyopentracks.views.dialogs import (
     ImportResultDialog,
     ExportResultDialog,
-    MessageDialogError
+    PyotDialog
 )
 from pyopentracks.app_analytic import AppAnalytic
 from pyopentracks.app_segments import AppSegments
@@ -130,12 +130,11 @@ class Application(Gtk.Application):
             activity = RecordProxy(record).to_activity()
             self._load_app(AppActivityInfo, {"activity": activity})
         except Exception as e:
-            print(type(e))
-            MessageDialogError(
-                transient_for=self.get_window(),
-                text=_(f"File {filename} cannot be opened: {e}"),
-                title=_("Error opening a file")
-            ).show()
+            PyotDialog(self.get_window())\
+                .with_title(_(f"File {filename} cannot be opened: {e}"))\
+                .with_image_and_text("error-app-symbolic", _("Error opening a file"))\
+                .with_accept_button()\
+                .show()
 
     def get_pref(self, pref):
         return self._preferences.get_pref(pref)
@@ -165,16 +164,14 @@ class Application(Gtk.Application):
         )
 
     def preferences_button_clicked(self, prefs_btn):
-        def on_response(dialog, response):
-            if response == Gtk.ResponseType.OK:
-                updated_prefs = dialog.get_updated_preferences()
-                for pref, value in updated_prefs.items():
-                    self.set_pref(pref, value)
-            dialog.close()
+        def on_ok_button_clicked(button):
+            updated_prefs = dialog.get_updated_preferences()
+            for pref, value in updated_prefs.items():
+                self.set_pref(pref, value)
+            dialog.destroy()
 
-        dialog = PreferencesDialog(parent=self._window, app=self)
+        dialog = PreferencesDialog(self._window, self, on_ok_button_clicked)
         dialog.show()
-        dialog.connect("response", on_response)
 
     def analytic_button_clicked(self, btn):
         self._load_app(AppAnalytic)
@@ -246,9 +243,6 @@ class Application(Gtk.Application):
         db_version = migration.migrate()
         self._preferences.set_pref(AppPreferences.DB_VERSION, db_version)
 
-    def _end_load_file_cb(self, gpxParserHandler):
-        self._window.loading(1.0)
-
     def _on_folder_import(self, action, param):
         dialog = ImportFolderChooserWindow(parent=self._window, on_response=self._on_import)
         dialog.show()
@@ -267,8 +261,8 @@ class Application(Gtk.Application):
             )
             import_dialog.show()
 
-    def _on_import_response(self, dialog, response):
-        if response == Gtk.ResponseType.DELETE_EVENT:
+    def _on_import_response(self, response):
+        if response == Gtk.ResponseType.ACCEPT:
             self._load_main_app()
 
     def _on_export_all(self, action, param):
@@ -280,3 +274,4 @@ class Application(Gtk.Application):
 
         dialog = FolderChooserWindow(parent=self._window, on_response=on_response)
         dialog.show()
+

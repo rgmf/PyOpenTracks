@@ -139,6 +139,41 @@ class TrackActivityStatsProxy:
         )
 
 
+class TrackActivityStatsStatsProxy:
+
+    __slots__ = ("_track_activity_stats")
+
+    def __init__(self, track_activity_stats: TrackActivityStats):
+        self._track_activity_stats = track_activity_stats
+
+    def to_stats(self):
+        return Stats(
+            None,
+            self._track_activity_stats.start_time,
+            self._track_activity_stats.end_time,
+            self._track_activity_stats.total_distance,
+            self._track_activity_stats.total_time,
+            self._track_activity_stats.moving_time,
+            self._track_activity_stats.avg_speed,
+            self._track_activity_stats.avg_moving_speed,
+            self._track_activity_stats.max_speed,
+            self._track_activity_stats.min_elevation,
+            self._track_activity_stats.max_elevation,
+            self._track_activity_stats.gain_elevation,
+            self._track_activity_stats.loss_elevation,
+            self._track_activity_stats.max_hr,
+            self._track_activity_stats.avg_hr,
+            self._track_activity_stats.max_cadence,
+            self._track_activity_stats.avg_cadence,
+            None,
+            None,
+            self._track_activity_stats.min_temperature,
+            self._track_activity_stats.max_temperature,
+            self._track_activity_stats.avg_temperature,
+            None
+        )
+
+
 class SetsProxy:
 
     __slots__ = "_record"

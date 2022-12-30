@@ -24,9 +24,16 @@ from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.utils.utils import SensorUtils, ZonesUtils
 
 
-class PreferencesZonesLayout(Gtk.Box):
+class PreferencesZonesLayout(Gtk.ScrolledWindow):
     def __init__(self, dialog):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        super().__init__()
+
+        self._box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        self._box.set_margin_top(20)
+        self._box.set_margin_bottom(20)
+        self._box.set_margin_start(20)
+        self._box.set_margin_end(20)
+        self.set_child(self._box)
 
         self._dialog = dialog
         self._hr_max = dialog.get_pref(AppPreferences.HEART_RATE_MAX)
@@ -34,11 +41,9 @@ class PreferencesZonesLayout(Gtk.Box):
 
         self._title = Gtk.Label.new(_("Training Heart Rate Zones"))
         self._title.get_style_context().add_class("pyot-h3")
-        self._title.set_margin_top(20)
 
         self._help_text = Gtk.Label.new(_("Configure your training heart rate zones"))
         self._help_text.get_style_context().add_class("pyot-prefs-help")
-        self._help_text.set_margin_bottom(20)
 
         self._content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self._content_box.set_hexpand(False)
@@ -113,9 +118,9 @@ class PreferencesZonesLayout(Gtk.Box):
         self._content_box.append(self._max_hr_hint_label)
         self._content_box.append(self._zones_grid)
 
-        self.append(self._title)
-        self.append(self._help_text)
-        self.append(self._content_box)
+        self._box.append(self._title)
+        self._box.append(self._help_text)
+        self._box.append(self._content_box)
 
         self._set_zones()
 
