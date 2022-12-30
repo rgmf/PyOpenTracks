@@ -16,8 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-import threading
-
 from gi.repository import Gtk, GLib, GdkPixbuf
 from pyopentracks.app_activity_analytic import AppActivityAnalytic
 
@@ -27,7 +25,9 @@ from pyopentracks.utils import logging as pyot_logging
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.activity_stats_layout import ActivityStatsLayout
 from pyopentracks.models.database_helper import DatabaseHelper
-from pyopentracks.views.dialogs import QuestionDialog, ActivityEditDialog
+from pyopentracks.views.dialogs import (
+    PyotDialog, ActivityEditDialog, ActivitiesRemoveDialog
+)
 from pyopentracks.utils.utils import TypeActivityUtils
 from pyopentracks.views.layouts.process_view import QueuedProcessesView
 from pyopentracks.tasks.altitude_correction import AltitudeCorrection
@@ -106,13 +106,14 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         pass
 
     def on_remove_bulk(self, widget, treeiter_list):
+        dialog = PyotDialog(self._app.get_window())
 
-        def on_response(dialog, response):
-            dialog.close()
-            if response != Gtk.ResponseType.OK:
-                return
+        def on_cancel(button):
+            dialog.destroy()
 
-            def deletion_done():
+        def on_ok(button):
+            dialog.destroy()
+            def deletion_done(response):
                 childiters = [
                     self._tree_model_filter.convert_iter_to_child_iter(treeiter)
                     for treeiter in treeiter_list
@@ -123,25 +124,17 @@ class ActivitiesLayout(Gtk.Paned, Layout):
                 self._tree_view_widget.set_sensitive(True)
                 self._select_first_row()
 
-            def delete_in_thread():
-                total = len(treeiter_list)
-                done = 0
-                for treeiter in treeiter_list:
-                    self._remove_item_from_db(treeiter)
-                    done = done + 1
-                    self._app.get_window().loading(done / total)
-                GLib.idle_add(deletion_done)
+            activities_ids = [
+                self._tree_model_filter.get_value(treeiter, 0) for treeiter in treeiter_list
+            ]
+            removeDialog = ActivitiesRemoveDialog(self._app.get_window(), activities_ids, on_response_cb=deletion_done)
+            removeDialog.show_and_run()
 
-            self._tree_view_widget.set_sensitive(False)
-            threading.Thread(target=delete_in_thread, daemon=True).start()
-
-        dialog = QuestionDialog(
-            parent=self._app.get_window(),
-            title=_("Remove Activities"),
-            question=_(f"Do you really want to remove all selected activities?")
-        )
-        dialog.show()
-        dialog.connect("response", on_response)
+        dialog.with_title(_("Remove Activities"))\
+            .with_image_and_text("question-round-symbolic", _(f"Do you really want to remove all selected activities?"))\
+            .with_cancel_button(on_cancel)\
+            .with_ok_button(on_ok)\
+            .show()
 
     def on_remove(self, widget, treeiter):
         """Callback to remove the treeiter item from list store.
@@ -153,22 +146,22 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in
                     the Gtk.TreeView through the model.
         """
-        def on_response(dialog, response):
-            if response != Gtk.ResponseType.OK:
-                dialog.close()
-                return
+        dialog = PyotDialog(self._app.get_window())
+
+        def on_cancel(button):
+            dialog.destroy()
+
+        def on_ok(button):
             self._remove_item_from_db(treeiter)
             self._remove_item_from_list_store(treeiter)
-            dialog.close()
+            dialog.destroy()
 
         activity_name = self._tree_model_filter.get_value(treeiter, 1)
-        dialog = QuestionDialog(
-            parent=self._app.get_window(),
-            title=_("Remove Activity"),
-            question=_(f"Do you really want to remove activity {activity_name}?")
-        )
-        dialog.show()
-        dialog.connect("response", on_response)
+        dialog.with_title(_("Remove Activity"))\
+            .with_image_and_text("question-round-symbolic", _(f"Do you really want to remove activity {activity_name}?"))\
+            .with_cancel_button(on_cancel)\
+            .with_ok_button(on_ok)\
+            .show()
 
     def on_edit(self, widget, treeiter):
         """Callback to edit the treeiter item from list store.
@@ -180,12 +173,8 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         treeiter -- the Gtk.TreeIter that can be used to access to the node in
                     the Gtk.TreeView through the model.
         """
-        def on_response(dialog, response):
-            if response != Gtk.ResponseType.OK:
-                dialog.close()
-                return
-
-            activity = dialog.get_activity()
+        def on_ok_button_clicked(button):
+            activity = dialog.get_object()
             self._tree_model_filter.set_value(treeiter, 1, activity.name)
             self._tree_model_filter.set_value(
                 treeiter, 2, TypeActivityUtils.get_icon_pixbuf(activity.category, 32, 32)
@@ -197,9 +186,8 @@ class ActivitiesLayout(Gtk.Paned, Layout):
         activity_id = self._tree_model_filter.get_value(treeiter, 0)
 
         activity = DatabaseHelper.get_activity_by_id(activity_id)
-        dialog = ActivityEditDialog(parent=self._app.get_window(), activity=activity)
+        dialog = ActivityEditDialog(self._app.get_window(), activity, on_ok_button_clicked)
         dialog.show()
-        dialog.connect("response", on_response)
 
     def on_analytic(self, widget, treeiter):
         """Callback to open analytic for the treeiter item.
@@ -343,3 +331,4 @@ class ActivitiesLayout(Gtk.Paned, Layout):
             self._current_model_filter = None
             self._tree_model_filter.refilter()
             self._select_first_row()
+

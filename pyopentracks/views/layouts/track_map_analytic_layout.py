@@ -35,7 +35,7 @@ from pyopentracks.views.layouts.track_map_layout import TrackInteractiveMapLayou
 from pyopentracks.views.layouts.create_segment_layout import CreateSegmentLayout
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.activity_summary_layout import TrackActivitySummaryStatsLayout
-from pyopentracks.io.proxy.proxy import TrackActivityStatsProxy
+from pyopentracks.io.proxy.proxy import TrackActivityStatsStatsProxy
 
 
 class TrackMapAnalyticLayout(Gtk.Box, Layout):
@@ -154,7 +154,7 @@ class TrackMapAnalyticLayout(Gtk.Box, Layout):
 
         track_activity_stats = TrackActivityStats()
         track_activity_stats.compute(self._track_points)
-        self._stats = TrackActivityStatsProxy(track_activity_stats).to_stats()
+        self._stats = TrackActivityStatsStatsProxy(track_activity_stats).to_stats()
 
         self._content_box.append(TrackActivitySummaryStatsLayout(self._stats, self._activity.category, 4))
 

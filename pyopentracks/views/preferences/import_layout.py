@@ -23,17 +23,23 @@ from pyopentracks.app_preferences import AppPreferences
 from pyopentracks.views.file_chooser import FolderChooserWindow
 
 
-class PreferencesImportLayout(Gtk.Box):
+class PreferencesImportLayout(Gtk.ScrolledWindow):
 
     def __init__(self, dialog):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        super().__init__()
 
         self._dialog = dialog
+
+        self._box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        self._box.set_margin_top(20)
+        self._box.set_margin_bottom(20)
+        self._box.set_margin_start(20)
+        self._box.set_margin_end(20)
+        self.set_child(self._box)
 
         self._title = Gtk.Label.new(_("Auto-import folder"))
         self._title.get_style_context().add_class("pyot-h3")
         self._title.set_halign(Gtk.Align.CENTER)
-        self._title.set_margin_top(20)
 
         self._help_text = Gtk.Label.new(_(
             "Select a folder to import automatically new activity files. "
@@ -41,7 +47,7 @@ class PreferencesImportLayout(Gtk.Box):
         ))
         self._help_text.get_style_context().add_class("pyot-prefs-help")
         self._help_text.set_halign(Gtk.Align.CENTER)
-        self._help_text.set_margin_bottom(20)
+        self._help_text.set_wrap(True)
 
         self._content_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self._content_box.set_halign(Gtk.Align.CENTER)
@@ -58,9 +64,9 @@ class PreferencesImportLayout(Gtk.Box):
         self._content_box.append(self._switch)
         self._content_box.append(self._select_folder_button)
 
-        self.append(self._title)
-        self.append(self._help_text)
-        self.append(self._content_box)
+        self._box.append(self._title)
+        self._box.append(self._help_text)
+        self._box.append(self._content_box)
 
     def _on_select_folder_button_clicked(self, button):
         def on_response(dialog, response):
@@ -80,3 +86,4 @@ class PreferencesImportLayout(Gtk.Box):
             self._select_folder_button.set_sensitive(False)
             self._select_folder_button.set_label(_("Select a folder..."))
             self._dialog.set_pref(AppPreferences.AUTO_IMPORT_FOLDER, "")
+

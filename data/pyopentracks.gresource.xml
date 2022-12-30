@@ -39,5 +39,6 @@
 
     <file>icons/percentage-symbol.svg</file>
     <file>icons/error-app-symbolic.svg</file>
+    <file>icons/question-round-symbolic.svg</file>
   </gresource>
 </gresources>

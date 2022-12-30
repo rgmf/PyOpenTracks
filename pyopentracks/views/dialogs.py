@@ -16,143 +16,177 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+import threading
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 
 from pyopentracks.io.import_handler import ImportHandler
 from pyopentracks.io.export_handler import ExportAllHandler
 from pyopentracks.io.importer.importer import ImportResult
 from pyopentracks.utils.utils import TypeActivityUtils as TAU
+from pyopentracks.models.database_helper import DatabaseHelper
 
 
-class QuestionDialog(Gtk.Dialog):
+class PyotDialog(Gtk.Window):
+    """General class to create modal windows (dialogs) for the app.
 
-    def __init__(self, parent, title, question):
-        Gtk.Dialog.__init__(
-            self,
-            title=title,
-            transient_for=parent
-        )
-        btn1 = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
-        btn1.set_margin_start(10)
-        btn1.set_margin_end(10)
-        btn1.set_margin_top(10)
-        btn1.set_margin_bottom(20)
-        btn2 = self.add_button(_("Ok"), Gtk.ResponseType.OK)
-        btn2.set_margin_end(20)
-        btn2.set_margin_top(10)
-        btn2.set_margin_bottom(20)
+    This Gtk.Window contains a grid inside a scrolled window. This grid has
+    4 columns. Child classes can create a dialog with some flexible features.
+    """
 
-        self.set_default_size(150, 100)
-
-        label = Gtk.Label(label=question)
-
-        box = self.get_content_area()
-        box.set_margin_top(20)
-        box.set_margin_bottom(20)
-        box.set_margin_start(20)
-        box.set_margin_end(20)
-        box.append(label)
-
-
-class MessageDialogError(Gtk.Window):
-
-    def __init__(self, transient_for, title, text):
+    def __init__(self, parent: Gtk.Window):
         super().__init__()
 
-        self.set_transient_for(transient_for)
+        # Window configuration
+        self.set_transient_for(parent)
         self.set_modal(True)
         self.set_default_size(600, 400)
+        self.set_titlebar(Gtk.HeaderBar())
 
-        button = Gtk.Button.new_with_label(_("Ok"))
-        button.connect("clicked", lambda *_: self.destroy())
-
-        header_bar = Gtk.HeaderBar()
-        header_bar.pack_start(button)
-        self.set_titlebar(header_bar)
+        # Child of the window: a scrolled window which contains a grid
+        self._grid = Gtk.Grid()
+        self._grid.set_margin_top(20)
+        self._grid.set_margin_bottom(20)
+        self._grid.set_margin_start(20)
+        self._grid.set_margin_end(20)
+        self._grid.set_column_spacing(20)
+        self._grid.set_row_spacing(20)
+        self._grid.set_halign(Gtk.Align.CENTER)
 
         scrolled_window = Gtk.ScrolledWindow()
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
-        title_lbl = Gtk.Label.new(title)
-        title_lbl.get_style_context().add_class("pyot-h3")
-        title_lbl.set_margin_top(30)
-        box_image_text = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
-        box_image_text.set_halign(Gtk.Align.CENTER)
-        box_image_text.set_margin_start(20)
-        box_image_text.set_margin_end(20)
-        image = Gtk.Image.new_from_icon_name("error-app-symbolic")
-        image.set_pixel_size(24)
-        text_lbl = Gtk.Label.new(text)
-        text_lbl.set_wrap(True)
-        box_image_text.append(image)
-        box_image_text.append(text_lbl)
-        box.append(title_lbl)
-        box.append(box_image_text)
-
-        scrolled_window.set_child(box)
+        scrolled_window.set_child(self._grid)
 
         self.set_child(scrolled_window)
 
+    def with_size(self, w: int, h: int):
+        self.set_default_size(w, h)
+        return self
 
-class ImportExportResultDialog(Gtk.Dialog):
+    def with_cancel_button(self, on_clicked_cb):
+        button = Gtk.Button.new_with_label(_("Cancel"))
+        button.connect("clicked", on_clicked_cb)
+        self.get_titlebar().pack_start(button)
+        return self
+
+    def with_ok_button(self, on_clicked_cb):
+        button = Gtk.Button.new_with_label(_("Ok"))
+        button.connect("clicked", on_clicked_cb)
+        self.get_titlebar().pack_end(button)
+        return self
+
+    def with_accept_button(self):
+        button = Gtk.Button.new_with_label(_("Accept"))
+        button.connect("clicked", lambda b: self.destroy())
+        self.get_titlebar().pack_end(button)
+        return self
+
+    def with_title(self, title: str):
+        """The title is set in the first row and it spans all 4 columns."""
+        label = Gtk.Label.new(title)
+        label.get_style_context().add_class("pyot-h3")
+        label.set_margin_top(10)
+        self._grid.attach(label, 0, 0, 4, 1)
+        return self
+
+    def with_text(self, text: str):
+        """The text is set in the second row and it spans all 4 columns."""
+        label = Gtk.Label.new(text)
+        label.get_style_context().add_class("pyot-p-medium")
+        self._grid.attach(label, 0, 1, 4, 1)
+        return self
+
+    def with_image_and_text(self, image_name: str, text: str):
+        """
+        The image is set in the first column of the second row and it spans 1 column.
+        The text is set in the second column of the second row and it spans all 3 columns.
+        """
+        image = Gtk.Image.new_from_icon_name(image_name)
+        image.set_pixel_size(24)
+        label = Gtk.Label.new(text)
+        label.set_wrap(True)
+        label.get_style_context().add_class("pyot-p-medium")
+        self._grid.attach(image, 0, 1, 1, 1)
+        self._grid.attach(label, 1, 1, 3, 1)
+        return self
+
+
+class ImportExportResultDialog(Gtk.Window):
     def __init__(self, parent, folder, title, text_label, on_response_cb):
-        Gtk.Dialog.__init__(
-            self,
-            title=title,
-            transient_for=parent
-        )
+        super().__init__()
+
+        # General properties
         self._on_response_cb = on_response_cb
         self._handler = None
         self._folder = folder
-        self._box = self.get_content_area()
+
+        self.connect("close-request", self._on_destroy)
+
+        # Header bar with the Ok button
+        header_bar = Gtk.HeaderBar()
+        self._button = Gtk.Button.new_with_label(_("Ok"))
+        self._button.connect("clicked", self._on_button_clicked)
+        self._button.hide()
+        header_bar.pack_start(self._button)
+
+        # The title
+        title_lbl = Gtk.Label.new(title)
+        title_lbl.get_style_context().add_class("pyot-h3")
+        title_lbl.set_margin_top(10)
+
+        # The progress bar
         self._progress = Gtk.ProgressBar()
-        self._label = None
+
+        # Message
         self._text_label = text_label
-        self._list_box = None
-        self._button = self.add_button(_("Ok"), Gtk.ResponseType.ACCEPT)
-        self._setup_ui()
-        self._start()
-
-    def _on_destroy(self, widget, data):
-        if self._handler:
-            self._handler.stop()
-
-    def _setup_ui(self):
-        self._label = Gtk.Label(
-            label=f"{self._text_label}\n{self._folder}"
-        )
+        self._label = Gtk.Label.new(f"{self._text_label}\n{self._folder}")
         self._label.set_margin_top(10)
         self._label.set_margin_bottom(10)
         self._label.set_margin_start(10)
         self._label.set_margin_end(10)
         self._label.get_style_context().add_class("pyot-p-medium")
 
-        self._button.set_margin_top(10)
-        self._button.set_margin_bottom(10)
-        self._button.set_margin_start(10)
-        self._button.set_margin_end(10)
-
-        scrolled_window = Gtk.ScrolledWindow()
+        # List box where errors will be
         self._list_box = Gtk.ListBox()
         self._list_box.set_vexpand(True)
-        scrolled_window.set_child(self._list_box)
+        self._list_box.hide()
+        sw_with_list_box = Gtk.ScrolledWindow()
+        sw_with_list_box.set_child(self._list_box)
 
+        # Main box inside a scrolled window with all the contents
+        scrolled_window = Gtk.ScrolledWindow()
+        self._box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        self._box.set_margin_top(20)
+        self._box.set_margin_bottom(20)
+        self._box.set_margin_start(20)
+        self._box.set_margin_end(20)
+        scrolled_window.set_child(self._box)
+
+        self._box.append(title_lbl)
         self._box.append(self._progress)
         self._box.append(self._label)
-        self._box.append(scrolled_window)
+        self._box.append(sw_with_list_box)
 
-        self.connect("response", self._on_response)
+        # Properties of the window with the content
+        self.set_transient_for(parent)
+        self.set_modal(True)
+        self.set_default_size(800, 600)
+        self.set_titlebar(header_bar)
+        self.set_child(scrolled_window)
 
-        self.set_default_size(400, 300)
+        self._start()
 
-        self._list_box.hide()
-        self._button.hide()
+    def _on_destroy(self, window):
+        self._destroy_and_close()
 
-    def _on_response(self, dialog, response):
-        if response == Gtk.ResponseType.ACCEPT:
-            self.close()
+    def _on_button_clicked(self, button):
+        self._destroy_and_close()
+
+    def _destroy_and_close(self):
+        if self._handler:
+            self._handler.stop()
         if self._on_response_cb:
-            self._on_response_cb(dialog, response)
+            self._on_response_cb(Gtk.ResponseType.ACCEPT)
+        self.destroy()
 
     def _start(self):
         raise NotImplementedError("ImportExportResultDialog._start not implemented")
@@ -240,44 +274,69 @@ class ExportResultDialog(ImportExportResultDialog):
         self._button.show()
 
 
-class ActivityEditDialog(Gtk.Dialog):
-    """Activity's dialog editor.
+class AbstractEditDialog(Gtk.Window):
+    def __init__(self, parent, on_ok_button_clicked_cb):
+        super().__init__()
 
-    This dialog can be used to edit a activity: name, description and
-    activity type (category).
+        # Window configuration
+        self.set_title("PyOpenTracks")
+        self.set_transient_for(parent)
+        self.set_modal(True)
+        self.set_default_size(600, 400)
+        header_bar = Gtk.HeaderBar()
+        self.set_titlebar(header_bar)
 
-    It offers a method (get_activity) to get the activity's changes.
-    """
+        # Child of the window: a scrolled widow which contains a grid
+        self._grid = Gtk.Grid()
+        self._grid.set_margin_top(20)
+        self._grid.set_margin_bottom(20)
+        self._grid.set_margin_start(20)
+        self._grid.set_margin_end(20)
+        self._grid.set_column_spacing(20)
+        self._grid.set_row_spacing(20)
+        self._grid.set_halign(Gtk.Align.CENTER)
 
-    def __init__(self, parent, activity):
-        Gtk.Dialog.__init__(
-            self,
-            title=_("Edit Activity"),
-            transient_for=parent
-        )
-        self._activity = activity
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_child(self._grid)
+
+        self.set_child(scrolled_window)
+
+        # Other widgets
         self._type_list_store = Gtk.ListStore.new([str, str])
-        self._box = self.get_content_area()
-        btn1 = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
-        btn1.set_margin_start(10)
-        btn1.set_margin_end(10)
-        btn1.set_margin_top(10)
-        btn1.set_margin_bottom(20)
-        btn2 = self.add_button(_("Ok"), Gtk.ResponseType.OK)
-        btn2.set_margin_end(20)
-        btn2.set_margin_top(10)
-        btn2.set_margin_bottom(20)
+
+        cancel_button = Gtk.Button.new_with_label(_("Cancel"))
+        cancel_button.connect("clicked", lambda b: self.destroy())
+
+        ok_button = Gtk.Button.new_with_label(_("Ok"))
+        ok_button.connect("clicked", on_ok_button_clicked_cb)
+
+        header_bar.pack_start(cancel_button)
+        header_bar.pack_end(ok_button)
+
+        # Adds entries to the grid
         self._set_data()
 
     def _set_data(self):
-        grid = Gtk.Grid()
-        grid.set_margin_start(20)
-        grid.set_margin_end(20)
-        grid.set_margin_top(20)
-        grid.set_margin_bottom(20)
-        grid.set_column_spacing(10)
-        grid.set_row_spacing(10)
+        raise NotImplementedError()
 
+    def get_object(self):
+        raise NotImplementedError()
+
+
+class ActivityEditDialog(AbstractEditDialog):
+    """Activity's editor.
+
+    This modal Gtk.Window can be used to edit a activity: name, description and
+    activity type (category).
+
+    It offers a method (get_object) to get the activity's changes.
+    """
+    def __init__(self, parent, activity, on_ok_button_clicked_cb):
+        self._activity = activity
+        super().__init__(parent, on_ok_button_clicked_cb)
+        self.set_title("PyOpenTracks: Edit Activity")
+
+    def _set_data(self):
         name_entry = Gtk.Entry()
         name_entry.set_text(self._activity.name)
         name_entry.connect("changed", self._on_name_changed)
@@ -298,20 +357,18 @@ class ActivityEditDialog(Gtk.Dialog):
 
         l1 = Gtk.Label.new(_("Name"))
         l1.set_xalign(0.0)
-        grid.attach(l1, 0, 0, 1, 1)
-        grid.attach(name_entry, 1, 0, 1, 1)
+        self._grid.attach(l1, 0, 0, 1, 1)
+        self._grid.attach(name_entry, 1, 0, 1, 1)
 
         l2 = Gtk.Label.new(_("Description"))
         l2.set_xalign(0.0)
-        grid.attach(l2, 0, 1, 1, 1)
-        grid.attach(desc_entry, 1, 1, 1, 1)
+        self._grid.attach(l2, 0, 1, 1, 1)
+        self._grid.attach(desc_entry, 1, 1, 1, 1)
 
         l3 = Gtk.Label.new(_("Category"))
         l3.set_xalign(0.0)
-        grid.attach(l3, 0, 2, 1, 1)
-        grid.attach(type_combo_box, 1, 2, 1, 1)
-
-        self._box.append(grid)
+        self._grid.attach(l3, 0, 2, 1, 1)
+        self._grid.attach(type_combo_box, 1, 2, 1, 1)
 
     def _on_name_changed(self, entry):
         self._activity.name = entry.get_text()
@@ -325,44 +382,22 @@ class ActivityEditDialog(Gtk.Dialog):
             name, icon = self._type_list_store[iter_item][:2]
             self._activity.category = name
 
-    def get_activity(self):
+    def get_object(self):
         return self._activity
 
 
-class SegmentEditDialog(Gtk.Dialog):
-    """Segment's dialog editor.
+class SegmentEditDialog(AbstractEditDialog):
+    """Segment's editor.
 
-    It offers a method (get_segment) to get the segment's changes.
+    It offers a method (get_object) to get the segment's changes.
     """
 
-    def __init__(self, parent, segment):
-        Gtk.Dialog.__init__(
-            self,
-            title=_("Edit Segment"),
-            transient_for=parent
-        )
+    def __init__(self, parent, segment, on_ok_button_clicked_cb):
         self._segment = segment
-        self._box = self.get_content_area()
-        btn1 = self.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
-        btn1.set_margin_start(10)
-        btn1.set_margin_end(10)
-        btn1.set_margin_top(10)
-        btn1.set_margin_bottom(20)
-        btn2 = self.add_button(_("Ok"), Gtk.ResponseType.OK)
-        btn2.set_margin_end(20)
-        btn2.set_margin_top(10)
-        btn2.set_margin_bottom(20)
-        self._set_data()
+        super().__init__(parent, on_ok_button_clicked_cb)
+        self.set_title("PyOpenTracks: Edit Segment")
 
     def _set_data(self):
-        grid = Gtk.Grid()
-        grid.set_margin_start(20)
-        grid.set_margin_end(20)
-        grid.set_margin_top(20)
-        grid.set_margin_bottom(20)
-        grid.set_column_spacing(10)
-        grid.set_row_spacing(10)
-
         name = Gtk.Entry()
         name.set_text(self._segment.name)
         name.connect("changed", self._on_name_changed)
@@ -370,14 +405,99 @@ class SegmentEditDialog(Gtk.Dialog):
         label = Gtk.Label.new(_("Name"))
         label.set_xalign(0.0)
 
-        grid.attach(label, 0, 0, 1, 1)
-        grid.attach(name, 1, 0, 1, 1)
-
-        self._box.append(grid)
+        self._grid.attach(label, 0, 0, 1, 1)
+        self._grid.attach(name, 1, 0, 1, 1)
 
     def _on_name_changed(self, entry):
         self._segment.name = entry.get_text()
 
-    def get_segment(self):
+    def get_object(self):
         return self._segment
+
+class ActivitiesRemoveDialog(Gtk.Window):
+    """Modal Gtk.Window to remove a set of activities on background"""
+
+    def __init__(self, parent, activities_ids, on_response_cb):
+        super().__init__()
+
+        # General properties
+        self._on_response_cb = on_response_cb
+        self._activities_ids = activities_ids
+
+        self.connect("close-request", self._on_destroy)
+
+        # Header bar with the Ok button
+        header_bar = Gtk.HeaderBar()
+        self._button = Gtk.Button.new_with_label(_("Ok"))
+        self._button.connect("clicked", self._on_button_clicked)
+        self._button.hide()
+        header_bar.pack_start(self._button)
+
+        # The title
+        self._title_lbl = Gtk.Label.new(_("Removing activities..."))
+        self._title_lbl.get_style_context().add_class("pyot-h3")
+        self._title_lbl.set_margin_top(10)
+
+        # The progress bar
+        self._progress = Gtk.ProgressBar()
+
+        # Message
+        self._label = Gtk.Label.new(f"0 / {len(activities_ids)}")
+        self._label.set_margin_top(10)
+        self._label.set_margin_bottom(10)
+        self._label.set_margin_start(10)
+        self._label.set_margin_end(10)
+        self._label.get_style_context().add_class("pyot-p-medium")
+
+        # Main box inside a scrolled window with all the contents
+        scrolled_window = Gtk.ScrolledWindow()
+        self._box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        self._box.set_margin_top(20)
+        self._box.set_margin_bottom(20)
+        self._box.set_margin_start(20)
+        self._box.set_margin_end(20)
+        scrolled_window.set_child(self._box)
+
+        self._box.append(self._title_lbl)
+        self._box.append(self._progress)
+        self._box.append(self._label)
+
+        # Properties of the window with the content
+        self.set_transient_for(parent)
+        self.set_modal(True)
+        self.set_default_size(600, 400)
+        self.set_titlebar(header_bar)
+        self.set_child(scrolled_window)
+
+    def show_and_run(self):
+        self.show()
+        threading.Thread(target=self._delete_in_thread, daemon=True).start()
+
+    def _delete_in_thread(self):
+        done = 0
+        total = len(self._activities_ids)
+        for id in self._activities_ids:
+            try:
+                activity = DatabaseHelper.get_activity_by_id(id)
+                DatabaseHelper.delete(activity)
+                done += 1
+                self._label.set_text(f"{done} / {total}")
+                self._progress.set_fraction(done/total)
+            except ValueError:
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: deleting activity {id}"
+                )
+        GLib.idle_add(self._deletion_done)
+
+    def _deletion_done(self):
+        self._title_lbl.set_text(_(f"Activities deleted: {len(self._activities_ids)}"))
+        self._button.show()
+
+    def _on_destroy(self, window):
+        self._on_response_cb(Gtk.ResponseType.ACCEPT)
+        self.destroy()
+
+    def _on_button_clicked(self, button):
+        self._on_response_cb(Gtk.ResponseType.ACCEPT)
+        self.destroy()
 
