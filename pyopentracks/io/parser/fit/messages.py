@@ -447,6 +447,14 @@ class FitSessionMessage:
     )
 
     def __init__(self, mesg: fitparse.records.DataMessage):
+        self.sub_sport = None
+        self.total_elapsed_time = None
+        self.avg_heart_rate = None
+        self.max_heart_rate = None
+        self.avg_temperature = None
+        self.max_temperature = None
+        self.total_calories = None
+
         for field_name, value in mesg.get_values().items():
             if field_name == "unknown_110":
                 self.sub_sport = value
@@ -474,3 +482,4 @@ class FitSessionMessage:
                 self.max_temperature if self.max_temperature is not None else 0,
                 self.total_calories if self.total_calories is not None else 0
             )
+
