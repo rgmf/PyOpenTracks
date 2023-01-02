@@ -372,8 +372,15 @@ class SegmentsListLayout(Gtk.Box):
 
         def on_response(dialog, response):
             if response == Gtk.ResponseType.ACCEPT:
-                with open(SanitizeFile.fit_file(dialog.get_file().get_path()), "wb") as fd:
-                    fd.write(fit_segment)
+                try:
+                    with open(SanitizeFile.fit_file(dialog.get_file().get_path()), "wb") as fd:
+                        fd.write(fit_segment)
+                except Exception as e:
+                    PyotDialog(self._app.get_window())\
+                        .with_title(_(f"Segment '{segment.name}' cannot be exported"))\
+                        .with_image_and_text("error-app-symbolic", str(e))\
+                        .with_accept_button()\
+                        .show()
 
         dialog = ExportSegmentChooserDialog(
             parent=self._app.get_window(),

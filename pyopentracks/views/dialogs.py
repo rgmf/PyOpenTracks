@@ -49,7 +49,7 @@ class PyotDialog(Gtk.Window):
         self._grid.set_margin_bottom(20)
         self._grid.set_margin_start(20)
         self._grid.set_margin_end(20)
-        self._grid.set_column_spacing(20)
+        self._grid.set_column_spacing(5)
         self._grid.set_row_spacing(20)
         self._grid.set_halign(Gtk.Align.CENTER)
 
@@ -84,6 +84,7 @@ class PyotDialog(Gtk.Window):
         """The title is set in the first row and it spans all 4 columns."""
         label = Gtk.Label.new(title)
         label.get_style_context().add_class("pyot-h3")
+        label.set_wrap(True)
         label.set_margin_top(10)
         self._grid.attach(label, 0, 0, 4, 1)
         return self
@@ -92,6 +93,8 @@ class PyotDialog(Gtk.Window):
         """The text is set in the second row and it spans all 4 columns."""
         label = Gtk.Label.new(text)
         label.get_style_context().add_class("pyot-p-medium")
+        label.set_wrap(True)
+        label.set_xalign(0.0)
         self._grid.attach(label, 0, 1, 4, 1)
         return self
 
@@ -101,9 +104,9 @@ class PyotDialog(Gtk.Window):
         The text is set in the second column of the second row and it spans all 3 columns.
         """
         image = Gtk.Image.new_from_icon_name(image_name)
-        image.set_pixel_size(24)
         label = Gtk.Label.new(text)
         label.set_wrap(True)
+        label.set_xalign(0.0)
         label.get_style_context().add_class("pyot-p-medium")
         self._grid.attach(image, 0, 1, 1, 1)
         self._grid.attach(label, 1, 1, 3, 1)
