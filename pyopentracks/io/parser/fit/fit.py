@@ -96,8 +96,6 @@ class FitTrackActivity(Fit):
         for mesg in [m for m in self._fitfile.messages if m.name in ("record", "event", "session")]:
             if mesg.name == "record" and not is_event_stopped:
                 point = FitRecordMessage(mesg, gain_loss_manager).point
-                last_altitude = point.altitude
-                gain_loss_manager.add(last_altitude)
                 is_moving = self._is_moving(point, last_point)
                 record.set_min_temperature(point.temperature)
                 last_point = point

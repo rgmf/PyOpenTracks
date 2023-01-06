@@ -24,7 +24,7 @@ class GainLossManager:
     # Ignore differences of DIFF_THRESHOLD between two consecutive altitudes.
     DIFF_THRESHOLD = 5
     # Elevation accumulation threshold to add gain or loss.
-    ACCUM_THRESHOLD = 0.2
+    ACCUM_THRESHOLD = 0.7
 
     def __init__(self):
         self._last_altitude = None
@@ -64,8 +64,6 @@ class GainLossManager:
             if self._loss_accum > GainLossManager.ACCUM_THRESHOLD:
                 self._loss += self._loss_accum
                 self._loss_accum = 0
-        else:
-            self._gain_accum = self._loss_accum = 0
 
         self._last_altitude = altitude
 
@@ -75,3 +73,4 @@ class GainLossManager:
         self._total_gain += gain
         self._total_loss += loss
         return gain, loss
+

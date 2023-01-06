@@ -335,7 +335,10 @@ class FitRecordMessage:
         self._point.time = dt_to_aware_locale_ms(values["timestamp"]) if "timestamp" in values else None
         self._point.speed = self._value(values, "enhanced_speed", "speed")
         self._point.altitude = self._value(values, "enhanced_altitude", "altitude")
+
+        manager.add(self._point.altitude)
         self._point.gain, self._point.loss = manager.get_and_reset()
+
         self._point.heart_rate = values["heart_rate"] if "heart_rate" in values else None
         self._point.cadence = values["cadence"] if "cadence" in values else None
         if self._point.cadence is not None:
