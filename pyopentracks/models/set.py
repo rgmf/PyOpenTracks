@@ -16,14 +16,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-from pyopentracks.io.parser.fit.messages import EXERCISE_CATEGORY, SetType
+from pyopentracks.io.parser.fit.messages import EXERCISE_CATEGORY, SetType, SetResult
 from pyopentracks.utils.utils import SensorUtils, TimeUtils
 from .model import Model
 
 
 class Set(Model):
     __slots__ = (
-        "_id", "type", "exercise_category", "weight", "repetitions", 
+        "_id", "type", "result", "exercise_category", "weight", "repetitions",
         "avghr", "maxhr", "time", "calories", "temperature", "difficulty",
         "stats_id"
     )
@@ -40,22 +40,23 @@ class Set(Model):
         super().__init__()
         self._id = args[0] if args else None
         self.type = args[1] if args else None
-        self.exercise_category = args[2] if args else None
-        self.weight = args[3] if args else None
-        self.repetitions = args[4] if args else None
-        self.avghr = args[5] if args else None
-        self.maxhr = args[6] if args else None
-        self.time = args[7] if args else None
-        self.calories = args[8] if args else None
-        self.temperature = args[9] if args else None
-        self.difficulty = args[10] if args else None
-        self.stats_id = args[11] if args else None
+        self.result = args[2] if args else None
+        self.exercise_category = args[3] if args else None
+        self.weight = args[4] if args else None
+        self.repetitions = args[5] if args else None
+        self.avghr = args[6] if args else None
+        self.maxhr = args[7] if args else None
+        self.time = args[8] if args else None
+        self.calories = args[9] if args else None
+        self.temperature = args[10] if args else None
+        self.difficulty = args[11] if args else None
+        self.stats_id = args[12] if args else None
 
     @property
     def insert_query(self):
         """Returns the query for inserting a Set register."""
         return """
-        INSERT INTO sets VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO sets VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
     @property
@@ -77,7 +78,7 @@ class Set(Model):
         Maintain the database table sets order of the fields.
         """
         return (
-            self._id, self.type, self.exercise_category, self.weight,
+            self._id, self.type, self.result, self.exercise_category, self.weight,
             self.repetitions, self.avghr, self.maxhr, self.time,
             self.calories, self.temperature, self.difficulty,
             self.stats_id
@@ -92,6 +93,24 @@ class Set(Model):
 
     def type_value(self, active_label=_("Active"), resting_label=_("Resting")):
         return resting_label if SetType.REST.value == self.type else active_label
+
+    @property
+    def result_label(self):
+        return _("Result")
+
+    @property
+    def result_value(self):
+        if self.result == SetResult.COMPLETED.value:
+            return _("Completed")
+        if self.result == SetResult.ATTEMPTED.value:
+            return _("Attempted")
+        if self.result == SetResult.DISCARDED.value:
+            return _("Discarded")
+        return "-"
+
+    @property
+    def is_resting(self):
+        return self.type == SetType.REST.value or self.result == SetResult.DISCARDED.value
 
     @property
     def exercise_category_label(self):
@@ -170,3 +189,4 @@ class Set(Model):
         if int(self.difficulty) >= len(Set.DIFFICULTIES):
             return "-"
         return Set.DIFFICULTIES[int(self.difficulty)]
+

@@ -23,7 +23,7 @@ from pyopentracks.models.set import Set
 
 from pyopentracks.models.stats import Stats
 from pyopentracks.models.activity import Activity
-from pyopentracks.utils.utils import TypeActivityUtils, TrackPointUtils, DistanceUtils
+from pyopentracks.utils.utils import TypeActivityUtils, TrackPointUtils, DistanceUtils, TimeUtils
 from pyopentracks.views.graphs import LinePlot
 from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.track_map_layout import TrackMapLayout
@@ -195,7 +195,7 @@ class SetActivitySummaryLayout(Gtk.ScrolledWindow, Layout):
         super().__init__()
         Layout.__init__(self)
 
-        self._main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self._main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self._main_box.set_hexpand(True)
         self._main_box.set_vexpand(True)
         self._info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -218,7 +218,7 @@ class SetActivitySummaryLayout(Gtk.ScrolledWindow, Layout):
 
         # Add activity stats.
         if self._activity.stats:
-            self._info_box.append(SetActivitySummaryStatsLayout(self._activity.stats))
+            self._info_box.append(SetActivitySummaryStatsLayout(self._activity.stats, columns=4))
         else:
             self._info_box.append(Gtk.Label.new(_("There are not stats")))
 
@@ -383,11 +383,14 @@ class SetActivitySetsLayout(Gtk.Grid):
     def __init__(self, sets: List[Set]):
         super().__init__()
 
-        self.set_column_spacing(20)
-        self.set_row_spacing(30)
+        self.set_margin_top(30)
+        self.set_margin_bottom(30)
+        self.set_margin_start(30)
+        self.set_margin_bottom(30)
+
+        self.set_column_spacing(10)
+        self.set_row_spacing(10)
         self.set_column_homogeneous(False)
-        self.set_margin_start(10)
-        self.set_margin_end(10)
 
         self._sets = sets
         self._columns = len(self._sets)
@@ -412,57 +415,130 @@ class SetActivitySetsLayout(Gtk.Grid):
             label.set_xalign(0.0)
             label.set_justify(0.5)
 
-            self.attach(label, column=idx, row=self._row, width=1, height=1)
+            box = Gtk.Box(spacing=10, orientation=Gtk.Orientation.VERTICAL)
+            box.get_style_context().add_class("pyot-stats-bg-color")
+            box.set_homogeneous(False)
+            box.append(label)
+
+            self.attach(box, column=idx, row=self._row, width=1, height=1)
         self._row += 1
 
 
 class ClimbingSetsLayout(SetActivitySetsLayout):
 
     def build(self):
-        self._add_header([
-            self._sets[0].type_label,
-            self._sets[0].time_label,
-            self._sets[0].avghr_label,
-            self._sets[0].maxhr_label,
-            self._sets[0].calories_label,
-            self._sets[0].temperature_label,
-            self._sets[0].difficulty_label
-        ])
+        avghrs = any(filter(lambda s: s.avghr is not None, self._sets))
+        maxhrs = any(filter(lambda s: s.maxhr is not None, self._sets))
+        calories = any(filter(lambda s: s.calories is not None, self._sets))
+        temperatures = any(filter(lambda s: s.temperature is not None, self._sets))
+        difficulties = any(filter(lambda s: s.difficulty is not None, self._sets))
+
+        labels = ['#', self._sets[0].result_label, self._sets[0].time_label]
+        if avghrs:
+            labels.append(self._sets[0].avghr_label)
+        if maxhrs:
+            labels.append(self._sets[0].maxhr_label)
+        if calories:
+            labels.append(self._sets[0].calories_label)
+        if temperatures:
+            labels.append(self._sets[0].temperature_label)
+        if difficulties:
+            labels.append(self._sets[0].difficulty_label)
+        labels.append(_("Resting"))
+
+        self._add_header(labels)
+        count = 1
+        resting_time = 0
+        resting_ready = False
+        data_ready = False
         for set in self._sets:
-            self._add_row([
-                set.type_value(_("Climbing")),
-                set.time_value,
-                set.avghr_value,
-                set.maxhr_value,
-                set.calories_value,
-                set.temperature_value,
-                set.difficulty_value
-            ])
+            if set.is_resting:
+                resting_time += set.time
+                resting_ready = True
+            else:
+                datas = [str(count), set.result_value, set.time_value]
+                if avghrs:
+                    datas.append(set.avghr_value)
+                if maxhrs:
+                    datas.append(set.maxhr_value)
+                if calories:
+                    datas.append(set.calories_value)
+                if temperatures:
+                    datas.append(set.temperature_value)
+                if difficulties:
+                    datas.append(set.difficulty_value)
+                data_ready = True
+
+            if resting_ready and data_ready:
+                datas.append(TimeUtils.ms_to_str(resting_time, True))
+                self._add_row(datas)
+                resting_time = 0
+                resting_ready = False
+                data_ready = False
+                count += 1
+
+        if resting_ready and data_ready:
+            datas.append(TimeUtils.ms_to_str(resting_time, True))
+            self._add_row(datas)
 
 
 class TrainingSetsLayout(SetActivitySetsLayout):
     
     def build(self):
-        self._add_header([
-            self._sets[0].type_label,
-            self._sets[0].time_label,
-            self._sets[0].exercise_category_label,
-            self._sets[0].weight_label,
-            self._sets[0].repetitions_label,
-            self._sets[0].avghr_label,
-            self._sets[0].maxhr_label,
-            self._sets[0].calories_label,
-            self._sets[0].temperature_label
-        ])
+        weights = any(filter(lambda s: s.weight is not None, self._sets))
+        avghrs = any(filter(lambda s: s.avghr is not None, self._sets))
+        maxhrs = any(filter(lambda s: s.maxhr is not None, self._sets))
+        calories = any(filter(lambda s: s.calories is not None, self._sets))
+        temperatures = any(filter(lambda s: s.temperature is not None, self._sets))
+
+        labels = [
+            '#', self._sets[0].exercise_category_label, self._sets[0].time_label,
+            self._sets[0].repetitions_label
+        ]
+        if weights:
+            labels.append(self._sets[0].weight_label)
+        if avghrs:
+            labels.append(self._sets[0].avghr_label)
+        if maxhrs:
+            labels.append(self._sets[0].maxhr_label)
+        if calories:
+            labels.append(self._sets[0].calories_label)
+        if temperatures:
+            labels.append(self._sets[0].temperature_label)
+        labels.append(_("Resting"))
+
+        self._add_header(labels)
+        count = 1
+        resting_time = 0
+        resting_ready = False
+        data_ready = False
         for set in self._sets:
-            self._add_row([
-                set.type_value(),
-                set.time_value,
-                set.exercise_category_value,
-                set.weight_value,
-                set.repetitions_value,
-                set.avghr_value,
-                set.maxhr_value,
-                set.calories_value,
-                set.temperature_value
-            ])
+            if set.is_resting:
+                resting_time += set.time
+                resting_ready = True
+            else:
+                datas = [str(count), set.exercise_category_value, set.time_value, set.repetitions_value]
+                if weights:
+                    datas.append(set.weight_value)
+                if avghrs:
+                    datas.append(set.avghr_value)
+                if maxhrs:
+                    datas.append(set.maxhr_value)
+                if calories:
+                    datas.append(set.calories_value)
+                if temperatures:
+                    datas.append(set.temperature_value)
+                data_ready = True
+
+            if resting_ready and data_ready:
+                datas.append(TimeUtils.ms_to_str(resting_time, True))
+                self._add_row(datas)
+                resting_time = 0
+                resting_ready = False
+                data_ready = False
+                count += 1
+
+        if resting_ready and data_ready:
+            datas.append(TimeUtils.ms_to_str(resting_time, True))
+            self._add_row(datas)
+

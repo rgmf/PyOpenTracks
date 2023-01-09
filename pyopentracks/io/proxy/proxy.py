@@ -62,6 +62,7 @@ class RecordProxy:
         for set in self._record.sets:
             set_model = SetModel()
             set_model.type = set.type
+            set_model.result = set.result
             set_model.exercise_category = set.exercise_category
             set_model.weight = set.weight
             set_model.repetitions = set.repetitions

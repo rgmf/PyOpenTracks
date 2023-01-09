@@ -47,7 +47,7 @@ class SetType(Enum):
 class SetResult(Enum):
     DISCARDED = 0
     COMPLETED = 1
-    TRIED = 2
+    ATTEMPTED = 2
 
 
 EXERCISE_CATEGORY = {
@@ -409,7 +409,7 @@ class FitClimbMessage:
             elif field_name == ClimbField.ACTION:
                 self.set.type = SetType.ACTIVE.value if value == 9 else SetType.REST.value
             elif field_name == ClimbField.RESULT and (value == 3 or value == 2):
-                self.set.result = SetResult.COMPLETED.value if value == 3 else SetResult.TRIED.value
+                self.set.result = SetResult.COMPLETED.value if value == 3 else SetResult.ATTEMPTED.value
             elif field_name == ClimbField.DISCARDED and value == 0:
                 self.set.result = SetResult.DISCARDED.value
         

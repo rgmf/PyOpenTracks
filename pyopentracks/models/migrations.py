@@ -127,6 +127,7 @@ class Migration:
             CREATE TABLE sets (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
                 type INTEGER,
+                result INTEGER,
                 exercisecategory INTEGER,
                 weight FLOAT,
                 repetitions INT,
