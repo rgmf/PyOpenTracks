@@ -46,11 +46,19 @@ class TrackMapLayout(Shumate.SimpleMap):
         self._start_marker.hide()
         self._end_marker = self._add_marker_from_icon_name("location-end")
         self._end_marker.hide()
-        self._location_marker = self._add_marker_from_icon_name("view-pin-symbolic")
+        self._location_marker = self._add_marker_from_icon_name("location-position")
         self._location_marker.hide()
 
         self._path_layer = Shumate.PathLayer.new(self.get_viewport())
+        self._path_layer.set_stroke_width(3)
         self.add_overlay_layer(self._path_layer)
+
+        self._hightlight_layer = Shumate.PathLayer.new(self.get_viewport())
+        rgba_black = Gdk.RGBA()
+        rgba_black.red, rgba_black.green, rgba_black.blue, rgba_black.alpha = 0, 0, 0, 1
+        self._hightlight_layer.set_stroke_color(rgba_black)
+        self._hightlight_layer.set_stroke_width(5)
+        self.add_overlay_layer(self._hightlight_layer)
 
     def add_polyline_from_points(self, points: List[Location]) -> None:
         if points is None or len(points) == 0:
@@ -121,11 +129,16 @@ class TrackMapLayout(Shumate.SimpleMap):
         )
 
     def add_polyline_from_activity_id(self, activity_id):
-        print(activity_id)
+        print("The method add_plyline_from_activity_id in track_segments_layout.py is not implemented")
 
-    def highlight(self, locations: List[Location]):
-
-        print("hightlight")
+    def highlight(self, points: List[Location]):
+        if points is None or len(points) == 0:
+            return
+        self._hightlight_layer.remove_all()
+        for point in points:
+            shumate_location = Shumate.Point.new()
+            shumate_location.set_location(point.latitude, point.longitude)
+            self._hightlight_layer.add_node(shumate_location)
 
     def set_start_marker(self, location: Location):
         self._start_marker.set_location(location.latitude, location.longitude)
