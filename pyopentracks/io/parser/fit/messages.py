@@ -216,6 +216,11 @@ EXERCISE_CATEGORY = {
         "value_name": "run",
         "name": _("Run")
     },
+    49: {
+        "value": 49,
+        "value_name": "suspension",
+        "name": _("Suspension")
+    },
     65524: {
         "value": 65524,
         "value_name": "unknown",
@@ -436,6 +441,8 @@ class FitSetMessage:
             elif field_name == "set_type":
                 self.set.type = SetType.ACTIVE.value if value == "active" else SetType.REST.value
                 self.set.result = SetResult.COMPLETED.value if value == 9 else None
+            elif field_name == "weight":
+                self.set.weight = value if value is not None and value > 0 else None
         self.set.end = self.set.start + duration_ms if self.set.start is not None and duration_ms is not None else None
 
     def __repr__(self) -> str:

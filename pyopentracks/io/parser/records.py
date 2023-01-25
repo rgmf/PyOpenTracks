@@ -388,6 +388,10 @@ class Set:
     def exercise_category(self, value):
         self._exercise_category = int(value) if Value.is_int(value) else None
 
+    @weight.setter
+    def weight(self, value):
+        self._weight = float(value) if Value.is_float(value) else None
+
     @repetitions.setter
     def repetitions(self, value):
         self._repetitions = value
