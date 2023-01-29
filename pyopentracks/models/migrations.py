@@ -146,6 +146,33 @@ class Migration:
         self._db.execute(query)
 
         query = """
+            CREATE TABLE laps (
+                _id INTEGER PRIMARY KEY AUTOINCREMENT,
+                activity INTEGER NOT NULL,
+                starttime INTEGER NOT NULL,
+                totaltime INTEGER NOT NULL,
+                totaltimertime INTEGER,
+                startlatitude FLOAT,
+                startlongitude FLOAT,
+                endlatitude FLOAT,
+                endlongitude FLOAT,
+                distance FLOAT,
+                avgspeed FLOAT,
+                maxspeed FLOAT,
+                avghr FLOAT,
+                maxhr FLOAT,
+                avgcadence FLOAT,
+                maxcadence FLOAT,
+                gain FLOAT,
+                loss FLOAT,
+                avgtemperature FLOAT,
+                maxtemperature FLOAT,
+                calories FLOAT,
+                FOREIGN KEY (activity) REFERENCES activities (_id) ON UPDATE CASCADE ON DELETE CASCADE
+            );
+        """
+
+        query = """
             CREATE TABLE segments (
                 _id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
