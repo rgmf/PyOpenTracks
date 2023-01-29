@@ -21,7 +21,7 @@ from itertools import chain
 from xml.etree.ElementTree import XMLParser
 from pyopentracks.io.parser.parser import Parser
 from pyopentracks.io.parser.recorded_with import RecordedWith
-from pyopentracks.io.parser.records import Point, Record, Segment
+from pyopentracks.io.parser.records import Point, Record, Segment, RecordBuilder
 
 from pyopentracks.utils.utils import TimeUtils, LocationUtils
 
@@ -74,7 +74,7 @@ class GpxParser:
     def __init__(self):
         super().__init__()
 
-        self._record = Record()
+        self._record = RecordBuilder.new_track_record()
         self._segment = Segment()
         self._point = None
 

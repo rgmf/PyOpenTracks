@@ -18,9 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 import os
 
-from pyopentracks.io.importer.file_importer import FileImporter
-from pyopentracks.io.importer.folder_importer import FolderImporter
-from pyopentracks.io.importer.importer import Importer
+from pyopentracks.io.importer.importer import Importer, FileImporter, FolderImporter
 
 
 class ImporterFactory:

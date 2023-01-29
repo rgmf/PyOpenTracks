@@ -16,7 +16,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-from gi.repository import Gtk, GLib, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf
+
 from pyopentracks.app_activity_analytic import AppActivityAnalytic
 
 from pyopentracks.app_interfaces import ActionId
@@ -29,8 +30,6 @@ from pyopentracks.views.dialogs import (
     PyotDialog, ActivityEditDialog, ActivitiesRemoveDialog
 )
 from pyopentracks.utils.utils import TypeActivityUtils
-from pyopentracks.views.layouts.process_view import QueuedProcessesView
-from pyopentracks.tasks.altitude_correction import AltitudeCorrection
 
 
 class ActivitiesLayout(Gtk.Paned, Layout):

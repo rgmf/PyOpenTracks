@@ -16,13 +16,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-
 from typing import List
 from gi.repository import Gtk
 from pyopentracks.models.set import Set
 
 from pyopentracks.models.stats import Stats
-from pyopentracks.models.activity import Activity
+from pyopentracks.models.activity import Activity, MultiActivity
 from pyopentracks.utils.utils import TypeActivityUtils, TrackPointUtils, DistanceUtils, TimeUtils
 from pyopentracks.views.graphs import LinePlot
 from pyopentracks.views.layouts.layout import Layout
@@ -33,7 +32,7 @@ class ActivitySummaryLayout:
     """Utility class to creates some Gtk widgets useful for common summary layouts."""
 
     @staticmethod
-    def info_activity(activity: Activity):
+    def info_activity(activity: Activity) -> Gtk.Box:
         """Creates an Gtk.Box with horizontal orientation with Activity's info.
 
         Arguments:
@@ -144,7 +143,9 @@ class TrackActivitySummaryLayout(Gtk.ScrolledWindow, Layout):
 
         # Add activity stats.
         if self._activity.stats:
-            self._info_box.append(TrackActivitySummaryStatsLayout(self._activity.stats, self._activity.category))
+            self._info_box.append(
+                TrackActivitySummaryStatsLayout(self._activity.stats, self._activity.category)
+            )
         else:
             self._info_box.append(Gtk.Label.new(_("There are not stats")))
 
@@ -296,13 +297,17 @@ class TrackActivitySummaryStatsLayout(ActivitySummaryStatsLayout):
         super().__init__(columns)
 
         # Total distance
-        self._add_item(stats.total_distance_label, stats.total_distance)
+        if stats.total_distance_m is not None:
+            self._add_item(stats.total_distance_label, stats.total_distance)
         # Total moving time
-        self._add_item(stats.moving_time_label, stats.moving_time)
+        if stats.moving_time_ms is not None:
+            self._add_item(stats.moving_time_label, stats.moving_time)
         # Avg. moving speed
-        self._add_item(stats.avg_moving_speed_label(category), stats.avg_moving_speed(category))
+        if stats.avg_moving_speed_mps is not None:
+            self._add_item(stats.avg_moving_speed_label(category), stats.avg_moving_speed(category))
         # Max. speed
-        self._add_item(stats.max_speed_label(category), stats.max_speed(category))
+        if stats.max_speed_mps is not None:
+            self._add_item(stats.max_speed_label(category), stats.max_speed(category))
 
         if stats.max_elevation_m is not None or stats.min_elevation_m is not None:
             # Max. elevation
@@ -483,7 +488,7 @@ class ClimbingSetsLayout(SetActivitySetsLayout):
 
 
 class TrainingSetsLayout(SetActivitySetsLayout):
-    
+
     def build(self):
         weights = any(filter(lambda s: s.weight is not None, self._sets))
         avghrs = any(filter(lambda s: s.avghr is not None, self._sets))
@@ -542,3 +547,146 @@ class TrainingSetsLayout(SetActivitySetsLayout):
             datas.append(TimeUtils.ms_to_str(resting_time, True))
             self._add_row(datas)
 
+
+class MultiActivitySummaryLayout(Gtk.ScrolledWindow, Layout):
+    """Multi activity summary's layout."""
+
+    def __init__(self, activity: Activity):
+        super().__init__()
+
+        self._activity: Activity = activity
+        self.get_style_context().add_class("pyot-bg")
+        self.set_vexpand(True)
+        self.set_hexpand(True)
+
+        self._main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+
+        self._top_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self._top_box.set_vexpand(True)
+        self._top_box.set_homogeneous(True)
+        self._info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._info_box.set_hexpand(False)
+        self._top_box.append(self._info_box)
+        self._bottom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
+        self._main_box.append(self._top_box)
+        self._main_box.append(self._bottom_box)
+
+        self.set_child(self._main_box)
+
+    def build(self):
+        # Add activity's info
+        self._info_box.append(ActivitySummaryLayout.info_activity(self._activity))
+
+        # Generic stats from main activity
+        if self._activity.stats:
+            self._info_box.append(
+                TrackActivitySummaryStatsLayout(self._activity.stats, self._activity.category, 3)
+            )
+
+        # Multi activity information
+        multiactivity = MultiActivity(self._activity)
+
+        header = Gtk.Label.new(_("Sports summary"))
+        header.get_style_context().add_class("pyot-h3")
+        header.set_xalign(0.0)
+        header.set_margin_top(20)
+        header.set_margin_start(10)
+        header.set_margin_end(10)
+        self._info_box.append(header)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        box.set_hexpand(True)
+        box.set_margin_top(10)
+        box.set_margin_bottom(10)
+        box.set_margin_start(10)
+        box.set_margin_end(10)
+        for ma_data in multiactivity.sequence:
+            box_item = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+            box_item.set_hexpand(True)
+
+            box_header = self._build_box_header(ma_data)
+            box_item.append(box_header)
+
+            body = self._build_body(ma_data)
+            if body is not None:
+                box_item.append(body)
+
+            box.append(box_item)
+
+        self._info_box.append(box)
+
+    def post_build(self):
+        pass
+
+    def _build_box_header(self, data: MultiActivity.Data) -> Gtk.Box:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        if data.is_activity:
+            box.get_style_context().add_class("pyot-stats-bg-color")
+
+        icon = Gtk.Image.new_from_pixbuf(TypeActivityUtils.get_icon_pixbuf(data.category))
+        icon.set_valign(Gtk.Align.START)
+        icon.set_pixel_size(24)
+        time_lbl = Gtk.Label.new(data.time)
+        time_lbl.get_style_context().add_class("pyot-stats-value-medium")
+        speed_lbl = Gtk.Label.new(data.speed if data.speed else "")
+        speed_lbl.get_style_context().add_class("pyot-stats-value-medium")
+
+        box.append(icon)
+        box.append(time_lbl)
+        box.append(speed_lbl)
+
+        return box
+
+    def _build_body(self, data: MultiActivity.Data) -> Gtk.Grid:
+        if not data.is_activity or not data.value or not data.value.stats:
+            return None
+
+        category = data.value.category
+        stats = data.value.stats
+
+        grid = Gtk.Grid()
+        grid.set_column_homogeneous(True)
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+
+        def attach(label: str, value: str, row: int):
+            if value is None:
+                return row
+            label_gtk = Gtk.Label.new(label)
+            label_gtk.get_style_context().add_class("pyot-p-small")
+            label_gtk.set_xalign(1.0)
+            value_gtk = Gtk.Label.new(value)
+            value_gtk.get_style_context().add_class("pyot-stats-value-small")
+            value_gtk.set_xalign(0.0)
+            grid.attach(label_gtk, 0, row, 1, 1)
+            grid.attach(value_gtk, 1, row, 1, 1)
+            return row + 1
+
+        row = 0
+        row = attach(stats.total_distance_label, stats.total_distance, row)
+        row = attach(stats.max_speed_label(category), stats.max_speed(category), row)
+        row = attach(stats.avg_hr_label, stats.avg_hr, row)
+        row = attach(stats.max_hr_label, stats.max_hr, row)
+        row = attach(stats.gain_elevation_label, stats.gain_elevation, row)
+        row = attach(stats.loss_elevation_label, stats.loss_elevation, row)
+
+        return grid
+
+
+class DefaultActivitySummaryLayout(Gtk.ScrolledWindow, Layout):
+    """A default, with minimal stats, summary's layout."""
+
+    def __init__(self, activity: Activity):
+        super().__init__()
+        self._activity: Activity = activity
+        self.get_style_context().add_class("pyot-bg")
+        self.set_hexpand(True)
+        self.set_vexpand(True)
+
+    def build(self):
+        # Add activity's info.
+        self.set_child(ActivitySummaryLayout.info_activity(self._activity))
+
+    def post_build(self):
+        pass

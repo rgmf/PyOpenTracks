@@ -16,51 +16,45 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
+from functools import reduce
+
 import fitparse
 
-from typing import List
-
-from pyopentracks.io.parser.fit.messages import FitClimbMessage, FitEventMessage, FitSessionMessage, FitSetMessage, FitSportMessage
 from pyopentracks.io.parser.exceptions import FitParserException
 from pyopentracks.io.parser.fit.gain_loss_manager import GainLossManager
-from pyopentracks.io.parser.fit.messages import FitFileIdMessage, FitRecordMessage
+from pyopentracks.io.parser.fit.messages import (
+    FitClimbMessage,
+    FitEventMessage,
+    FitFileIdMessage,
+    FitRecordMessage,
+    FitSessionMessage,
+    FitSetMessage,
+    FitSportMessage,
+    FIT_SUPPORTED_SPORTS
+)
 from pyopentracks.io.parser.parser import Parser
 from pyopentracks.io.parser.recorded_with import RecordedWith
-from pyopentracks.io.parser.records import Point, Record, Segment
-
-
-FIT_SUPPORTED_SPORTS = {
-    # Sports that need location's points (latitude, longitude)
-    "with_points": [
-        "running",
-        "cycling",
-        "walking",
-        "hiking",
-        "e_biking",
-        "motorcycling",
-        "driving",
-        "inline_skating",
-        "ice_skating",
-    ],
-    # Sports with sets
-    "with_sets": [
-        "training",
-        "rock_climbing",
-    ]
-}
+from pyopentracks.io.parser.records import (
+    Point, Record, RecordBuilder, Segment
+)
 
 
 class Fit(Parser):
     """Interface with methods to implement for all FIT parsers."""
 
-    def __init__(self, fitfile: fitparse.FitFile, file_id: FitFileIdMessage):
+    def __init__(self, file_id: FitFileIdMessage):
         super().__init__()
-        self._fitfile = fitfile
         self._file_id = file_id
 
 
 class FitTrackActivity(Fit):
     """FIT parser for activity files."""
+
+    def __init__(self, messages: List, file_id: FitFileIdMessage, fit_sport_mesg: FitSportMessage):
+        super().__init__(file_id)
+        self._fit_sport_mesg = fit_sport_mesg
+        self._messages = messages
 
     def _compute_mesg_event(self, mesg: fitparse.records.DataMessage, stopped: bool) -> bool:
         fields = list(filter(lambda field_data: field_data.field and field_data.field.def_num == 1, mesg.fields))
@@ -79,13 +73,12 @@ class FitTrackActivity(Fit):
         return stopped
 
     def parse(self) -> Record:
-        record = Record()
+        record = RecordBuilder.new_track_record()
         record.recorded_with = RecordedWith.from_device(
             self._file_id.manufacturer, self._file_id.product
         )
-        sport_message = FitSportMessage(self._fitfile)
-        record.name = sport_message.name
-        record.category = sport_message.category
+        record.name = self._fit_sport_mesg.name
+        record.category = self._fit_sport_mesg.category
         record.start_time = self._file_id.time_created_ms
 
         is_event_stopped = False
@@ -93,7 +86,7 @@ class FitTrackActivity(Fit):
         gain_loss_manager = GainLossManager()
         segment_points: List[Point] = []
         last_point = None
-        for mesg in [m for m in self._fitfile.messages if m.name in ("record", "event", "session")]:
+        for mesg in [m for m in self._messages if m.name in ("record", "event", "session")]:
             if mesg.name == "record" and not is_event_stopped:
                 point = FitRecordMessage(mesg, gain_loss_manager).point
                 is_moving = self._is_moving(point, last_point)
@@ -107,6 +100,7 @@ class FitTrackActivity(Fit):
                 record.total_calories = fit_session_mesg.total_calories
                 record.avg_temperature = fit_session_mesg.avg_temperature
                 record.max_temperature = fit_session_mesg.max_temperature
+                record.start_time = fit_session_mesg.start_time_ms
 
             if (is_event_stopped or not is_moving) and len(segment_points) > self._points_for_segment:
                 segment = Segment()
@@ -119,7 +113,7 @@ class FitTrackActivity(Fit):
             segment.points = segment_points
             record.segments.append(segment)
 
-        record.end_time = record.segments[-1].points[-1] if len(record.segments) > 0 and len(record.segments[-1].points) > 0 else None
+        record.end_time = record.segments[-1].points[-1].time if len(record.segments) > 0 and len(record.segments[-1].points) > 0 else None
 
         return record
 
@@ -127,17 +121,21 @@ class FitTrackActivity(Fit):
 class FitSetActivity(Fit):
     """FIT parser for activity without points, with sets."""
 
+    def __init__(self, messages: List, file_id: FitFileIdMessage, fit_sport_mesg: FitSportMessage):
+        super().__init__(file_id)
+        self._fit_sport_mesg = fit_sport_mesg
+        self._messages = messages
+
     def parse(self) -> Record:
-        record = Record()
+        record = RecordBuilder.new_set_record()
         record.recorded_with = RecordedWith.from_device(
             self._file_id.manufacturer, self._file_id.product
         )
-        sport_message = FitSportMessage(self._fitfile)
-        record.name = sport_message.name
-        record.category = sport_message.category
+        record.name = self._fit_sport_mesg.name
+        record.category = self._fit_sport_mesg.category
         record.start_time = self._file_id.time_created_ms
 
-        for mesg in [m for m in self._fitfile.messages if m.name in ("unknown_312", "set", "session", "event")]:
+        for mesg in [m for m in self._messages if m.name in ("unknown_312", "set", "session", "event")]:
             if mesg.name == "unknown_312":
                 record.sets.append(FitClimbMessage(mesg).set)
             elif mesg.name == "set":
@@ -150,6 +148,7 @@ class FitSetActivity(Fit):
                 record.avg_temperature = fit_session_mesg.avg_temperature
                 record.max_temperature = fit_session_mesg.max_temperature
                 record.total_calories = fit_session_mesg.total_calories
+                record.start_time = fit_session_mesg.start_time_ms
             elif mesg.name == "event":
                 fem = FitEventMessage(mesg)
                 record.end_time = fem.timestamp if fem.type == "stop_all" else record.end_time
@@ -157,9 +156,84 @@ class FitSetActivity(Fit):
         return record
 
 
+class FitMultisportActivity(Fit):
+
+    def __init__(self, messages: List, file_id: FitFileIdMessage, fit_sport_messages: list[FitSportMessage]):
+        super().__init__(file_id)
+        self._fit_sport_messages = fit_sport_messages
+        self._messages = messages
+
+    def parse(self) -> Record:
+        record = RecordBuilder.new_multi_record()
+        record.recorded_with = RecordedWith.from_device(
+            self._file_id.manufacturer, self._file_id.product
+        )
+        record.name = "Multisport"
+        record.category = "multisport"
+
+        record.records = [
+            self._parse_sport(sport_obj)
+            for sport_obj in self._split_sport_messages() if sport_obj['sport'].category in (
+                FIT_SUPPORTED_SPORTS["with_points"] + FIT_SUPPORTED_SPORTS["with_sets"]
+            )
+        ]
+
+        record.start_time = min(r.start_time for r in record.records)
+        record.end_time = max(r.end_time for r in record.records)
+
+        maxhrs = [r.maxhr for r in record.records if r.maxhr is not None]
+        record.maxhr = max(maxhrs) if maxhrs else None
+
+        avghrs = [r.avghr for r in record.records if r.avghr is not None]
+        record.avghr = reduce(lambda a, b: (a + b) / 2, avghrs) if avghrs else None
+
+        mintemps = [r.min_temperature for r in record.records if r.min_temperature is not None]
+        record.min_temperature = min(mintemps) if mintemps else None
+
+        maxtemps = [r.max_temperature for r in record.records if r.max_temperature is not None]
+        record.max_temperature = max(maxtemps) if maxtemps else None
+
+        avgtemps = [r.avg_temperature for r in record.records if r.avg_temperature is not None]
+        record.avg_temperature = reduce(lambda a, b: (a + b) / 2, avgtemps) if avgtemps else None
+
+        calories = [r.total_calories for r in record.records if r.total_calories is not None]
+        record.total_calories = sum(calories) if calories else None
+
+        return record
+
+    def _parse_sport(self, sport_obj):
+        if sport_obj['sport'].category in FIT_SUPPORTED_SPORTS["with_sets"]:
+            return FitSetActivity(sport_obj["messages"], self._file_id, sport_obj["sport"]).parse()
+        return FitTrackActivity(sport_obj["messages"], self._file_id, sport_obj["sport"]).parse()
+
+    def _split_sport_messages(self):
+        """Split messages per sports.
+
+        In a multi record activity can be several sport records.
+
+        It retuns a list of dictionaries. Each dictionary has:
+        - FitSportMessage
+        - The list of messages for that sport
+        """
+        sport_obj = {}
+        sport_messages = []
+        for mesg in [m for m in self._messages if m.name in ("sport", "record", "session")]:
+            if mesg.name == "sport":
+                if sport_obj:
+                    sport_messages.append(sport_obj)
+                sport_obj = {"sport": FitSportMessage(mesg), "messages": []}
+            else:
+                sport_obj["messages"].append(mesg)
+
+        if sport_obj:
+            sport_messages.append(sport_obj)
+
+        return sport_messages
+
+
 class FitSegment(Fit):
     """FIT parser for segments files."""
-    
+
     def parse(self) -> Record:
         return super().parse()
 
@@ -173,7 +247,7 @@ class PreParser:
 
     def parse(self) -> tuple:
         """Parse the FIT file and return the FIT parser.
-        
+
         It checks if FileId message is supported and valid.
 
         Return:

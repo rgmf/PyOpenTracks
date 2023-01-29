@@ -301,6 +301,10 @@ class TypeActivityUtils:
         "rock_climbing": {"icon": "icons/climbing_black_48dp.svg", "color": "#483e37"},
 
         "training": {"icon": "icons/training_black_48dp.svg", "color": "#704e89"},
+
+        "multisport": {"icon": "icons/multisport_black_48dp.svg", "color": "#009688"},
+
+        "transition": {"icon": "icons/transition_black_48dp.svg", "color": "#000000"},
     }
 
     _pace = [

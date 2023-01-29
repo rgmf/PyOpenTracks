@@ -50,6 +50,16 @@
     font-weight: bolder;
 }
 
+.pyot-stats-value-medium {
+    font-size: 1.25em;
+    font-weight: bolder;
+}
+
+.pyot-stats-value-small {
+    font-size: 1em;
+    font-weight: bolder;
+}
+
 .pyot-stats-small-header {
     font-size: 1.1em;
     font-weight: bolder;

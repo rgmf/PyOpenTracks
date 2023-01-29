@@ -105,7 +105,7 @@ class Database:
         """
         with sqlite3.connect(self._db_file) as conn:
             try:
-                query = "SELECT * FROM activities WHERE starttime>=? AND starttime<=?"
+                query = "SELECT * FROM activities WHERE starttime>=? AND starttime<=? AND activityid is NULL"
                 return [Activity(*t) for t in conn.execute(query, (begin, end)).fetchall()]
             except Exception as error:
                 pyot_logging.get_logger(__name__).exception(
@@ -190,7 +190,7 @@ class Database:
                     SELECT st._id segmenttrackid, COUNT(*) + 1 ranking, MIN(st.time) best_time 
                     FROM segmentracks st, activities t
                     WHERE st.segmentid=? AND st.activityid=t._id AND st.time<? {optional_where}   
-                    GROUP BY st.segmentid                        
+                    GROUP BY st.segmentid
                     ORDER BY time ASC
                 """
                 tuple_result = conn.execute(query, (segment_id, time)).fetchone()
@@ -210,7 +210,7 @@ class Database:
         """
         with sqlite3.connect(self._db_file) as conn:
             try:
-                query = "SELECT * FROM activities ORDER BY starttime DESC"
+                query = "SELECT * FROM activities WHERE activityid is NULL ORDER BY starttime DESC"
                 return [
                     Activity(*activity) for activity in conn.execute(query).fetchall()
                 ]
@@ -325,7 +325,7 @@ class Database:
             try:
                 query = """
                 SELECT activities.*, stats.* FROM activities, stats
-                WHERE stats._id=activities.statsid AND (activities.uuid=? OR (activities.starttime=? and stats.stoptime=?))
+                WHERE stats._id=activities.statsid AND (activities.uuid=? OR (activities.starttime>=? and stats.stoptime<=?))
                 """
                 tuple_result = conn.execute(query, (uuid, start, end)).fetchall()
                 if tuple_result:
@@ -337,8 +337,33 @@ class Database:
                 )
                 raise
 
+    def get_subactivities(self, id):
+        """Get all subactivities from the activity identified by id.
+
+        Return:
+            list of Activity object sorted by start time.
+        """
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                query = """
+                    SELECT activities.*, stats.*
+                    FROM activities, stats
+                    WHERE stats._id=activities.statsid AND activityid=?
+                    ORDER BY starttime ASC
+                """
+                return [
+                    Activity(*activity) for activity in conn.execute(query, (id,)).fetchall()
+                ]
+            except Exception as error:
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query: {error}"
+                )
+        return []
+
     def get_aggregated_stats(self, date_from=None, date_to=None, order_by="total_activities"):
         """Query for aggregated stats.
+
+        It builds aggregated statistics from all activities but not multi activity ones.
 
         Arguments:
         date_from -- (optional) milliseconds to filter dates from.
@@ -360,6 +385,40 @@ class Database:
                     where = f" AND stats.starttime<={date_to}"
                 else:
                     where = ""
+
+                #query = f"""
+                #SELECT
+                #    category,
+                #    COUNT(*) total_activities,
+                #    SUM(stats.totaltime) total_time,
+                #    SUM(stats.movingtime) total_moving_time,
+                #    SUM(stats.totaldistance) total_distance,
+                #    SUM(stats.elevationgain) total_gain,
+                #    AVG(stats.totaltime) avg_time,
+                #    AVG(stats.movingtime) avg_moving_time,
+                #    AVG(stats.totaldistance) avg_distance,
+                #    AVG(stats.elevationgain) avg_gain,
+                #    SUM(stats.totaldistance) / (SUM(stats.movingtime) / 1000) avg_speed,
+                #    AVG(stats.avghr) avg_heart_rate,
+                #    AVG(stats.avgcadence) avg_cadence,
+                #    MAX(stats.totaltime) max_time,
+                #    MAX(stats.movingtime) max_moving_time,
+                #    MAX(stats.totaldistance) max_distance,
+                #    MAX(stats.elevationgain) max_gain,
+                #    MAX(stats.maxspeed) max_speed,
+                #    MAX(stats.maxhr) max_heart_rate,
+                #    MAX(stats.maxcadence) max_cadence
+                #FROM stats, activities
+                #WHERE stats._id=activities.statsid AND activities._id NOT IN (
+                #    SELECT activityid
+                #    FROM activities
+                #    WHERE activityid IS NOT NULL
+                #    GROUP BY activityid
+                #)
+                #{where}
+                #GROUP BY category
+                #ORDER BY {order_by} DESC;
+                #"""
 
                 query = f"""
                 SELECT
@@ -389,6 +448,7 @@ class Database:
                 GROUP BY category
                 ORDER BY {order_by} DESC;
                 """
+
 
                 stats = conn.execute(query).fetchall()
                 if stats:
@@ -596,7 +656,6 @@ class Database:
 
                 statsid = None
                 if activity.stats:
-                    activity.stats_id = statsid
                     cursor.execute(activity.stats.insert_query, activity.stats.fields)
                     statsid = cursor.lastrowid
 
@@ -666,6 +725,27 @@ class Database:
                 )
                 conn.rollback()
                 return None
+
+    def insert_multi_activity(self, activity: Activity):
+        """Insert a multi activity model into the database."""
+
+        with sqlite3.connect(self._db_file) as conn:
+            try:
+                cursor = conn.cursor()
+
+                if activity.stats:
+                    cursor.execute(activity.stats.insert_query, activity.stats.fields)
+                    activity.stats_id = cursor.lastrowid
+
+                cursor.execute(activity.insert_query, activity.fields)
+                conn.commit()
+                return cursor.lastrowid
+            except Exception as error:
+                pyot_logging.get_logger(__name__).exception(
+                    f"Error: [SQL] Couldn't execute the query {query}: {error}"
+                )
+                conn.rollback()
+        return None
 
     def insert(self, model):
         """Insert the model in the database.

@@ -26,7 +26,13 @@ from pyopentracks.views.layouts.layout import Layout
 from pyopentracks.views.layouts.notebook_layout import NotebookLayout
 from pyopentracks.views.layouts.process_view import ProcessView
 from pyopentracks.views.layouts.activity_summary_layout import (
-    ActivitySummaryLayout, ClimbingSetsLayout, SetActivitySetsLayout, SetActivitySummaryLayout, TrackActivitySummaryLayout, TrainingSetsLayout
+    ClimbingSetsLayout,
+    SetActivitySetsLayout,
+    SetActivitySummaryLayout,
+    TrackActivitySummaryLayout,
+    TrainingSetsLayout,
+    MultiActivitySummaryLayout,
+    DefaultActivitySummaryLayout
 )
 from pyopentracks.views.layouts.summary_sport_layout import SummaryMovingSport, SummaryTimeSport
 from pyopentracks.views.layouts.track_activity_data_analytic_layout import TrackActivityDataAnalyticLayout
@@ -107,13 +113,18 @@ class ActivitySummaryLayoutBuilder:
         if self._activity.stats and len(self._activity.stats.sets) == 0:
             self._activity.stats.sets = DatabaseHelper.get_sets(self._activity.stats.id)
 
+        if len(self._activity.activities) == 0:
+            self._activity.activities = DatabaseHelper.get_subactivities(self._activity.id)
+
         if len(self._activity.sections) > 0:
             return TrackActivitySummaryLayout(self._activity)
         elif self._activity.stats and len(self._activity.stats.sets) > 0:
             return SetActivitySummaryLayout(self._activity)\
                 .add_sets_layout(SetsLayoutBuilder(self._activity).make())
+        elif len(self._activity.activities) > 0:
+            return MultiActivitySummaryLayout(self._activity)
         else:
-            return ActivitySummaryLayout.info_activity(self._activity)
+            return DefaultActivitySummaryLayout(self._activity)
 
 
 class ActivityAnalyticLayoutBuilder:
@@ -147,7 +158,7 @@ class ActivityAnalyticLayoutBuilder:
             layout.append(summary_layout, _("Summary"))
             return layout
         else:
-            return ActivitySummaryLayout.info_activity(self._activity)
+            return DefaultActivitySummaryLayout(self._activity)
 
 
 class SetsLayoutBuilder:
