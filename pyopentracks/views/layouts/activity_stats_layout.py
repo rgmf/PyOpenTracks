@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-
 from gi.repository import Gtk
 
 from pyopentracks.views.layouts.layout import Layout

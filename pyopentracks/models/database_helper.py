@@ -42,6 +42,11 @@ class DatabaseHelper:
         return db.get_existed_activities(activity.uuid, activity.start_time_ms, activity.stats.end_time_ms)
 
     @staticmethod
+    def get_subactivities(id):
+        db = Database()
+        return db.get_subactivities(id)
+
+    @staticmethod
     def get_sections(activity_id):
         db = Database()
         return db.get_sections(activity_id)
@@ -104,6 +109,13 @@ class DatabaseHelper:
         db = Database()
         activity_id = db.insert_set_activity(activity, sets)
         return activity_id
+
+    @staticmethod
+    def insert_multi_activity(multi_activity):
+        """Inserts a the multi activity and all their activities"""
+        db = Database()
+        multi_activity_id = db.insert_multi_activity(multi_activity)
+        return multi_activity_id
 
     @staticmethod
     def bulk_insert(list_to_insert, fk):

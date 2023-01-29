@@ -143,12 +143,20 @@ class Stats(Model):
         return tu.ms_to_str(self._totaltime_ms)
 
     @property
+    def total_time_ms(self):
+        return self._totaltime_ms
+
+    @property
     def total_time_label(self):
         return _("Total Time")
 
     @property
     def moving_time(self):
         return tu.ms_to_str(self._movingtime_ms)
+
+    @property
+    def moving_time_ms(self):
+        return self._movingtime_ms
 
     @property
     def moving_time_label(self):
@@ -179,11 +187,19 @@ class Stats(Model):
     def avg_speed_label(self, category):
         return _("Avg. Speed") if tau.is_speed(category) else _("Avg. Pace")
 
+    @property
+    def max_speed_mps(self):
+        return self._maxspeed_mps
+
     def max_speed(self, category):
         return su.mps_to_category_rate(self._maxspeed_mps, category)
 
     def max_speed_label(self, category):
         return _("Max. Speed") if tau.is_speed(category) else _("Max. Pace")
+
+    @property
+    def avg_moving_speed_mps(self):
+        return self._avgmovingspeed_mps
 
     def avg_moving_speed(self, category):
         return su.mps_to_category_rate(self._avgmovingspeed_mps, category)

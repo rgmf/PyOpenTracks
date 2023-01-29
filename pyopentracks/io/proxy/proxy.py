@@ -18,7 +18,7 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
 from pyopentracks.io.parser.fit.messages import SetType
-from pyopentracks.io.parser.records import Point, Record
+from pyopentracks.io.parser.records import Point, Record, TrackRecord, SetRecord, MultiRecord
 from pyopentracks.models.set import Set as SetModel
 from pyopentracks.models.section import Section
 from pyopentracks.models.stats import Stats
@@ -43,17 +43,19 @@ class RecordProxy:
             self._record.category,
             self._record.recorded_with.id,
             self._record.start_time,
+            None,
             None
         )
-        activity.sections = self.to_sections()
     
-        if self._record.type == Record.Type.TRACK:
+        if isinstance(self._record, TrackRecord):
+            activity.sections = self.to_sections()
             activity_stats = TrackActivityStats()
             activity_stats.compute(activity.sections)
-
             activity.stats = TrackActivityStatsProxy(self._record, activity_stats).to_stats()
-        elif self._record.type == Record.Type.SET:
+        elif isinstance(self._record, SetRecord):
             activity.stats = SetsProxy(self._record).to_stats()
+        elif isinstance(self._record, MultiRecord):
+            activity.stats = MultiProxy(self._record).to_stats()
 
         return activity
 
@@ -200,6 +202,54 @@ class SetsProxy:
             None,
             total_time_ms,
             moving_time_ms,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            self._record.maxhr,
+            self._record.avghr,
+            None,
+            None,
+            None,
+            None,
+            self._record.min_temperature,
+            self._record.max_temperature,
+            self._record.avg_temperature,
+            self._record.total_calories
+        )
+
+
+class MultiProxy:
+
+    __slots__ = "_record"
+
+    def __init__(self, record: Record):
+        self._record = record
+
+    def to_stats(self):
+        total_time_ms = (
+            self._record.end_time - self._record.start_time
+            if self._record.end_time is not None and self._record.start_time is not None
+            else None
+        )
+
+        sub_activities = [RecordProxy(r).to_activity() for r in self._record.records]
+
+        total_distance_list = [
+            a.stats.total_distance_m for a in sub_activities if a.stats and a.stats.total_distance_m
+        ]
+        total_distance = sum(total_distance_list) if total_distance_list else None
+
+        return Stats(
+            None,
+            self._record.start_time,
+            self._record.end_time,
+            total_distance,
+            total_time_ms,
+            total_time_ms,
             None,
             None,
             None,

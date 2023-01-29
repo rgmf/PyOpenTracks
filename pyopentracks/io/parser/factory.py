@@ -19,11 +19,16 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from abc import ABC, abstractmethod
 from itertools import chain
 
-from pyopentracks.io.parser.fit.messages import FitSportMessage
+from pyopentracks.io.parser.fit.messages import FitSportMessage, FIT_SUPPORTED_SPORTS
 from pyopentracks.io.parser.parser import Parser
 from pyopentracks.io.parser.exceptions import FitParserException, ParserExtensionUnknownException, GpxParserException
 from pyopentracks.io.parser.gpx.gpx import GpxOpenTracks, GpxPath, GpxStandard, PreParser as GpxPreParser
-from pyopentracks.io.parser.fit.fit import FIT_SUPPORTED_SPORTS, FitSetActivity, FitTrackActivity, PreParser as FitPreParser
+from pyopentracks.io.parser.fit.fit import (
+    PreParser as FitPreParser,
+    FitTrackActivity,
+    FitSetActivity,
+    FitMultisportActivity
+)
 
 
 class ParserFactory:
@@ -74,11 +79,38 @@ class FitFactory(Factory):
 
     def make(self, filename: str) -> Parser:
         fitfile, file_id = FitPreParser(filename).parse()
-        sport_message = FitSportMessage(fitfile)
-        if sport_message.category.lower() in FIT_SUPPORTED_SPORTS["with_points"]:
-            return FitTrackActivity(fitfile, file_id)
-        elif sport_message.category.lower() in FIT_SUPPORTED_SPORTS["with_sets"]:
-            return FitSetActivity(fitfile, file_id)
-        else:
-            raise FitParserException(filename, f"{sport_message} sport not supported")
 
+        sport_messages = [FitSportMessage(mesg) for mesg in list(fitfile.get_messages("sport"))]
+
+        if self._is_track_activity(sport_messages):
+            return FitTrackActivity(fitfile.messages, file_id, sport_messages[0])
+        elif self._is_set_activity(sport_messages):
+            return FitSetActivity(fitfile.messages, file_id, sport_messages[0])
+        elif self._is_multisport_activity(sport_messages):
+            return FitMultisportActivity(fitfile.messages, file_id, sport_messages)
+        else:
+            raise FitParserException(
+                filename,
+                f"{sport_messages[0]} sport not supported" if len(sport_messages) == 1 else f"FIT file not supported"
+            )
+
+    def _is_track_activity(self, sport_messages: list[FitSportMessage]) -> bool:
+        if len(sport_messages) != 1:
+            return False
+        return sport_messages[0].category in FIT_SUPPORTED_SPORTS["with_points"]
+
+    def _is_set_activity(self, sport_messages: list[FitSportMessage]) -> bool:
+        if len(sport_messages) != 1:
+            return False
+        return sport_messages[0].category in FIT_SUPPORTED_SPORTS["with_sets"]
+
+    def _is_multisport_activity(self, sport_messages: list[FitSportMessage]) -> bool:
+        """It's a multisport activity if there are several sports and they are supported ones."""
+        if len(sport_messages) < 2:
+            return False
+        categories = (
+            FIT_SUPPORTED_SPORTS["with_points"] +
+            FIT_SUPPORTED_SPORTS["with_sets"] +
+            FIT_SUPPORTED_SPORTS['transition']
+        )
+        return len([mesg for mesg in sport_messages if mesg.category in categories]) == len(sport_messages)

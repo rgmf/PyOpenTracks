@@ -65,8 +65,7 @@ class Migration:
                 mintemperature FLOAT,
                 maxtemperature FLOAT,
                 avgtemperature FLOAT,
-                totalcalories INTEGER,
-                FOREIGN KEY (_id) REFERENCES activities (statsid) ON UPDATE CASCADE ON DELETE CASCADE
+                totalcalories INTEGER
             );
         """
         self._db.execute(query)
@@ -80,8 +79,10 @@ class Migration:
                 category TEXT,
                 recorded_with INTEGER,
                 starttime INTEGER,
-                statsid INTEGER,
-                FOREIGN KEY (statsid) REFERENCES stats (_id) ON UPDATE CASCADE ON DELETE CASCADE
+                statsid INTEGER UNIQUE,
+                activityid INTEGER,
+                FOREIGN KEY (statsid) REFERENCES stats (_id) ON UPDATE CASCADE ON DELETE CASCADE,
+                FOREIGN KEY (activityid) REFERENCES activities (_id) ON UPDATE CASCADE ON DELETE CASCADE
             );
         """
         self._db.execute(query)

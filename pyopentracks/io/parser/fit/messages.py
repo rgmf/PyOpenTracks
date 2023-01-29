@@ -50,6 +50,35 @@ class SetResult(Enum):
     ATTEMPTED = 2
 
 
+FIT_SUPPORTED_SPORTS = {
+    # Sports that need location's points (latitude, longitude)
+    "with_points": [
+        "running",
+        "cycling",
+        "walking",
+        "hiking",
+        "e_biking",
+        "motorcycling",
+        "driving",
+        "inline_skating",
+        "ice_skating",
+    ],
+    # Sports with sets
+    "with_sets": [
+        "training",
+        "rock_climbing",
+    ],
+    # Multisport
+    "multisport": [
+        "multisport",
+    ],
+    # Transition
+    "transition": [
+        "transition",
+    ],
+}
+
+
 EXERCISE_CATEGORY = {
     0: {
         "value": 0,
@@ -285,14 +314,12 @@ class FitSportMessage:
 
     __slots__ = ("_name", "_category")
 
-    def __init__(self, fitfile):
+    def __init__(self, mesg: fitparse.records.DataMessage):
         self._name = "unknown"
         self._category = "unknown"
 
-        messages = list(fitfile.get_messages("sport"))
-        sport = messages[0] if len(messages) > 0 else None
-        if sport:
-            values = sport.get_values()
+        if mesg:
+            values = mesg.get_values()
             self._name = values["name"] if "name" in values else "unknown"
             self._category = values["sport"] if "sport" in values else "unknown"
 
@@ -452,12 +479,13 @@ class FitSetMessage:
 class FitSessionMessage:
 
     __slots__ = (
-        "sub_sport", "total_elapsed_time", "avg_heart_rate", "max_heart_rate",
+        "sub_sport", "start_time", "total_elapsed_time", "avg_heart_rate", "max_heart_rate",
         "avg_temperature", "max_temperature", "total_calories"
     )
 
     def __init__(self, mesg: fitparse.records.DataMessage):
         self.sub_sport = None
+        self.start_time = None
         self.total_elapsed_time = None
         self.avg_heart_rate = None
         self.max_heart_rate = None
@@ -468,6 +496,8 @@ class FitSessionMessage:
         for field_name, value in mesg.get_values().items():
             if field_name == "unknown_110":
                 self.sub_sport = value
+            elif field_name == "start_time":
+                self.start_time = value
             elif field_name == "total_elapsed_time":
                 self.total_elapsed_time = value
             elif field_name == "avg_heart_rate":
@@ -481,10 +511,15 @@ class FitSessionMessage:
             elif field_name == "total_calories":
                 self.total_calories = value
 
+    @property
+    def start_time_ms(self):
+        return dt_to_aware_locale_ms(self.start_time) if self.start_time else None
+
     def __repr__(self) -> str:
-        return "<FitSessionMessage: sub_sport (%s) total_elapsed_time (%f) avg_heart_rate (%f) max_heart_rate (%f)" \
+        return "<FitSessionMessage: sub_sport (%s) start_time(%f) total_elapsed_time (%f) avg_heart_rate (%f) max_heart_rate (%f)" \
             "avg_temperature (%f) max_temperature (%f) total_calories (%f)>"  % (
                 self.sub_sport if self.sub_sport is not None else "",
+                self.start_time if self.start_time is not None else 0,
                 self.total_elapsed_time if self.total_elapsed_time is not None else 0,
                 self.avg_heart_rate if self.avg_heart_rate is not None else 0,
                 self.max_heart_rate if self.max_heart_rate is not None else 0,

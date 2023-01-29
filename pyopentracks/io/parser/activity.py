@@ -18,14 +18,14 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
 import time
 
-from typing import List
+from Typing import List
 from math import radians, sin, cos, asin, sqrt
 
 from pyopentracks.io.parser.recorded_with import RecordedOptions, RecordedWith
 
 
-class Record:
-    """Class where parser will save the data extracted from files."""
+class Activity:
+    """Base class where parser will save the data extracted from files."""
 
     __slots__ = (
         "uuid", "name", "description", "start_time", "end_time", "category", "sub_category",
@@ -56,55 +56,50 @@ class Record:
             self.min_temperature = temperature
 
     def __repr__(self) -> str:
-        return '<Record: uuid (%s) name (%s) description (%s) start time (%d) category (%s) recorded_width (%s)>' % (
+        return '<Activity: uuid (%s) name (%s) description (%s) start time (%d) category (%s) recorded_width (%s)>' % (
             self.uuid if self.uuid else "None", self.name, self.description,
             self.start_time, self.category, self.recorded_with.__repr__()
         )
 
 
-class TrackRecord(Record):
+class TrackActivity(Activity):
     __slots__ = ("segments",)
 
     def __init__(self):
-        super().__init__()
         self.segments: List[Segment] = []
 
 
-class SetRecord(Record):
+class SetActivity(Activity):
     __slots__ = ("sets",)
 
     def __init__(self):
-        super().__init__()
         self.sets: List[Set] = []
 
 
-class TransitionRecord(Record):
+class TransitionActivity(Activity):
+    pass
+
+
+class MultiActivity(Activity):
+    __slots__ = ("activities",)
 
     def __init__(self):
-        super().__init__()
+        self.activities: List[Activity] = []
 
 
-class MultiRecord(Record):
-    __slots__ = ("records",)
-
-    def __init__(self):
-        super().__init__()
-        self.records: List[Record] = []
-
-
-class RecordBuilder:
+class ActivityBuilder:
 
     @staticmethod
-    def new_track_record() -> Record:
-        return TrackRecord()
+    def new_track_activity() -> Activity:
+        return TrackActivity()
 
     @staticmethod
-    def new_set_record() -> Record:
-        return SetRecord()
+    def new_set_activity() -> Activity:
+        return SetActivity()
 
     @staticmethod
-    def new_multi_record() -> Record:
-        return MultiRecord()
+    def new_multiactivity() -> Activity:
+        return MultiActivity()
 
 
 class Segment:
