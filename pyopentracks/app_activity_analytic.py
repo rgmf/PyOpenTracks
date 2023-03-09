@@ -79,7 +79,6 @@ class AppActivityAnalytic(AppExternal):
                     child_layout.set_new_segment_created_cb(self.segment_created_notify)
                 child_layout.build()
                 child_layout.post_build()
-        layout.build()
         self._layout.append(layout)
 
     def _on_sections_ready(self, sections):
