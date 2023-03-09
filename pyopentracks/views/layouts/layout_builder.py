@@ -142,6 +142,9 @@ class ActivityAnalyticLayoutBuilder:
         if len(self._activity.stats.sets) == 0:
             self._activity.stats.sets = DatabaseHelper.get_sets(self._activity.stats.id)
 
+        if len(self._activity.activities) == 0:
+            self._activity.activities = DatabaseHelper.get_subactivities(self._activity.id)
+
         if len(self._activity.sections) > 0:
             summary_layout = TrackActivitySummaryLayout(self._activity)
             data_analytic_layout = TrackActivityDataAnalyticLayout(self._activity, self._preferences)
@@ -157,6 +160,8 @@ class ActivityAnalyticLayoutBuilder:
                 .add_sets_layout(SetsLayoutBuilder(self._activity).make())
             layout.append(summary_layout, _("Summary"))
             return layout
+        elif len(self._activity.activities) > 0:
+            return MultiActivitySummaryLayout(self._activity)
         else:
             return DefaultActivitySummaryLayout(self._activity)
 
