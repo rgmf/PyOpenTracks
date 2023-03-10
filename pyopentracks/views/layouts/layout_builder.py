@@ -161,7 +161,16 @@ class ActivityAnalyticLayoutBuilder:
             layout.append(summary_layout, _("Summary"))
             return layout
         elif len(self._activity.activities) > 0:
-            return MultiActivitySummaryLayout(self._activity)
+            layout.append(MultiActivitySummaryLayout(self._activity), _("Summary"))
+            for activity in self._activity.activities:
+                if len(activity.sections) == 0:
+                    activity.sections = DatabaseHelper.get_sections(activity.id)
+
+                if len(self._activity.stats.sets) == 0:
+                    activity.stats.sets = DatabaseHelper.get_sets(activity.stats.id)
+
+                layout.append(TrackActivitySummaryLayout(activity), activity.name)
+            return layout
         else:
             return DefaultActivitySummaryLayout(self._activity)
 
@@ -178,7 +187,7 @@ class SetsLayoutBuilder:
         elif self._activity.category == "training":
             return TrainingSetsLayout(self._activity.stats.sets)
         else:
-            return SetActivitySetsLayout()
+            return TrainingSetsLayout(self._activity.stats.sets)
 
 
 class SportSummaryLayoutBuilder:
