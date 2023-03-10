@@ -285,11 +285,11 @@ class AbstractEditDialog(Gtk.Window):
         self.set_title("PyOpenTracks")
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_default_size(600, 400)
+        self.set_default_size(600, 450)
         header_bar = Gtk.HeaderBar()
         self.set_titlebar(header_bar)
 
-        # Child of the window: a scrolled widow which contains a grid
+        # Child of the window: a scrolled window which contains a grid
         self._grid = Gtk.Grid()
         self._grid.set_margin_top(20)
         self._grid.set_margin_bottom(20)
@@ -372,6 +372,54 @@ class ActivityEditDialog(AbstractEditDialog):
         l3.set_xalign(0.0)
         self._grid.attach(l3, 0, 2, 1, 1)
         self._grid.attach(type_combo_box, 1, 2, 1, 1)
+
+        # Subactivities if any
+        self._activity.activities = DatabaseHelper.get_subactivities(self._activity.id)
+        if not self._activity.activities:
+            return
+        subactivities_lbl = Gtk.Label.new(_("Subactivities"))
+        subactivities_lbl.get_style_context().add_class("pyot-h3")
+        subactivities_lbl.set_xalign(0.0)
+        self._grid.attach(subactivities_lbl, 0, 3, 1, 1)
+        item = 4
+        for a in self._activity.activities:
+            self._add_subactivity(item, a)
+            item += 1
+
+    def _add_subactivity(self, num_row, activity):
+
+        def on_name_changed(entry):
+            activity.name = entry.get_text()
+
+        def on_type_changed(combo):
+            iter_item = combo.get_active_iter()
+            if iter_item is not None:
+                name, icon = self._type_list_store[iter_item][:2]
+                activity.category = name
+
+        name_entry = Gtk.Entry()
+        name_entry.set_text(activity.name)
+        name_entry.connect("changed", on_name_changed)
+
+        type_combo_box = Gtk.ComboBox.new_with_model(self._type_list_store)
+        renderer_text = Gtk.CellRendererText()
+        type_combo_box.pack_start(renderer_text, True)
+        type_combo_box.add_attribute(renderer_text, "text", 0)
+        for idx, item in enumerate(TAU.get_activity_types()):
+            self._type_list_store.append(item)
+            if item[0] == activity.category:
+                type_combo_box.set_active(idx)
+        type_combo_box.connect("changed", on_type_changed)
+
+        l1 = Gtk.Label.new(_("Name"))
+        l1.set_xalign(0.0)
+        self._grid.attach(l1, 0, num_row, 1, 1)
+        self._grid.attach(name_entry, 1, num_row, 1, 1)
+
+        l3 = Gtk.Label.new(_("Category"))
+        l3.set_xalign(0.0)
+        self._grid.attach(l3, 4, num_row, 1, 1)
+        self._grid.attach(type_combo_box, 5, num_row, 1, 1)
 
     def _on_name_changed(self, entry):
         self._activity.name = entry.get_text()

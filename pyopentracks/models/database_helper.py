@@ -211,6 +211,12 @@ class DatabaseHelper:
         db.update(activity)
 
     @staticmethod
+    def update_activity(activity):
+        DatabaseHelper.update(activity)
+        for a in activity.activities:
+            DatabaseHelper.update(a)
+
+    @staticmethod
     def update(model):
         db = Database()
         db.update(model)

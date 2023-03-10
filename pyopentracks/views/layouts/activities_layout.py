@@ -178,7 +178,7 @@ class ActivitiesLayout(Gtk.Paned, Layout):
             self._tree_model_filter.set_value(
                 treeiter, 2, TypeActivityUtils.get_icon_pixbuf(activity.category, 32, 32)
             )
-            DatabaseHelper.update(activity)
+            DatabaseHelper.update_activity(activity)
             self._select_row(self._tree_model_filter.get_path(treeiter), force=True)
             dialog.close()
 
