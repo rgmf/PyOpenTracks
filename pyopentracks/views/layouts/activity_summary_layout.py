@@ -438,7 +438,11 @@ class ClimbingSetsLayout(SetActivitySetsLayout):
         temperatures = any(filter(lambda s: s.temperature is not None, self._sets))
         difficulties = any(filter(lambda s: s.difficulty is not None, self._sets))
 
-        labels = ['#', self._sets[0].result_label, self._sets[0].time_label]
+        labels = ['#']
+        if difficulties:
+            labels.append(self._sets[0].difficulty_label)
+        labels.append(self._sets[0].result_label)
+        labels.append(self._sets[0].time_label)
         if avghrs:
             labels.append(self._sets[0].avghr_label)
         if maxhrs:
@@ -447,8 +451,6 @@ class ClimbingSetsLayout(SetActivitySetsLayout):
             labels.append(self._sets[0].calories_label)
         if temperatures:
             labels.append(self._sets[0].temperature_label)
-        if difficulties:
-            labels.append(self._sets[0].difficulty_label)
         labels.append(_("Resting"))
 
         self._add_header(labels)
@@ -461,7 +463,11 @@ class ClimbingSetsLayout(SetActivitySetsLayout):
                 resting_time += set.time
                 resting_ready = True
             else:
-                datas = [str(count), set.result_value, set.time_value]
+                datas = [str(count)]
+                if difficulties:
+                    datas.append(set.difficulty_value)
+                datas.append(set.result_value)
+                datas.append(set.time_value)
                 if avghrs:
                     datas.append(set.avghr_value)
                 if maxhrs:
@@ -470,8 +476,6 @@ class ClimbingSetsLayout(SetActivitySetsLayout):
                     datas.append(set.calories_value)
                 if temperatures:
                     datas.append(set.temperature_value)
-                if difficulties:
-                    datas.append(set.difficulty_value)
                 data_ready = True
 
             if resting_ready and data_ready:
