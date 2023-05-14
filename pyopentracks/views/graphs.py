@@ -25,7 +25,7 @@ from matplotlib.figure import Figure
 
 
 class BarsChart:
-    def __init__(self, results, colors=None, cb_annotate=None):
+    def __init__(self, results, orientation="horizontal", width_ratio=1, height_ratio=2.5, colors=None, cb_annotate=None):
         """Creates a set of bar chart with results dictionary.
 
         Arguments:
@@ -36,12 +36,17 @@ class BarsChart:
                         "Label 2": 50,
                         "Label 3": 40
                    }
+        orientation -- (optional) the orientation of the bars. It can be
+                       "horizontal" (default) or "vertical".
+        width_ratio -- (optional) graph's width ratio.
+        height_ratio -- (optional) graph's height ratio.
         colors -- (optional) list of colors to be used for every bar.
         cb_annotate -- (optional) it's a callback to parse the bars
                        annotation. If it's not passed then the values
                        will be used like are.
         """
         self._results = results
+        self._orientation = orientation
         self._colors = colors
         self._cb_annotate = cb_annotate
 
@@ -54,7 +59,7 @@ class BarsChart:
         w, h = int(np.ceil(w * dpi_res)), int(np.ceil(h * dpi_res))
 
         self._figure.canvas = FigureCanvas(self._figure)
-        self._figure.canvas.set_size_request(w, h)
+        self._figure.canvas.set_size_request(w / width_ratio, h / height_ratio)
         # self._figure.canvas.set_has_window(False)
 
     def _draw(self):
@@ -71,40 +76,72 @@ class BarsChart:
         self._figure.patch.set_alpha(0)
         self._axes.patch.set_alpha(0)
 
-        y_pos = np.arange(len(labels))
-        rectangles = self._axes.barh(y_pos, values)
-        self._axes.set_yticks(y_pos)
-        self._axes.set_yticklabels(labels)
-        # Turn off x tick labels
-        self._axes.set_xticklabels([])
+        if self._orientation == "horizontal":
+            pos = np.arange(len(labels))
+            bars = self._axes.barh(pos, values)
+            self._axes.set_yticks(pos)
+            self._axes.set_yticklabels(labels)
+            # Turn off x tick labels
+            self._axes.set_xticklabels([])
 
-        # Lastly, write in the ranking inside each bar to aid in interpretation
-        for i, rect in enumerate(rectangles):
-            # Set rectangle color
-            rect.set_color(
-                self._colors[i] if self._colors is not None and len(self._colors) > i else None
-            )
+            # Lastly, write in the ranking inside each bar to aid in interpretation
+            for i, bar in enumerate(bars):
+                # Set rectangle color
+                bar.set_color(
+                    self._colors[i] if self._colors is not None and len(self._colors) > i else None
+                )
 
-            # Rectangle width
-            width = rect.get_width()
-            # Shift the text to the right side of the right edge
-            xloc = 5
-            # Black against white background
-            color = "black"
-            align = "left"
-            # Center the text vertically in the bar
-            yloc = rect.get_y() + rect.get_height() / 2
-            self._axes.annotate(
-                self._cb_annotate(width) if self._cb_annotate is not None else width,
-                xy=(width, yloc),
-                xytext=(xloc, 0),
-                textcoords="offset points",
-                horizontalalignment=align,
-                verticalalignment="center",
-                color=color,
-                weight="bold",
-                clip_on=True
-            )
+                # Rectangle width
+                width = bar.get_width()
+                # Shift the text to the right side of the right edge
+                xloc = 5
+                # Black against white background
+                color = "black"
+                align = "left"
+                # Center the text vertically in the bar
+                yloc = bar.get_y() + bar.get_height() / 2
+                self._axes.annotate(
+                    self._cb_annotate(width) if self._cb_annotate is not None else width,
+                    xy=(width, yloc),
+                    xytext=(xloc, 0),
+                    textcoords="offset points",
+                    horizontalalignment=align,
+                    verticalalignment="center",
+                    color=color,
+                    weight="bold",
+                    clip_on=True
+                )
+        elif self._orientation == "vertical":
+            pos = np.arange(len(labels))
+            bars = self._axes.bar(pos, values, width=0.5)
+            self._axes.set_xticks(pos)
+            #self._axes.set_xticklabels(labels, rotation="vertical")
+            self._axes.set_xticklabels(labels)
+            self._axes.set_yticklabels([])
+
+            self._axes.set_xlim([-0.5, len(pos) - 0.5])
+
+            for i, bar in enumerate(bars):
+                bar.set_color(
+                    self._colors[i] if self._colors is not None and len(self._colors) > i else None
+                )
+
+                height = bar.get_height()
+                yloc = 5
+                color = "black"
+                align = "center"
+                xloc = bar.get_x() + bar.get_width() / 2
+                self._axes.annotate(
+                    self._cb_annotate(height) if self._cb_annotate is not None else height,
+                    xy=(xloc, height),
+                    xytext=(0, yloc),
+                    textcoords="offset points",
+                    horizontalalignment="center",
+                    verticalalignment=align,
+                    color=color,
+                    weight="bold",
+                    clip_on=True
+                )
 
     def get_canvas(self):
         return self._figure.canvas

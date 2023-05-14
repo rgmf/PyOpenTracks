@@ -16,22 +16,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 """
-from gi.repository import Gtk
-
 from dataclasses import dataclass
 from typing import List
 
-from pyopentracks.utils.utils import TypeActivityUtils as tau
-from pyopentracks.utils.utils import DateUtils as du
-from pyopentracks.utils.utils import DateTimeUtils as dtu
-from pyopentracks.utils.utils import StatsUtils as su
-from pyopentracks.utils.utils import DistanceUtils as distu
-from pyopentracks.utils.utils import TimeUtils as tu
+from gi.repository import Gtk
+
 from pyopentracks.models.database_helper import DatabaseHelper
+from pyopentracks.utils.utils import DateTimeUtils as dtu
+from pyopentracks.utils.utils import DateUtils as du
+from pyopentracks.utils.utils import DistanceUtils as distu
+from pyopentracks.utils.utils import StatsUtils as su
+from pyopentracks.utils.utils import TimeUtils as tu
+from pyopentracks.utils.utils import TypeActivityUtils as tau
 from pyopentracks.views.graphs import BarsChart
 from pyopentracks.views.layouts.calendar_layout import CalendarLayout
 from pyopentracks.views.layouts.layout_builder import LayoutBuilder
 from pyopentracks.views.layouts.process_view import ProcessView
+from pyopentracks.views.widgets.graphs_widget import YearlyAggregatedStatsChartBuilder
 
 
 class AggregatedStats(Gtk.Box):
@@ -143,10 +144,10 @@ class AnalyticMonthsStack(Gtk.Box):
 
     def __init__(self, year):
         """Initialize the switcher and load data through ProcessView."""
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
 
-        self.set_vexpand(True)
-        self.set_hexpand(True)
+        self.set_vexpand(False)
+        self.set_hexpand(False)
 
         self.set_margin_top(20)
         self.set_margin_bottom(20)
@@ -156,13 +157,13 @@ class AnalyticMonthsStack(Gtk.Box):
         self._data = {}
 
         self._stack_switcher = Gtk.StackSwitcher()
-        self._stack_switcher.set_orientation(Gtk.Orientation.VERTICAL)
+        self._stack_switcher.set_orientation(Gtk.Orientation.HORIZONTAL)
         self._stack_switcher.set_vexpand(False)
         self._stack_switcher.set_valign(Gtk.Align.START)
 
         self._stack = Gtk.Stack()
-        self._stack.set_margin_start(20)
-        self._stack.set_margin_end(20)
+        self._stack.set_margin_top(20)
+        self._stack.set_margin_bottom(20)
         self._stack.connect(
             "notify::visible-child",
             self._visible_child_changed
@@ -227,7 +228,7 @@ class AnalyticMonthsStack(Gtk.Box):
                 elif i.total_moving_time_ms is not None:
                     list_time.append((i.category, i.total_moving_time_ms))
                     colors_time.append(tau.get_color(i.category))
-            
+
             if len(list_distance) > 0:
                 chart_distance = BarsChart(
                     results=dict(list_distance),
@@ -344,6 +345,7 @@ class AnalyticTotalsYear(Gtk.Box):
         year -- the year of the totals stats.
         """
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
+
         self._year = year
         ProcessView(
             self._ready,
@@ -359,57 +361,79 @@ class AnalyticTotalsYear(Gtk.Box):
             lbl.get_style_context().add_class("pyot-h3")
             self.append(lbl)
             return
+
+        builder = YearlyAggregatedStatsChartBuilder(int(self._year))
+
+        aggregated_distance_list = [a for a in aggregated_list if a.total_distance_float is not None]
+        if len(aggregated_distance_list) > 0:
+            grid_distance = self._create_grid(
+                [_("Sport"), _("Activities"), _("Activities\nper Month"), _("Time"), _("Distance"), _("Elevation\nGain"),
+                 _("Cadence\nMaximum"), _("Cadence\nAverage"), _("Speed/Pace\nAverage"), _("Heart Rate\nMaximum"),
+                 _("Heart Rate\nAverage")],
+                aggregated_distance_list,
+                True
+            )
+            self.append(grid_distance)
+
+            widget = builder.set_activity_distance().set_distance().add_categories_filter().build_widget()
+            self.append(widget)
+            widget.draw()
+
+        aggregated_time_list = [a for a in aggregated_list if a.total_distance_float is None]
+        if len(aggregated_time_list) > 0:
+            grid_time = self._create_grid(
+                [_("Sport"), _("Activities"), _("Activities\nper Month"), _("Time"), _("Heart Rate\nMaximum"),
+                 _("Heart Rate\nAverage")],
+                aggregated_time_list,
+                False
+            )
+            grid_time.set_margin_top(30)
+            self.append(grid_time)
+
+            widget = builder.set_activity_time().set_moving_time().add_categories_filter().build_widget()
+            self.append(widget)
+            widget.draw()
+
+    def _create_grid(self, headers, data_list, with_distance):
         grid = Gtk.Grid()
         grid.set_column_homogeneous(True)
         grid.set_row_spacing(10)
         grid.set_column_spacing(10)
         grid.set_margin_start(50)
-        self._build_headers(
-            grid,
-            _("Sport"),
-            _("Activities"),
-            _("Activities\nper Month"),
-            _("Distance"),
-            _("Time"),
-            _("Elevation\nGain"),
-            _("Heart Rate\nMaximum"),
-            _("Heart Rate\nAverage"),
-            _("Cadence\nMaximum"),
-            _("Cadence\nAverage"),
-            _("Speed/Pace\nAverage")
-        )
-        for i, aggregated in enumerate(aggregated_list):
-            box_icon = self._build_icon_box(aggregated.category)
-            box_activities = self._build_info_box(aggregated.total_activities)
-            box_activities_per_month = self._build_info_box(
-                su.avg_per_month(aggregated.total_activities, int(self._year))
-            )
-            box_distance = self._build_info_box(aggregated.total_distance)
-            box_time = self._build_info_box(aggregated.total_short_moving_time)
-            box_gain = self._build_info_box(aggregated.total_elevation_gain)
-            box_hr_max = self._build_info_box(aggregated.max_heart_rate)
-            box_hr_avg = self._build_info_box(aggregated.avg_heart_rate)
-            box_cadence_max = self._build_info_box(aggregated.max_cadence)
-            box_cadence_avg = self._build_info_box(aggregated.avg_cadence)
-            box_speed_pace_avg = self._build_info_box(aggregated.avg_speed)
 
-            grid.attach(box_icon, 0, i + 1, 1, 1)
-            grid.attach(box_activities, 1, i + 1, 1, 1)
-            grid.attach(box_activities_per_month, 2, i + 1, 1, 1)
-            grid.attach(box_distance, 3, i + 1, 1, 1)
-            grid.attach(box_time, 4, i + 1, 1, 1)
-            grid.attach(box_gain, 5, i + 1, 1, 1)
-            grid.attach(box_hr_max, 6, i + 1, 1, 1)
-            grid.attach(box_hr_avg, 7, i + 1, 1, 1)
-            grid.attach(box_cadence_max, 8, i + 1, 1, 1)
-            grid.attach(box_cadence_avg, 9, i + 1, 1, 1)
-            grid.attach(box_speed_pace_avg, 10, i + 1, 1, 1)
-        self.append(grid)
+        self._build_headers(grid, _("Distance Activities") if with_distance else _("Time Activities"), *headers)
 
-    def _build_headers(self, grid, *header_labels):
-        i = 0
+        for i, aggregated in enumerate(data_list):
+            boxes = [
+                self._build_icon_box(aggregated.category),
+                self._build_info_box(aggregated.total_activities),
+                self._build_info_box(su.avg_per_month(aggregated.total_activities, int(self._year))),
+                self._build_info_box(aggregated.total_short_moving_time)
+            ]
+            if with_distance:
+                boxes.extend([
+                    self._build_info_box(aggregated.total_distance),
+                    self._build_info_box(aggregated.total_elevation_gain),
+                    self._build_info_box(aggregated.max_cadence),
+                    self._build_info_box(aggregated.avg_cadence),
+                    self._build_info_box(aggregated.avg_speed)
+                ])
+            boxes.extend([
+                self._build_info_box(aggregated.max_heart_rate),
+                self._build_info_box(aggregated.avg_heart_rate)
+            ])
+
+            for j, box in enumerate(boxes):
+                grid.attach(box, j, i + 2, 1, 1)
+
+        return grid
+
+
+    def _build_headers(self, grid, header_title, *header_labels):
+        box_title = self._build_header_box(header_title)
+        grid.attach(box_title, 0, 0, len(header_labels), 1)
         for i, label in enumerate(header_labels):
-            grid.attach(self._build_header_box(label), i, 0, 1, 1)
+            grid.attach(self._build_header_box(label), i, 1, 1, 1)
 
     def _build_header_box(self, value):
         box = Gtk.Box(spacing=20, orientation=Gtk.Orientation.VERTICAL)
@@ -453,4 +477,3 @@ class AnalyticTotalsYear(Gtk.Box):
         lbl.get_style_context().add_class("pyot-h3")
         box.append(lbl)
         return box
-

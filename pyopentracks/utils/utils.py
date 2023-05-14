@@ -28,7 +28,7 @@ from typing import List
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
 from datetime import datetime, timedelta, date, timezone
-from calendar import monthrange
+from calendar import monthrange, month_abbr
 from locale import setlocale, LC_ALL
 
 from pyopentracks.models.location import Location
@@ -102,6 +102,20 @@ class DateUtils:
         return DateUtils.get_months()[month - 1]
 
     @staticmethod
+    def get_month_abbr(month: int) -> str:
+        """Return the name's abbreviation of the month.
+
+        Arguments:
+        month -- number of month from 1 to 12.
+
+        Return:
+        Month's abbreviation or Jan if month is out of 1 - 12 range.
+        """
+        if not isinstance(month, int) or not 1 <= month <= 12:
+            return month_abbr[1:][0]
+        return month_abbr[1:][month - 1]
+
+    @staticmethod
     def get_today():
         """Return year, month and day of today."""
         t = date.today()
@@ -125,7 +139,7 @@ class TimeUtils:
         return f"{hours:+03d}:{minutes:02d}"
 
     @staticmethod
-    def ms_to_str(time_ms: float, shorten=False) -> str:
+    def ms_to_str(time_ms: float, shorten=False, inline=False) -> str:
         """From time millis to human readable string.
 
         Arguments:
@@ -145,11 +159,21 @@ class TimeUtils:
         if not shorten:
             return f"{int(hours):d}:{int(minutes):02d}:{int(seconds):02d}" if hours > 0 else f"{int(minutes):02d}:{int(seconds):02d}"
         elif hours > 0:
+            if int(minutes) == 0:
+                return f"{int(hours):d}h"
+            if inline:
+                return f"{int(hours):d}h {int(minutes)}min"
             return f"{int(hours):d}h\n{int(minutes)}min"
         elif minutes > 0:
+            if int(seconds) == 0:
+                return f"{int(minutes)}min"
             return f"{int(minutes)}min" + (f" {int(seconds)}s" if seconds > 0 else "")
         else:
             return f"{int(seconds)}s"
+
+    @staticmethod
+    def ms_to_inline_shorten_str(time_ms: float) -> str:
+        return TimeUtils.ms_to_str(time_ms, True, True)
 
     @staticmethod
     def iso_to_ms(date_time: str) -> float:
@@ -208,6 +232,16 @@ class DistanceUtils:
             return f"{int(distance_m / 1000)} km"
         else:
             return f"{round(distance_m / 1000, 2)} km"
+
+    @staticmethod
+    def m_to_int_str(distance_m: float) -> str:
+        """From meters to human readable round int string."""
+        if not distance_m:
+            return "-"
+        elif distance_m < 1000:
+            return f"{int(distance_m)} m"
+        else:
+            return f"{round(distance_m / 1000)} km"
 
 
 class SpeedUtils:
