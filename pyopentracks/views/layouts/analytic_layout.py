@@ -375,9 +375,13 @@ class AnalyticTotalsYear(Gtk.Box):
             )
             self.append(grid_distance)
 
-            widget = builder.set_activity_distance().set_distance().add_categories_filter().build_widget()
-            self.append(widget)
-            widget.draw()
+            self.append(
+                self._create_notebook([
+                    (_("Total Activities"), builder.set_activity_distance().set_total_activities().add_categories_filter().build_widget()),
+                    (_("Distance"), builder.set_activity_distance().set_distance().add_categories_filter().build_widget()),
+                    (_("Moving Time"), builder.set_activity_distance().set_moving_time().add_categories_filter().build_widget())
+                ])
+            )
 
         aggregated_time_list = [a for a in aggregated_list if a.total_distance_float is None]
         if len(aggregated_time_list) > 0:
@@ -390,9 +394,25 @@ class AnalyticTotalsYear(Gtk.Box):
             grid_time.set_margin_top(30)
             self.append(grid_time)
 
-            widget = builder.set_activity_time().set_moving_time().add_categories_filter().build_widget()
-            self.append(widget)
-            widget.draw()
+            self.append(
+                self._create_notebook([
+                    (_("Total Activities"), builder.set_activity_time().set_total_activities().add_categories_filter().build_widget()),
+                    (_("Moving Time"), builder.set_activity_time().set_moving_time().add_categories_filter().build_widget())
+                ])
+            )
+
+    def _create_notebook(self, labels_and_charts):
+        notebook = Gtk.Notebook()
+        notebook.set_margin_top(20)
+        notebook.set_margin_bottom(20)
+        notebook.set_margin_start(50)
+        notebook.set_margin_end(5)
+
+        for label, chart in labels_and_charts:
+            notebook.append_page(chart, Gtk.Label.new(label))
+            chart.draw()
+
+        return notebook
 
     def _create_grid(self, headers, data_list, with_distance):
         grid = Gtk.Grid()
