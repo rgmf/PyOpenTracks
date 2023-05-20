@@ -25,7 +25,7 @@ from matplotlib.figure import Figure
 
 
 class BarsChart:
-    def __init__(self, results, orientation="horizontal", width_ratio=1, height_ratio=2.5, colors=None, cb_annotate=None):
+    def __init__(self, results, orientation="horizontal", width_ratio=1, height_ratio=2.5, min_height=400, colors=None, cb_annotate=None):
         """Creates a set of bar chart with results dictionary.
 
         Arguments:
@@ -59,7 +59,17 @@ class BarsChart:
         w, h = int(np.ceil(w * dpi_res)), int(np.ceil(h * dpi_res))
 
         self._figure.canvas = FigureCanvas(self._figure)
-        self._figure.canvas.set_size_request(w / width_ratio, h / height_ratio)
+        if self._orientation == "horizontal":
+            self._figure.canvas.set_size_request(
+                w / width_ratio,
+                len(self._results.items()) * 120
+            )
+        else:
+            self._figure.canvas.set_size_request(
+                len(self._results.items()) * 120,
+                h / height_ratio if h / height_ratio > min_height else min_height
+            )
+
         # self._figure.canvas.set_has_window(False)
 
     def _draw(self):
@@ -78,7 +88,7 @@ class BarsChart:
 
         if self._orientation == "horizontal":
             pos = np.arange(len(labels))
-            bars = self._axes.barh(pos, values)
+            bars = self._axes.barh(pos, values, height=0.75)
             self._axes.set_yticks(pos)
             self._axes.set_yticklabels(labels)
             # Turn off x tick labels
@@ -113,7 +123,7 @@ class BarsChart:
                 )
         elif self._orientation == "vertical":
             pos = np.arange(len(labels))
-            bars = self._axes.bar(pos, values, width=0.5)
+            bars = self._axes.bar(pos, values, width=0.75)
             self._axes.set_xticks(pos)
             #self._axes.set_xticklabels(labels, rotation="vertical")
             self._axes.set_xticklabels(labels)

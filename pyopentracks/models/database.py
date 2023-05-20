@@ -460,18 +460,19 @@ class Database:
                 )
                 raise
 
-    def get_years(self):
+    def get_years(self, order="DESC"):
         """Returns all years where there are activities.
 
         Return
         List of years.
         """
         with sqlite3.connect(self._db_file) as conn:
+            query_order = order if order in ("DESC", "desc") else "ASC"
             try:
-                query = """
+                query = f"""
                 SELECT distinct strftime('%Y', starttime / 1000, 'unixepoch')
                 FROM activities
-                ORDER BY starttime DESC
+                ORDER BY starttime {query_order}
                 """
                 items = conn.execute(query).fetchall()
                 if items:
