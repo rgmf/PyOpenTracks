@@ -67,9 +67,9 @@ class DatabaseHelper:
         return db.get_aggregated_stats(date_from, date_to, order_by="category" if order_by_categories else "total_activities")
 
     @staticmethod
-    def get_years():
+    def get_years(order="DESC"):
         db = Database()
-        return db.get_years()
+        return db.get_years(order)
 
     @staticmethod
     def create_segment(name: str, distance: float, gain: int, loss: int, points: list):

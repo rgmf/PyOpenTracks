@@ -59,8 +59,15 @@ class ChartWidget(Gtk.Box):
     def add(self, widget_description: str):
         pass
 
+    def set_category(self, category: str):
+        self._data = {
+            k: [chart_value for chart_value in chart_values if chart_value.category == category]
+            for k, chart_values in self._data.items()
+        }
+
     def set_callback_for_chart_annotation(self, cb):
         self._callback_annotation = cb
+
 
 class YearlyChartWidget(ChartWidget):
 
@@ -229,8 +236,9 @@ class YearlyAggregatedStatsChartBuilder(ChartBuilder):
             self._data[k] = v[self._type_of_activity]["total_activities"]
         return self
 
-    def add_categories_filter(self):
-        self._categories_filter = True
+    def set_category_filter(self, category: str = None):
+        self._category = category
+        self._categories_filter = True if category is None else False
         return self
 
     def build_widget(self) -> ChartWidget:
@@ -238,4 +246,103 @@ class YearlyAggregatedStatsChartBuilder(ChartBuilder):
         chart_widget.set_callback_for_chart_annotation(self._callback)
         if self._categories_filter:
             chart_widget.add("categories_filter")
+        if self._category is not None:
+            chart_widget.set_category(self._category)
+        return chart_widget
+
+
+class AllTimesAggregatedStatsChartBuilder(ChartBuilder):
+
+    def __init__(self, aggregated_stats=None):
+        super().__init__()
+        self._all_data = {}
+        self._data = {}
+        self._type_of_activity = "distance_activities"
+        self._category = None
+        self._callback = None
+        self._categories_filter = False
+
+        for year_str in DatabaseHelper.get_years(order="ASC"):
+            as_year_list = DatabaseHelper.get_aggregated_stats(
+                dtu.first_day_ms(int(year_str), 1),
+                dtu.last_day_ms(int(year_str), 12)
+            )
+            self._all_data[int(year_str)] = {
+                "distance_activities": {
+                    "total_activities": [
+                        ChartValue(a.category, a.total_activities)
+                        for a in as_year_list
+                        if a.total_activities is not None and a.total_distance_float is not None
+                    ] if as_year_list else [ChartValue(None, 0)],
+                    "distance": [
+                        ChartValue(a.category, a.total_distance_m)
+                        for a in as_year_list
+                        if a.total_distance_m is not None and a.total_distance_float is not None
+                    ] if as_year_list else [ChartValue(None, 0)],
+                    "moving_time": [
+                        ChartValue(a.category, a.total_moving_time_ms)
+                        for a in as_year_list
+                        if a.total_moving_time_ms is not None and a.total_distance_float is not None
+                    ] if as_year_list else [ChartValue(None, 0)]
+                },
+                "time_activities": {
+                    "total_activities": [
+                        ChartValue(a.category, a.total_activities)
+                        for a in as_year_list
+                        if a.total_activities is not None and a.total_distance_float is None
+                    ] if as_year_list else [ChartValue(None, 0)],
+                    "moving_time": [
+                        ChartValue(a.category, a.total_moving_time_ms)
+                        for a in as_year_list
+                        if a.total_moving_time_ms is not None and a.total_distance_float is None
+                    ] if as_year_list else [ChartValue(None, 0)]
+                }
+            }
+
+    def set_activity_distance(self):
+        self._type_of_activity = "distance_activities"
+        return self
+
+    def set_activity_time(self):
+        self._type_of_activity = "time_activities"
+        return self
+
+    def set_distance(self):
+        self._data = {}
+        self._callback = None
+
+        if self._type_of_activity == "time_activities":
+            return self
+
+        self._callback = distu.m_to_int_str
+        for k, v in self._all_data.items():
+            self._data[k] = v[self._type_of_activity]["distance"]
+        return self
+
+    def set_moving_time(self):
+        self._data = {}
+        self._callback = tu.ms_to_inline_shorten_str
+        for k, v in self._all_data.items():
+            self._data[k] = v[self._type_of_activity]["moving_time"]
+        return self
+
+    def set_total_activities(self):
+        self._data = {}
+        self._callback = round
+        for k, v in self._all_data.items():
+            self._data[k] = v[self._type_of_activity]["total_activities"]
+        return self
+
+    def set_category_filter(self, category: str = None):
+        self._category = category
+        self._categories_filter = True if category is None else False
+        return self
+
+    def build_widget(self) -> ChartWidget:
+        chart_widget = YearlyChartWidget(self._data)
+        chart_widget.set_callback_for_chart_annotation(self._callback)
+        if self._categories_filter:
+            chart_widget.add("categories_filter")
+        if self._category is not None:
+            chart_widget.set_category(self._category)
         return chart_widget

@@ -59,4 +59,3 @@ class NotebookLayout(Gtk.Notebook, Layout):
                 yield child.get_first_child()
             else:
                 yield child
-

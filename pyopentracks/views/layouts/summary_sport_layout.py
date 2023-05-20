@@ -27,7 +27,9 @@ class SummarySport(Gtk.Box, Layout):
 
     def __init__(self, aggregated):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
-        self.set_margin_top(10)
+        self.set_property("hexpand", False)
+        self.set_hexpand(False)
+        self.set_margin_top(80)
         self.set_margin_bottom(10)
         self.set_margin_start(10)
         self.set_margin_end(10)

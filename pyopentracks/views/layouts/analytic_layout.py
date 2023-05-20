@@ -32,7 +32,10 @@ from pyopentracks.views.graphs import BarsChart
 from pyopentracks.views.layouts.calendar_layout import CalendarLayout
 from pyopentracks.views.layouts.layout_builder import LayoutBuilder
 from pyopentracks.views.layouts.process_view import ProcessView
-from pyopentracks.views.widgets.graphs_widget import YearlyAggregatedStatsChartBuilder
+from pyopentracks.views.widgets.graphs_widget import (
+    YearlyAggregatedStatsChartBuilder,
+    AllTimesAggregatedStatsChartBuilder
+)
 
 
 class AggregatedStats(Gtk.Box):
@@ -64,12 +67,47 @@ class AggregatedStats(Gtk.Box):
             lbl.get_style_context().add_class("pyot-h3")
             self.append(lbl)
             return
+
+        builder = AllTimesAggregatedStatsChartBuilder(aggregated_stats)
         for aggregated in aggregated_stats:
+            widgets_array = []
+            if aggregated.total_distance_float is not None:
+                builder.set_activity_distance().set_category_filter(aggregated.category).set_total_activities()
+                widgets_array.append((_("Total Activities"), builder.build_widget()))
+
+                builder.set_activity_distance().set_category_filter(aggregated.category).set_distance()
+                widgets_array.append((_("Distance"), builder.build_widget()))
+
+                builder.set_activity_distance().set_category_filter(aggregated.category).set_moving_time()
+                widgets_array.append((_("Moving Time"), builder.build_widget()))
+            else:
+                builder.set_activity_time().set_category_filter(aggregated.category).set_total_activities()
+                widgets_array.append((_("Total Activities"), builder.build_widget()))
+
+                builder.set_activity_time().set_category_filter(aggregated.category).set_moving_time()
+                widgets_array.append((_("Moving Time"), builder.build_widget()))
+
+            notebook = self._create_notebook(widgets_array)
+
             LayoutBuilder(lambda layout: self.append(layout))\
                     .set_category(aggregated.category)\
+                    .append_widget(notebook)\
                     .set_type(LayoutBuilder.Layouts.SPORT_SUMMARY)\
                     .set_args((aggregated,))\
                     .make()
+
+    def _create_notebook(self, labels_and_charts):
+        notebook = Gtk.Notebook()
+        notebook.set_margin_top(20)
+        notebook.set_margin_bottom(20)
+        notebook.set_margin_start(50)
+        notebook.set_margin_end(5)
+
+        for label, chart in labels_and_charts:
+            notebook.append_page(chart, Gtk.Label.new(label))
+            chart.draw()
+
+        return notebook
 
 
 class AggregatedStatsMonth(Gtk.Box):
@@ -83,7 +121,7 @@ class AggregatedStatsMonth(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
 
         self._year_list_store = Gtk.ListStore.new([str, str])
-        renderer  = Gtk.CellRendererText()
+        renderer = Gtk.CellRendererText()
         self._combo_years = Gtk.ComboBox.new_with_model(self._year_list_store)
         self._combo_years.pack_start(renderer, True)
         self._combo_years.add_attribute(renderer, "text", 0)
@@ -345,7 +383,6 @@ class AnalyticTotalsYear(Gtk.Box):
         year -- the year of the totals stats.
         """
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
-
         self._year = year
         ProcessView(
             self._ready,
@@ -377,9 +414,9 @@ class AnalyticTotalsYear(Gtk.Box):
 
             self.append(
                 self._create_notebook([
-                    (_("Total Activities"), builder.set_activity_distance().set_total_activities().add_categories_filter().build_widget()),
-                    (_("Distance"), builder.set_activity_distance().set_distance().add_categories_filter().build_widget()),
-                    (_("Moving Time"), builder.set_activity_distance().set_moving_time().add_categories_filter().build_widget())
+                    (_("Total Activities"), builder.set_activity_distance().set_total_activities().set_category_filter().build_widget()),
+                    (_("Distance"), builder.set_activity_distance().set_distance().set_category_filter().build_widget()),
+                    (_("Moving Time"), builder.set_activity_distance().set_moving_time().set_category_filter().build_widget())
                 ])
             )
 
@@ -396,8 +433,8 @@ class AnalyticTotalsYear(Gtk.Box):
 
             self.append(
                 self._create_notebook([
-                    (_("Total Activities"), builder.set_activity_time().set_total_activities().add_categories_filter().build_widget()),
-                    (_("Moving Time"), builder.set_activity_time().set_moving_time().add_categories_filter().build_widget())
+                    (_("Total Activities"), builder.set_activity_time().set_total_activities().set_category_filter().build_widget()),
+                    (_("Moving Time"), builder.set_activity_time().set_moving_time().set_category_filter().build_widget())
                 ])
             )
 
@@ -447,7 +484,6 @@ class AnalyticTotalsYear(Gtk.Box):
                 grid.attach(box, j, i + 2, 1, 1)
 
         return grid
-
 
     def _build_headers(self, grid, header_title, *header_labels):
         box_title = self._build_header_box(header_title)

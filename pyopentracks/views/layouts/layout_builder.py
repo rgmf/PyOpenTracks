@@ -19,6 +19,8 @@ along with PyOpenTracks. If not, see <https://www.gnu.org/licenses/>.
 from enum import Enum
 from pyopentracks.app_preferences import AppPreferences
 
+from gi.repository import Gtk
+
 from pyopentracks.models.activity import Activity
 from pyopentracks.models.database_helper import DatabaseHelper
 from pyopentracks.views.layouts.error_layout import ErrorLayout
@@ -52,6 +54,7 @@ class LayoutBuilder:
         self._activity: Activity = None
         self._category: str = None
         self._type = None
+        self._widgets = []
         self._preferences = None
         self._callback = cb
         self._args = None
@@ -76,6 +79,10 @@ class LayoutBuilder:
         self._type = type
         return self
 
+    def append_widget(self, widget):
+        self._widgets.append(widget)
+        return self
+
     def make(self):
         if (self._activity is None and self._category is None) or self._type is None:
             self._callback(ErrorLayout())
@@ -91,6 +98,11 @@ class LayoutBuilder:
             layout = SportSummaryLayoutBuilder(self._category, self._args).make()
         else:
             layout = ErrorLayout()
+
+        for widget in self._widgets:
+            fixed = Gtk.Fixed()
+            fixed.put(widget, 0, 0)
+            layout.append(fixed)
 
         return layout
 
