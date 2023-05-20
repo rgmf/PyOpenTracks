@@ -71,9 +71,16 @@ class YearlyChartWidget(ChartWidget):
     def draw(self):
         graph_data = {}
         if self._categories_filter is not None:
-            graph_data = {key: sum([chart_value.value for chart_value in values if chart_value.category in self._categories_filter]) for key, values in self._data.items()}
+            graph_data = {
+                key: sum([
+                    chart_value.value for chart_value in values
+                    if chart_value.category in self._categories_filter
+                ]) for key, values in self._data.items()
+            }
         else:
-            graph_data = {key: sum([value.value for value in values]) for key, values in self._data.items()}
+            graph_data = {
+                key: sum([value.value for value in values]) for key, values in self._data.items()
+            }
 
         graph = BarsChart(
             graph_data,
@@ -89,12 +96,10 @@ class YearlyChartWidget(ChartWidget):
             self._append_categories_filter()
 
     def _append_categories_filter(self):
-        categories_set = set()
-        for values_list in self._data.values():
-            for chart_value in values_list:
-                if chart_value.category is not None:
-                    categories_set.add(chart_value.category)
-        self._categories_filter = list(categories_set)
+        self._categories_filter = list({
+            chart_value.category for values_list in self._data.values()
+            for chart_value in values_list if chart_value.category is not None
+        })
 
         category_buttons = [
             self._create_button(category) for category in self._categories_filter
@@ -160,13 +165,33 @@ class YearlyAggregatedStatsChartBuilder(ChartBuilder):
             month_name = du.get_month_abbr(month)
             self._all_data[month_name] = {
                 "distance_activities": {
-                    "total_activities": [ChartValue(a.category, a.total_activities) for a in as_month_list if a.total_activities is not None and a.total_distance_float is not None] if as_month_list else [ChartValue(None, 0)],
-                    "distance": [ChartValue(a.category, a.total_distance_m) for a in as_month_list if a.total_distance_m is not None and a.total_distance_float is not None] if as_month_list else [ChartValue(None, 0)],
-                    "moving_time": [ChartValue(a.category, a.total_moving_time_ms) for a in as_month_list if a.total_moving_time_ms is not None and a.total_distance_float is not None] if as_month_list else [ChartValue(None, 0)]
+                    "total_activities": [
+                        ChartValue(a.category, a.total_activities)
+                        for a in as_month_list
+                        if a.total_activities is not None and a.total_distance_float is not None
+                    ] if as_month_list else [ChartValue(None, 0)],
+                    "distance": [
+                        ChartValue(a.category, a.total_distance_m)
+                        for a in as_month_list
+                        if a.total_distance_m is not None and a.total_distance_float is not None
+                    ] if as_month_list else [ChartValue(None, 0)],
+                    "moving_time": [
+                        ChartValue(a.category, a.total_moving_time_ms)
+                        for a in as_month_list
+                        if a.total_moving_time_ms is not None and a.total_distance_float is not None
+                    ] if as_month_list else [ChartValue(None, 0)]
                 },
                 "time_activities": {
-                    "total_activities": [ChartValue(a.category, a.total_activities) for a in as_month_list if a.total_activities is not None and a.total_distance_float is None] if as_month_list else [ChartValue(None, 0)],
-                    "moving_time": [ChartValue(a.category, a.total_moving_time_ms) for a in as_month_list if a.total_moving_time_ms is not None and a.total_distance_float is None] if as_month_list else [ChartValue(None, 0)]
+                    "total_activities": [
+                        ChartValue(a.category, a.total_activities)
+                        for a in as_month_list
+                        if a.total_activities is not None and a.total_distance_float is None
+                    ] if as_month_list else [ChartValue(None, 0)],
+                    "moving_time": [
+                        ChartValue(a.category, a.total_moving_time_ms)
+                        for a in as_month_list
+                        if a.total_moving_time_ms is not None and a.total_distance_float is None
+                    ] if as_month_list else [ChartValue(None, 0)]
                 }
             }
 
